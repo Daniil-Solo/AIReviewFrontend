@@ -1,30 +1,29 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { AppShell } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { Landing } from './pages/Landing/Landing'
-import { Header } from './components/Header/Header'
-
-function App() {
-  const [opened, { toggle }] = useDisclosure()
-
-  return (
-    <AppShell
-      header={{ height: 60 }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Header opened={opened} onToggle={toggle} />
-      </AppShell.Header>
-      <AppShell.Main p={0}>
-        <Landing />
-      </AppShell.Main>
-    </AppShell>
-  )
-}
+import { createBrowserRouter } from 'react-router-dom';
+import { AppLayout } from './components/AppLayout/AppLayout';
+import { MainLayout } from './components/MainLayout/MainLayout';
+import { Login } from './pages/Login/Login';
+import { Register } from './pages/Register/Register';
+import { Home } from './pages/Home/Home';
+import { AuthLayout } from './components/AuthLayout/AuthLayout';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <AppLayout />,
   },
-])
+  {
+    element: <AuthLayout/>,
+    children: [
+      {path: '/login', element: <Login />},
+      {path: '/register', element: <Register />},
+    ]
+  },
+  {
+    element: <MainLayout/>,
+    children: [
+      { path: '/home', element: <Home /> },
+      { path: '/workspaces', element: <Home /> },
+      { path: '/settings', element: <Home /> },
+    ],
+  },
+]);

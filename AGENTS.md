@@ -7,19 +7,17 @@
 проводит ревью по критериям и выносит итоговый вердикт.
 
 ## Технологический стек
-
-React, TypeScript
-Vite - сборка
-React Router v7 - Маршрутизация
-TanStack Query - серверное состояние
-Zustand - клиентское состояние
-Mantine UI - UI-библиотека (формы, таблицы, графики)
-tabler - иконки
-Axios - HTTP-клиент
-CSS Modules - стилизация
-react-markdown + remark-gf - рендер markdown
-jose - декодирование jwt-токена
-
+React 19 + TypeScript 6 (strict mode, es2023)
+Vite 8 — сборка
+Mantine UI v9 — основная UI-библиотека
+React Router v7 — маршрутизация
+TanStack Query v5 — серверное состояние
+Zustand — клиентское состояние
+Axios — HTTP-клиент
+@tabler/icons-react — иконки
+CSS Modules (*.module.css) — стилизация
+react-markdown + remark-gfm — рендер markdown
+jose — работа с JWT
 
 ## Структура проекта
 src/
