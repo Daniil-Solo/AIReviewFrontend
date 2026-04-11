@@ -1,0 +1,66 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+:root {
+  --header-height: 72px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --accent-gradient: linear-gradient(135deg, #228BE6 0%, #37B9F1 100%);
+  --accent: #228BE6;
+  --accent-glow: rgba(34, 139, 230, 0.4);
+  --border: #E9ECEF;
+  --bg: #FFFFFF;
+  --code-bg: #F8F9FA;
+  --text: #495057;
+  --text-h: #212529;
+  --heading: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-mantine-color-scheme="dark"] {
+  --border: #373A40;
+  --bg: #1A1B1E;
+  --code-bg: #25262B;
+  --text: #C1C2C5;
+  --text-h: #C1C2C5;
+}
