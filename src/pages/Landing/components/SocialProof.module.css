@@ -17,17 +17,39 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
-.stats {
+.featuresList {
   display: flex;
-  justify-content: center;
-  gap: 48px;
-  margin-top: 48px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.stat {
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--mantine-color-gray-0);
+}
+
+[data-mantine-color-scheme="dark"] .feature {
+  background: var(--mantine-color-dark-5);
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  min-width: 100px;
+  padding: 24px;
+  background: var(--mantine-color-white);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-mantine-color-scheme="dark"] .statCard {
+  background: var(--mantine-color-dark-6);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 @media (max-width: 576px) {

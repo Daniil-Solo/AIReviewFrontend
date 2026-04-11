@@ -17,7 +17,7 @@ const plans = [
     highlighted: false,
   },
   {
-    title: 'Pay as you Go',
+    title: 'Оплата по факту',
     price: 'От 99 ₽',
     description: 'Платите только за то, что используете',
     features: [
@@ -27,14 +27,14 @@ const plans = [
       'Приоритетная поддержка',
       'API доступ',
     ],
-    cta: 'Пополнить баланс',
+    cta: 'Перейти',
     highlighted: true,
   },
 ]
 
 export function Pricing() {
   return (
-    <Box py={{ base: 60, md: 100 }} className={styles.section}>
+    <Box py={{ base: 60, md: 100 }} className={styles.section} id="pricing">
       <Container size="lg">
         <Title order={2} ta="center" mb={16} fw={700} fz={{ base: 28, md: 36 }}>
           Тарифы
@@ -51,11 +51,6 @@ export function Pricing() {
               padding="xl" 
               radius="lg"
             >
-              {plan.highlighted && (
-                <Text className={styles.badge} size="sm" fw={600} mb="md">
-                  Популярный выбор
-                </Text>
-              )}
               <Text fw={700} size="xl" mb="xs">{plan.title}</Text>
               <Text fw={800} fz={36} mb="xs" className={plan.highlighted ? styles.priceHighlight : ''}>
                 {plan.price}

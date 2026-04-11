@@ -1,4 +1,4 @@
-import { Container, Title, Text, SimpleGrid, ThemeIcon, Box, Stepper } from '@mantine/core'
+import { Container, Title, Text, SimpleGrid, ThemeIcon, Box } from '@mantine/core'
 import { IconUserPlus, IconUpload, IconBrain, IconChecklist } from '@tabler/icons-react'
 import styles from './HowItWorks.module.css'
 
@@ -27,34 +27,12 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <Box py={{ base: 60, md: 100 }} className={styles.section}>
+    <Box py={{ base: 60, md: 100 }} className={styles.section} id="how-it-works">
       <Container size="lg">
         <Title order={2} ta="center" mb={48} fw={700} fz={{ base: 28, md: 36 }}>
           Как это работает
         </Title>
         
-        <Box className={styles.stepsWrapper}>
-          <Stepper 
-            active={-1}
-            orientation="horizontal"
-            size="sm"
-            classNames={{ root: styles.stepperRoot }}
-          >
-            {steps.map((step, index) => (
-              <Stepper.Step 
-                key={index}
-                icon={<ThemeIcon size={32} radius="xl" variant="light" color="blue"><step.icon size={18} /></ThemeIcon>}
-                label={
-                  <Box className={styles.stepLabel}>
-                    <Text fw={600} size="sm">{step.title}</Text>
-                    <Text size="xs" c="dimmed" mt={4}>{step.description}</Text>
-                  </Box>
-                }
-              />
-            ))}
-          </Stepper>
-        </Box>
-
         <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} mt={48} spacing="lg">
           {steps.map((step, index) => (
             <Box key={index} className={styles.card}>

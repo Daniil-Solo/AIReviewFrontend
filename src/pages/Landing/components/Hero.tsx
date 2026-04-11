@@ -1,5 +1,5 @@
-import { Title, Text, Button, Group, Container, Box, Stack } from '@mantine/core'
-import { IconArrowRight, IconPlayerPlay } from '@tabler/icons-react'
+import { Title, Text, Button, Group, Container, Box, Stack, ThemeIcon } from '@mantine/core'
+import { IconArrowRight, IconPlayerPlay, IconBrain } from '@tabler/icons-react'
 import styles from './Hero.module.css'
 
 export function Hero() {
@@ -29,7 +29,7 @@ export function Hero() {
             <Text ta="center" c="dimmed" fz={{ base: 'lg', md: 'xl' }} maw={600}>
               Экономьте часы преподавателей. Давайте студентам мгновенную обратную связь.
             </Text>
-            <Group gap="md" mt="md">
+            <Group gap="md" mt="md" justify="center">
               <Button 
                 size="xl" 
                 variant="gradient" 
@@ -43,7 +43,6 @@ export function Hero() {
               <Button 
                 size="xl" 
                 variant="outline" 
-                color="gray"
                 leftSection={<IconPlayerPlay size={20} />}
               >
                 Смотреть демо
@@ -60,9 +59,15 @@ export function Hero() {
               <IconArrowRight size={24} />
             </Box>
             <Box className={styles.pipelineSystem}>
-              <Box className={styles.systemIcon}>⚡</Box>
-              <Text fw={600} size="sm">AI System</Text>
-              <Box className={styles.pulse} />
+              <ThemeIcon 
+                size={48} 
+                radius="xl" 
+                variant="gradient" 
+                gradient={{ from: 'blue.5', to: 'cyan.5', deg: 45 }}
+              >
+                <IconBrain size={28} />
+              </ThemeIcon>
+              <Text fw={700} size="sm" c="white">AI System</Text>
             </Box>
             <Box className={styles.arrow}>
               <IconArrowRight size={24} />

@@ -31,7 +31,7 @@ const features = [
 
 export function Features() {
   return (
-    <Box py={{ base: 60, md: 100 }} className={styles.section}>
+    <Box py={{ base: 60, md: 100 }} className={styles.section} id="features">
       <Container size="lg">
         <Title order={2} ta="center" mb={16} fw={700} fz={{ base: 28, md: 36 }}>
           Ключевые возможности

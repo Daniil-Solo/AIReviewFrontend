@@ -15,7 +15,7 @@ function App() {
       <AppShell.Header>
         <Header opened={opened} onToggle={toggle} />
       </AppShell.Header>
-      <AppShell.Main>
+      <AppShell.Main p={0}>
         <Landing />
       </AppShell.Main>
     </AppShell>
