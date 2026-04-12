@@ -76,6 +76,7 @@ export interface JoinRuleDTO {
   has_password: boolean;
   expired_at: string | null;
   created_at: string;
+  used_count: number;
 }
 
 export interface JoinRuleCreateDTO {
@@ -83,13 +84,6 @@ export interface JoinRuleCreateDTO {
   role: 'TEACHER' | 'STUDENT';
   password?: string;
   expired_at?: string;
-  is_active?: boolean;
-}
-
-export interface JoinRuleUpdateDTO {
-  role?: 'TEACHER' | 'STUDENT';
-  password?: string;
-  expired_at?: string | null;
   is_active?: boolean;
 }
 

@@ -8,7 +8,6 @@ import type {
   UserWorkspaceResponseDTO,
   JoinRuleDTO,
   JoinRuleCreateDTO,
-  JoinRuleUpdateDTO,
   JoinRequestDTO,
   JoinResponseDTO,
   SlugAvailabilityResponseDTO,
@@ -108,7 +107,7 @@ export const createJoinRule = async (
 export const updateJoinRule = async (
   workspaceId: number,
   ruleId: number,
-  data: JoinRuleUpdateDTO
+  data: JoinRuleCreateDTO
 ): Promise<JoinRuleDTO> => {
   const response = await api.put<JoinRuleDTO>(
     `/api/v1/workspaces/${workspaceId}/join_rules/${ruleId}`,

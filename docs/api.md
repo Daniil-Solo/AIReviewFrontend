@@ -82,7 +82,7 @@ WorkspaceMemberRoleEnum: OWNER, TEACHER, STUDENT
 
 WorkspaceJoinRuleRequestCreateDTO: slug(1-255), role, is_active(default true), expired_at(datetime|null), password(1-255|null)
 WorkspaceJoinRuleRequestUpdateDTO: same
-WorkspaceJoinRuleResponseDTO: id, workspace_id, slug, role, expired_at, is_active, has_password
+WorkspaceJoinRuleResponseDTO: id, workspace_id, slug, role, expired_at, is_active, has_password, used_count
 
 JoinBySlugDTO: slug, password(opt)
 JoinResponseDTO: workspace_id

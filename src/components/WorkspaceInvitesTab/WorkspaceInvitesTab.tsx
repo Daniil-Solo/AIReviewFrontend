@@ -30,7 +30,7 @@ import {
   IconLink,
 } from '@tabler/icons-react';
 import { getJoinRules, createJoinRule, updateJoinRule, deleteJoinRule, checkSlugAvailability } from '../../api/endpoints/workspaces';
-import type { JoinRuleDTO, JoinRuleCreateDTO, JoinRuleUpdateDTO } from '../../types';
+import type { JoinRuleDTO, JoinRuleCreateDTO } from '../../types';
 
 interface InviteModalProps {
   opened: boolean;
@@ -50,6 +50,16 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
   const [slugError, setSlugError] = useState('');
   const [slugLoading, setSlugLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
+
+  useEffect(() => {
+    setSlug(editRule?.slug || '');
+    setRole((editRule?.role === 'TEACHER' || editRule?.role === 'STUDENT') ? editRule.role : 'STUDENT');
+    setPassword('');
+    setExpiredAt(editRule?.expired_at ? new Date(editRule.expired_at) : null);
+    setIsActive(editRule?.is_active ?? true);
+    setSlugError('');
+    setGeneralError('');
+  }, [editRule]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -79,7 +89,7 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: JoinRuleUpdateDTO) => updateJoinRule(workspaceId, editRule!.id, data),
+    mutationFn: (data: JoinRuleCreateDTO) => updateJoinRule(workspaceId, editRule!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['joinRules', workspaceId] });
       onClose();
@@ -121,25 +131,18 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
       return;
     }
 
-    const data: JoinRuleCreateDTO | JoinRuleUpdateDTO = editRule
-      ? {
-          role,
-          password: password || undefined,
-          expired_at: expiredAt?.toISOString() || null,
-          is_active: isActive,
-        }
-      : {
-          slug: slug.trim(),
-          role,
-          password: password || undefined,
-          expired_at: expiredAt?.toISOString(),
-          is_active: isActive,
-        };
+    const data: JoinRuleCreateDTO = {
+      slug: slug.trim(),
+      role,
+      password: password || null,
+      expired_at: expiredAt?.toISOString() || null,
+      is_active: isActive,
+    }
 
     if (editRule) {
-      updateMutation.mutate(data as JoinRuleUpdateDTO);
+      updateMutation.mutate(data);
     } else {
-      createMutation.mutate(data as JoinRuleCreateDTO);
+      createMutation.mutate(data);
     }
   };
 
@@ -319,6 +322,7 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
               <Table.Th>Статус</Table.Th>
               <Table.Th>Срок</Table.Th>
               <Table.Th>Пароль</Table.Th>
+              <Table.Th>Использовано</Table.Th>
               <Table.Th></Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -363,6 +367,9 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
                   <Badge color={rule.has_password ? 'yellow' : 'gray'} variant="light">
                     {rule.has_password ? 'Да' : 'Нет'}
                   </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm">{rule.used_count}</Text>
                 </Table.Td>
                 <Table.Td>
                   <Group gap="xs">
