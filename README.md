@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# AI Review Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Платформа для автоматической проверки учебных проектов студентов с генерацией документации проекта (ProjectDoc), AI-ревью по критериям и вынесением итогового вердикта.
 
-Currently, two official plugins are available:
+## Возможности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Рабочие пространства** — создание workspace'ов для управления курсами и группами студентов
+- **Задачи с критериями** — назначение задач с набором критериев оценки и весами
+- **Загрузка решений** — поддержка ZIP-архивов и ссылок на GitHub-репозитории
+- **Автоматическое ревью** — многоэтапный AI-анализ:
+  - Генерация ProjectDoc на основе кода
+  - Проверка критериев по документации и коду
+  - Статический анализ (Ruff, Bandit)
+- **Экзамен** — автоматическая генерация вопросов на основе ProjectDoc и слабых мест
+- **Вердикт** — выставление финальной оценки и комментария преподавателем
 
-## React Compiler
+## Технологический стек
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React 19 + TypeScript 6 (strict mode, es2023)
+- **Build**: Vite 8
+- **UI**: Mantine UI v9
+- **Routing**: React Router v7
+- **State**: TanStack Query v5 (server), Zustand (client)
+- **HTTP**: Axios
+- **Icons**: @tabler/icons-react
+- **Styling**: CSS Modules
+- **Markdown**: react-markdown + remark-gfm
+- **Auth**: jose (JWT)
 
-## Expanding the ESLint configuration
+## Предварительная подготовка и запуск
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Структура проекта
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── api/           # Axios инстанс и эндпоинты
+├── components/   # Переиспользуемые UI-компоненты
+├── features/     # Фичи (reviews, dashboard, ai-chat)
+├── hooks/        # Кастомные хуки (useAuth, useStreaming)
+├── lib/          # Утилиты и helpers
+├── pages/        # Роуты страниц
+├── store/        # Zustand хранилища
+└── types/        # TypeScript типы API
+```
+
+## Документация
+
+- [API схема](./docs/api.md) — описание всех эндпоинтов и схем данных
+- [Описание системы](./docs/about.md) — подробное описание функциональности и ролей
