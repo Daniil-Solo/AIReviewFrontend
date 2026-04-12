@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MantineProvider, createTheme } from '@mantine/core'
 import { localStorageColorSchemeManager } from '@mantine/core'
@@ -30,11 +29,11 @@ const colorSchemeManager = localStorageColorSchemeManager({
 })
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  /*<StrictMode>*/
     <QueryClientProvider client={queryClient}>
       <MantineProvider theme={theme} defaultColorScheme="light" colorSchemeManager={colorSchemeManager}>
         <RouterProvider router={router} />
       </MantineProvider>
     </QueryClientProvider>
-  </StrictMode>,
+  /*</StrictMode>,*/
 )

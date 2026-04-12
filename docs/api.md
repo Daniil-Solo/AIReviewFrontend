@@ -32,7 +32,7 @@ DELETE /api/v1/workspaces/{workspace_id}/join_rules/{rule_id} -> auth, path: wor
 PATCH  /api/v1/workspaces/{workspace_id}/members/{member_id} -> auth, path: workspace_id, member_id, req: WorkspaceMemberUpdateDTO, res: WorkspaceMemberResponseDTO
 POST   /api/v1/workspaces/{workspace_id}/leave -> auth, path: workspace_id, res: SuccessOperationDTO
 PATCH  /api/v1/workspaces/{workspace_id}/owner -> auth, path: workspace_id, req: TransferOwnershipDTO, res: WorkspaceResponseDTO
-POST   /api/v1/workspaces/slugs/availability   -> query: slug(string), res: SlugCheckResponseDTO
+GET    /api/v1/workspaces/slugs/availability   -> query: slug(string), res: SlugCheckResponseDTO
 
 POST   /api/v1/joins                          -> auth, req: JoinBySlugDTO, res: JoinResponseDTO
 

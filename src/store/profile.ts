@@ -17,6 +17,7 @@ interface ProfileState {
   canEdit: (workspaceId: number) => boolean;
   canDelete: (workspaceId: number) => boolean;
   canChangeMemberRoles: (workspaceId: number) => boolean;
+  canManageInvites: (workspaceId: number) => boolean;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -42,5 +43,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   canChangeMemberRoles: (workspaceId) => {
     const role = get().getRole(workspaceId);
     return role === 'OWNER';
+  },
+  canManageInvites: (workspaceId) => {
+    const role = get().getRole(workspaceId);
+    return role === 'OWNER' || role === 'TEACHER';
   },
 }));

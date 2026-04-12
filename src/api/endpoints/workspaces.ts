@@ -6,11 +6,21 @@ import type {
   WorkspaceMemberResponseDTO,
   WorkspaceMemberUpdateDTO,
   UserWorkspaceResponseDTO,
+  JoinRuleDTO,
+  JoinRuleCreateDTO,
+  JoinRuleUpdateDTO,
+  JoinRequestDTO,
+  JoinResponseDTO,
+  SlugAvailabilityResponseDTO,
 } from '../../types';
 
 export const getProfileWorkspaces = async (): Promise<UserWorkspaceResponseDTO[]> => {
   const response = await api.get<UserWorkspaceResponseDTO[]>('/api/v1/profile/workspaces');
   return response.data;
+};
+
+export const refreshProfileWorkspaces = async (): Promise<UserWorkspaceResponseDTO[]> => {
+  return getProfileWorkspaces();
 };
 
 export const getWorkspace = async (workspaceId: number): Promise<WorkspaceResponseDTO> => {
@@ -72,5 +82,64 @@ export const leaveWorkspace = async (
   const response = await api.post<{ message: string }>(
     `/api/v1/workspaces/${workspaceId}/leave`
   );
+  return response.data;
+};
+
+export const getJoinRules = async (
+  workspaceId: number
+): Promise<JoinRuleDTO[]> => {
+  const response = await api.get<JoinRuleDTO[]>(
+    `/api/v1/workspaces/${workspaceId}/join_rules`
+  );
+  return response.data;
+};
+
+export const createJoinRule = async (
+  workspaceId: number,
+  data: JoinRuleCreateDTO
+): Promise<JoinRuleDTO> => {
+  const response = await api.post<JoinRuleDTO>(
+    `/api/v1/workspaces/${workspaceId}/join_rules`,
+    data
+  );
+  return response.data;
+};
+
+export const updateJoinRule = async (
+  workspaceId: number,
+  ruleId: number,
+  data: JoinRuleUpdateDTO
+): Promise<JoinRuleDTO> => {
+  const response = await api.put<JoinRuleDTO>(
+    `/api/v1/workspaces/${workspaceId}/join_rules/${ruleId}`,
+    data
+  );
+  return response.data;
+};
+
+export const deleteJoinRule = async (
+  workspaceId: number,
+  ruleId: number
+): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(
+    `/api/v1/workspaces/${workspaceId}/join_rules/${ruleId}`
+  );
+  return response.data;
+};
+
+export const checkSlugAvailability = async (
+  slug: string
+): Promise<SlugAvailabilityResponseDTO> => {
+  const response = await api.get<SlugAvailabilityResponseDTO>(
+    '/api/v1/workspaces/slugs/availability',
+    { params: { slug } }
+  );
+  return response.data;
+};
+
+export const joinWorkspace = async (
+  data: JoinRequestDTO
+): Promise<JoinResponseDTO> => {
+  const response = await api.post<JoinResponseDTO>('/api/v1/joins', data);
   return response.data;
 };

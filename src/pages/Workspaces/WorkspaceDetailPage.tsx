@@ -19,7 +19,7 @@ import {
   Modal,
   Menu,
 } from '@mantine/core';
-import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDotsVertical, IconUserEdit } from '@tabler/icons-react';
+import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDotsVertical, IconUserEdit, IconLink } from '@tabler/icons-react';
 import {
   getWorkspace,
   getWorkspaceMembers,
@@ -31,6 +31,7 @@ import {
 } from '../../api/endpoints/workspaces';
 import { useProfileStore } from '../../store/profile';
 import { getUserData } from '../../lib/jwt';
+import { WorkspaceInvitesTab } from '../../components/WorkspaceInvitesTab/WorkspaceInvitesTab';
 import type { WorkspaceMemberRole } from '../../types';
 
 const roleLabels: Record<string, string> = {
@@ -56,6 +57,7 @@ export function WorkspaceDetailPage() {
   const canEdit = useProfileStore((state) => state.canEdit(workspaceId));
   const canDelete = useProfileStore((state) => state.canDelete(workspaceId));
   const canChangeMemberRoles = useProfileStore((state) => state.canChangeMemberRoles(workspaceId));
+  const canManageInvites = useProfileStore((state) => state.canManageInvites(workspaceId));
   const getRole = useProfileStore((state) => state.getRole);
   const currentRole = getRole(workspaceId) ?? 'STUDENT';
 
@@ -218,6 +220,11 @@ export function WorkspaceDetailPage() {
           <Tabs.Tab value="members" leftSection={<IconUsers size={16} />}>
             Участники
           </Tabs.Tab>
+          {canManageInvites && (
+            <Tabs.Tab value="invites" leftSection={<IconLink size={16} />}>
+              Приглашения
+            </Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="main" pt="md">
@@ -258,14 +265,16 @@ export function WorkspaceDetailPage() {
               </>
             )}
             {currentRole !== 'OWNER' && !workspace.is_archived && (
-              <Button
-                variant="light"
-                color="red"
-                onClick={() => leaveMutation.mutate()}
-                loading={leaveMutation.isPending}
-              >
-                Покинуть пространство
-              </Button>
+              <Group>
+                <Button
+                  variant="light"
+                  color="red"
+                  onClick={() => leaveMutation.mutate()}
+                  loading={leaveMutation.isPending}
+                >
+                  Покинуть пространство
+                </Button>
+              </Group>
             )}
           </Stack>
         </Tabs.Panel>
@@ -317,6 +326,12 @@ export function WorkspaceDetailPage() {
             </Table.Tbody>
           </Table>
         </Tabs.Panel>
+
+        {canManageInvites && (
+          <Tabs.Panel value="invites" pt="md">
+            <WorkspaceInvitesTab workspaceId={workspaceId} />
+          </Tabs.Panel>
+        )}
       </Tabs>
 
       <Modal

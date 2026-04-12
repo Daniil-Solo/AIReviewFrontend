@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   TextInput,
   PasswordInput,
@@ -20,6 +20,8 @@ const TIMER_DURATION = 60;
 
 export function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const { step, fullname, email, password, setStep, setCredentials, reset } = useRegisterStore();
 
   const [formFullname, setFormFullname] = useState(fullname);
@@ -140,7 +142,8 @@ export function Register() {
         code,
       });
       localStorage.setItem('token', response.access_token);
-      navigate('/home', { replace: true });
+      const target = redirect || '/home';
+      navigate(target, { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       const message = err.response?.data?.message || 'Неверный код';
@@ -277,7 +280,7 @@ export function Register() {
             <Text span c="dimmed">
               Уже есть аккаунт?{' '}
             </Text>
-            <Anchor component="a" href="/login" fw={600}>
+            <Anchor component="a" href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} fw={600}>
               Войти
             </Anchor>
           </Box>

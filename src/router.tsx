@@ -9,6 +9,7 @@ import { CreateWorkspacePage } from './pages/Workspaces/CreateWorkspacePage';
 import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
 import { AuthLayout } from './components/AuthLayout/AuthLayout';
 import { NotFound } from './pages/NotFound/NotFound';
+import { JoinWorkspacePage } from './pages/Join/JoinWorkspacePage';
 import { isAuthenticated } from './lib/jwt';
 import { api } from './api/api';
 import { useProfileStore } from './store/profile';
@@ -55,6 +56,16 @@ export const router = createBrowserRouter([
       { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
       { path: '/settings', element: <Home /> },
     ],
+  },
+  {
+    path: '/join/:slug',
+    loader: async () => {
+      if (!isAuthenticated()) {
+        return redirect('/login');
+      }
+      return null;
+    },
+    element: <JoinWorkspacePage />,
   },
   {
     path: '*',

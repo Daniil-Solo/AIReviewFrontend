@@ -67,3 +67,51 @@ export interface UserWorkspaceResponseDTO {
   workspace: WorkspaceResponseDTO;
   role: WorkspaceMemberRole;
 }
+
+export interface JoinRuleDTO {
+  id: number;
+  slug: string;
+  role: WorkspaceMemberRole;
+  is_active: boolean;
+  has_password: boolean;
+  expired_at: string | null;
+  created_at: string;
+}
+
+export interface JoinRuleCreateDTO {
+  slug: string;
+  role: 'TEACHER' | 'STUDENT';
+  password?: string;
+  expired_at?: string;
+  is_active?: boolean;
+}
+
+export interface JoinRuleUpdateDTO {
+  role?: 'TEACHER' | 'STUDENT';
+  password?: string;
+  expired_at?: string | null;
+  is_active?: boolean;
+}
+
+export interface JoinRequestDTO {
+  slug: string;
+  password?: string;
+}
+
+export interface JoinResponseDTO {
+  workspace_id: number;
+}
+
+export interface SlugAvailabilityDTO {
+  slug: string;
+}
+
+export interface SlugAvailabilityResponseDTO {
+  slug: string;
+  is_available: boolean;
+}
+
+export interface ErrorResponseDTO {
+  message: string;
+  code: string;
+}
