@@ -10,6 +10,10 @@ import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
 import { AuthLayout } from './components/AuthLayout/AuthLayout';
 import { NotFound } from './pages/NotFound/NotFound';
 import { JoinWorkspacePage } from './pages/Join/JoinWorkspacePage';
+import { CriteriaListPage } from './pages/Criteria/CriteriaListPage';
+import { CriteriaCreatePage } from './pages/Criteria/CriteriaCreatePage';
+import { CriteriaDetailPage } from './pages/Criteria/CriteriaDetailPage';
+import { CriteriaEditPage } from './pages/Criteria/CriteriaEditPage';
 import { isAuthenticated } from './lib/jwt';
 import { api } from './api/api';
 import { useProfileStore } from './store/profile';
@@ -54,6 +58,10 @@ export const router = createBrowserRouter([
       { path: '/workspaces', element: <WorkspacesPage /> },
       { path: '/workspaces/new', element: <CreateWorkspacePage /> },
       { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
+      { path: '/criteria', element: <CriteriaListPage /> },
+      { path: '/criteria/new', element: <CriteriaCreatePage /> },
+      { path: '/criteria/:criterionId', element: <CriteriaDetailPage /> },
+      { path: '/criteria/:criterionId/edit', element: <CriteriaEditPage /> },
       { path: '/settings', element: <Home /> },
     ],
   },

@@ -27,7 +27,6 @@ import {
   IconTrash,
   IconCheck,
   IconAlertCircle,
-  IconLink,
 } from '@tabler/icons-react';
 import { getJoinRules, createJoinRule, updateJoinRule, deleteJoinRule, checkSlugAvailability } from '../../api/endpoints/workspaces';
 import type { JoinRuleDTO, JoinRuleCreateDTO } from '../../types';
@@ -167,6 +166,12 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
           />
         )}
 
+        <Switch
+          label="Ссылка активная"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.currentTarget.checked)}
+        />
+
         <Select
           label="Роль"
           value={role}
@@ -190,12 +195,6 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
           type="datetime-local"
           value={expiredAt ? expiredAt.toISOString().slice(0, 16) : ''}
           onChange={(e) => setExpiredAt(e.target.value ? new Date(e.target.value) : null)}
-        />
-
-        <Switch
-          label="Активно"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.currentTarget.checked)}
         />
 
         {generalError && (
@@ -331,7 +330,6 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
               <Table.Tr key={rule.id}>
                 <Table.Td>
                   <Group gap="xs">
-                    <IconLink size={16} style={{ color: 'var(--mantine-color-dimmed)' }} />
                     <Text size="sm" ff="monospace">{rule.slug}</Text>
                     <CopyButton value={inviteUrl(rule.slug)}>
                       {({ copied, copy }) => (
@@ -350,7 +348,7 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
                   </Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Badge color={rule.is_active ? 'green' : 'red'} variant="light">
+                  <Badge color={rule.is_active ? 'green' : 'gray'} variant="light">
                     {rule.is_active ? 'Активно' : 'Неактивно'}
                   </Badge>
                 </Table.Td>
@@ -365,7 +363,7 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
                 </Table.Td>
                 <Table.Td>
                   <Badge color={rule.has_password ? 'yellow' : 'gray'} variant="light">
-                    {rule.has_password ? 'Да' : 'Нет'}
+                    {rule.has_password ? 'Есть' : 'Нет'}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -374,10 +372,10 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
                 <Table.Td>
                   <Group gap="xs">
                     <ActionIcon variant="subtle" onClick={() => handleEdit(rule)}>
-                      <IconEdit size={16} />
+                      <IconEdit size={20} />
                     </ActionIcon>
                     <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(rule)}>
-                      <IconTrash size={16} />
+                      <IconTrash size={20} />
                     </ActionIcon>
                   </Group>
                 </Table.Td>

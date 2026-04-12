@@ -109,3 +109,29 @@ export interface ErrorResponseDTO {
   message: string;
   code: string;
 }
+
+export type CriterionStage = 'PROJECT_DOC' | 'CODEBASE' | 'MANUAL' | null;
+
+export interface CriterionCreateDTO {
+  description: string;
+  tags?: string[];
+  stage?: CriterionStage;
+  is_public?: boolean;
+}
+
+export interface CriterionUpdateDTO {
+  description?: string;
+  tags?: string[];
+  stage?: CriterionStage;
+  is_public?: boolean;
+}
+
+export interface CriterionResponseDTO {
+  id: number;
+  description: string;
+  tags: string[];
+  stage: CriterionStage;
+  is_public: boolean;
+  created_by: number;
+  created_at: string;
+}
