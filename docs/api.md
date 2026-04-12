@@ -47,6 +47,8 @@ PATCH  /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> auth, path: task_
 DELETE /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> auth, path: task_id, task_criterion_id, res: SuccessOperationDTO
 GET    /api/v1/tasks/{task_id}/solutions      -> auth, path: task_id, res: SolutionShortResponseDTO[]
 
+GET /api/v1/profile/workspaces                -> auth, res: UserWorkspaceResponseDTO[]
+
 POST   /api/v1/solutions                      -> auth, multipart/form-data: task_id(int), format(SolutionFormatEnum), link(string,opt), file(binary,opt), res: SolutionShortResponseDTO
 GET    /api/v1/solutions/{solution_id}        -> auth, path: solution_id(int), res: SolutionShortResponseDTO
 POST   /api/v1/solutions/{solution_id}/cancel -> auth, path: solution_id, res: SuccessOperationDTO
@@ -72,6 +74,7 @@ UserResponseDTO: id, email, fullname, is_admin, is_verified, created_at, hashed_
 WorkspaceCreateDTO: name(1-255), description(0-5000,opt)
 WorkspaceResponseDTO: id, name, description, is_archived, created_at
 WorkspaceUpdateDTO: name, description(opt)
+UserWorkspaceResponseDTO: workspace: WorkspaceResponseDTO, role: WorkspaceMemberRoleEnum
 
 WorkspaceMemberResponseDTO: user_id, workspace_id, role(OWNER|TEACHER|STUDENT), id, fullname, email
 WorkspaceMemberUpdateDTO: role
