@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDebouncedValue } from '@mantine/hooks';
 import {
   Stack,
   Group,
@@ -14,40 +15,50 @@ import {
   Card,
   ActionIcon,
   Modal,
-  Select,
-  NumberInput,
   Alert,
   Menu,
   Divider,
+  TextInput,
+  MultiSelect,
+  Table,
+  Checkbox,
+  Tooltip,
+  NumberInput,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
 import {
   IconTrash,
   IconPlus,
-  IconWeight,
-  IconTag,
+  IconDotsVertical,
+  IconSearch,
+  IconLock,
+  IconWorld,
+  IconFileDescription,
+  IconCode,
+  IconSchool,
+  IconStack2,
+  IconExternalLink,
+  IconX,
   IconChevronDown,
   IconChevronUp,
-  IconDotsVertical,
   IconEdit,
+  IconWeight,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
-import { getTaskCriteria, addTaskCriterion, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions } from '../../api/endpoints/tasks';
-import { getCriteria } from '../../api/endpoints/criteria';
+import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions } from '../../api/endpoints/tasks';
+import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
+import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
 
-const stageLabels: Record<string, string> = {
-  PROJECT_DOC: 'Project Doc',
-  CODEBASE: 'Codebase',
-  MANUAL: 'Manual',
-};
 
-const stageColors: Record<string, string> = {
-  PROJECT_DOC: 'blue',
-  CODEBASE: 'green',
-  MANUAL: 'orange',
+
+const stageIcons: Record<string, React.ReactNode> = {
+  PROJECT_DOC: <IconFileDescription size={16} color="gray" />,
+  CODEBASE: <IconCode size={16} color="gray" />,
+  MANUAL: <IconSchool size={16} color="gray" />,
+  null: <IconStack2 size={16} color="gray" />,
 };
 
 function TaskMainTab({ task }: { task: TaskResponseDTO }) {
@@ -84,31 +95,48 @@ function TaskMainTab({ task }: { task: TaskResponseDTO }) {
 
 function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean }) {
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedCriterion, setSelectedCriterion] = useState<number | null>(null);
-  const [weight, setWeight] = useState(0.5);
   const [search, setSearch] = useState('');
+  const [debouncedSearch] = useDebouncedValue(search, 500);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [debouncedSelectedTags] = useDebouncedValue(selectedTags, 300);
+  const [selectedCriterionIds, setSelectedCriterionIds] = useState<number[]>([]);
+
+  const queryClient = useQueryClient();
+  const modals = useModals();
+
+  const handleOpen = () => {
+    setSearch('');
+    setSelectedTags([]);
+    setSelectedCriterionIds([]);
+    open();
+  };
 
   const { data: taskCriteria, isLoading: criteriaLoading } = useQuery({
     queryKey: ['taskCriteria', taskId],
     queryFn: () => getTaskCriteria(taskId),
   });
 
-  const { data: allCriteria } = useQuery({
-    queryKey: ['criteria', search],
-    queryFn: () => getCriteria({ search: search || undefined }),
+  const { data: tags = [] } = useQuery({
+    queryKey: ['criteriaTags'],
+    queryFn: getAvailableTags,
   });
 
-  const queryClient = useQueryClient();
-  const modals = useModals();
+  const { data: allCriteria = [], isLoading: criteriaListLoading } = useQuery({
+    queryKey: ['criteria', debouncedSearch, debouncedSelectedTags],
+    queryFn: () =>
+      getCriteria({
+        search: debouncedSearch || undefined,
+        tags: debouncedSelectedTags.length > 0 ? debouncedSelectedTags : undefined,
+      }),
+  });
 
-  const addMutation = useMutation({
-    mutationFn: (data: { criterion_id: number; weight: number }) =>
-      addTaskCriterion(taskId, data),
+  const addBatchMutation = useMutation({
+    mutationFn: (criterionIds: number[]) =>
+      addTaskCriteriaBatch(taskId, { criterion_ids: criterionIds }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
       close();
-      setSelectedCriterion(null);
-      setWeight(0.5);
+      setSelectedCriterionIds([]);
     },
   });
 
@@ -127,14 +155,27 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
     },
   });
 
-  const availableCriteria = allCriteria?.filter(
+  const availableCriteria = allCriteria.filter(
     (c) => !taskCriteria?.some((tc) => tc.criterion_id === c.id)
-  ) || [];
+  );
 
   const handleAdd = () => {
-    if (selectedCriterion) {
-      addMutation.mutate({ criterion_id: selectedCriterion, weight });
+    if (selectedCriterionIds.length > 0) {
+      addBatchMutation.mutate(selectedCriterionIds);
     }
+  };
+
+  const handleClose = () => {
+    close();
+    setSearch('');
+    setSelectedTags([]);
+    setSelectedCriterionIds([]);
+  };
+
+  const toggleCriterion = (id: number) => {
+    setSelectedCriterionIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
   };
 
   const confirmDelete = (id: number, description: string) => {
@@ -155,7 +196,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
     <Stack gap="md">
       {canEdit && (
         <Group>
-          <Button leftSection={<IconPlus size={16} />} onClick={open} variant="light">
+          <Button leftSection={<IconPlus size={16} />} onClick={handleOpen} variant="light">
             Добавить критерий
           </Button>
         </Group>
@@ -163,44 +204,111 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
 
       {taskCriteria && taskCriteria.length > 0 ? (
         <Stack gap="sm">
-          {taskCriteria.map((tc) => (
-            <CriterionCard
-              key={tc.id}
-              tc={tc}
-              canEdit={canEdit}
-              onUpdateWeight={(w) => updateMutation.mutate({ id: tc.id, weight: w })}
-              onDelete={() => confirmDelete(tc.id, tc.criterion.description)}
-            />
-          ))}
+{taskCriteria.map((tc) => (
+              <CriterionCard
+                key={tc.id}
+                tc={tc}
+                canEdit={canEdit}
+                onUpdateWeight={(weight) => updateMutation.mutate({ id: tc.id, weight })}
+                onDelete={() => confirmDelete(tc.id, tc.criterion.description)}
+              />
+            ))}
         </Stack>
       ) : (
         <Text c="dimmed">Критерии не привязаны к этой задаче</Text>
       )}
 
-      <Modal opened={opened} onClose={close} title="Добавить критерий" centered>
+      <Modal opened={opened} onClose={handleClose} title="Выбор критериев" centered size="lg">
         <Stack gap="md">
-          <Select
-            placeholder="Выберите критерий (введите для поиска)"
-            data={availableCriteria.map((c) => ({
-              value: String(c.id),
-              label: c.description.slice(0, 50) + (c.description.length > 50 ? '...' : ''),
-            }))}
-            value={selectedCriterion ? String(selectedCriterion) : null}
-            onChange={(v) => setSelectedCriterion(v ? Number(v) : null)}
-            searchable
-            onSearchChange={setSearch}
-            searchValue={search}
-          />
-          <NumberInput
-            label="Вес"
-            value={weight}
-            onChange={(v) => setWeight(Number(v) || 0)}
-            min={0}
-            max={1}
-            step={0.1}
-          />
-          <Button onClick={handleAdd} disabled={!selectedCriterion} loading={addMutation.isPending}>
-            Добавить
+          <Group grow>
+            <TextInput
+              placeholder="Поиск по описанию..."
+              leftSection={<IconSearch size={16} />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              rightSection={
+                search && (
+                  <ActionIcon variant="transparent" onClick={() => setSearch('')}>
+                    <IconX size={16} color="gray" />
+                  </ActionIcon>
+                )
+              }
+            />
+            <MultiSelect
+              data={tags}
+              value={selectedTags}
+              onChange={setSelectedTags}
+              placeholder="Фильтр по тегам"
+              searchable
+              clearable
+            />
+          </Group>
+
+          {criteriaListLoading ? (
+            <Loader size="sm" />
+          ) : availableCriteria.length === 0 ? (
+            <Text c="dimmed" ta="center" py="lg">Критерии не найдены</Text>
+          ) : (
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th w={40}></Table.Th>
+                  <Table.Th></Table.Th>
+                  <Table.Th w={100}></Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {availableCriteria.map((criterion) => (
+                  <Table.Tr key={criterion.id}>
+                    <Table.Td>
+                      <Checkbox
+                        checked={selectedCriterionIds.includes(criterion.id)}
+                        onChange={() => toggleCriterion(criterion.id)}
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" lineClamp={1}>
+                        {criterion.description}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Tooltip label={criterion.is_public ? 'Публичный' : 'Приватный'}>
+                          {criterion.is_public ? (
+                            <IconWorld size={16} color="gray" />
+                          ) : (
+                            <IconLock size={16} color="gray" />
+                          )}
+                        </Tooltip>
+                        <Tooltip label={criterionStageLabels[criterion.stage ?? 'null'] || 'Все стадии'}>
+                          {stageIcons[criterion.stage ?? 'null']}
+                        </Tooltip>
+                        <Tooltip label="Перейти к критерию">
+                          <ActionIcon
+                            variant="subtle"
+                            component="a"
+                            href={`/criteria/${criterion.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <IconExternalLink size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          )}
+
+          <Button
+            onClick={handleAdd}
+            disabled={selectedCriterionIds.length === 0}
+            loading={addBatchMutation.isPending}
+          >
+            Добавить ({selectedCriterionIds.length})
           </Button>
         </Stack>
       </Modal>
@@ -220,75 +328,86 @@ function CriterionCard({
   onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [newWeight, setNewWeight] = useState(tc.weight);
   const [editing, setEditing] = useState(false);
+  const [newWeight, setNewWeight] = useState(tc.weight);
 
   const firstLine = tc.criterion.description.split('\n')[0];
-  const restLines = tc.criterion.description.split('\n').slice(1).join('\n');
+
+  const isPublic = tc.criterion.is_public;
+  const stage = tc.criterion.stage ?? null;
+  const tags = tc.criterion.tags;
+
+  const handleSaveWeight = () => {
+    onUpdateWeight(newWeight);
+    setEditing(false);
+  };
 
   return (
     <Card withBorder padding="sm">
       <Stack gap="xs">
-        <Group justify="space-between">
-          <Group gap="xs" style={{ cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
-            <Text size="sm" fw={500} lineClamp={1} style={{ maxWidth: 300 }}>
-              {firstLine}
-            </Text>
-            {expanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-          </Group>
-          <Group gap="xs">
-            <Badge size="sm" color={tc.criterion.stage ? stageColors[tc.criterion.stage] : 'gray'}>
-              {tc.criterion.stage ? stageLabels[tc.criterion.stage] : '—'}
-            </Badge>
-            {tc.criterion.tags.map((tag) => (
-              <Badge key={tag} size="sm" variant="outline" leftSection={<IconTag size={10} />}>
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap="xs" wrap="nowrap">
+            <Tooltip label={isPublic ? 'Публичный' : 'Приватный'}>
+              {isPublic ? <IconWorld size={16} color="gray" /> : <IconLock size={16} color="gray" />}
+            </Tooltip>
+            <Tooltip label={criterionStageLabels[stage ?? 'null']}>
+              {stageIcons[stage ?? 'null']}
+            </Tooltip>
+            {tags.map((tag) => (
+              <Badge key={tag} size="sm" variant="outline" color="gray">
                 {tag}
               </Badge>
             ))}
           </Group>
-        </Group>
 
-        {expanded && (
-          <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{restLines}</Text>
-        )}
-
-        <Group justify="space-between">
-          <Group gap="xs">
-            <Text size="sm" fw={500}>Вес: </Text>
-            {editing ? (
-              <Group gap="xs">
-                <NumberInput
-                  size="xs"
-                  value={newWeight}
-                  onChange={(v) => setNewWeight(Number(v) || 0)}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  style={{ width: 80 }}
-                />
-                <Button size="xs" onClick={() => { onUpdateWeight(newWeight); setEditing(false); }}>
-                  Сохранить
-                </Button>
-                <Button size="xs" variant="subtle" onClick={() => setEditing(false)}>
-                  Отмена
-                </Button>
-              </Group>
-            ) : (
-              <Text size="sm">{tc.weight.toFixed(2)}</Text>
-            )}
-          </Group>
-
-          {canEdit && !editing && (
-            <Group gap="xs">
-              <ActionIcon variant="subtle" size="sm" onClick={() => setEditing(true)}>
-                <IconWeight size={14} />
-              </ActionIcon>
-              <ActionIcon variant="subtle" size="sm" color="red" onClick={onDelete}>
-                <IconTrash size={14} />
-              </ActionIcon>
-            </Group>
+          {canEdit && (
+            <Menu shadow="md" width={200}>
+              <Menu.Target>
+                <ActionIcon variant="subtle" size="sm">
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={!expanded? <IconChevronDown size={14} />: <IconChevronUp size={14} />} onClick={() => setExpanded(!expanded)}>
+                  {expanded ? "Скрыть описание" : "Раскрыть описание"}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => setEditing(true)}>
+                  Изменить вес
+                </Menu.Item>
+                <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+                  Удалить
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           )}
         </Group>
+
+        <Group gap="xs" align='start' wrap="nowrap">
+          <Text size="sm" fw={500} lineClamp={expanded ? undefined : 1} style={{ whiteSpace: 'pre-wrap' }}>
+            {expanded ? tc.criterion.description : firstLine}
+          </Text>
+        </Group>
+
+        {editing ? (
+          <Group gap="xs">
+            <NumberInput
+              size="xs"
+              value={newWeight}
+              onChange={(v) => setNewWeight(Number(v) || 0)}
+              min={0}
+              step={0.1}
+              style={{ width: 80 }}
+            />
+            <Button size="xs" onClick={handleSaveWeight}>
+              Сохранить
+            </Button>
+            <Button size="xs" variant="subtle" onClick={() => setEditing(false)}>
+              Отмена
+            </Button>
+          </Group>
+        ) : (
+          <Text fw={500} size="sm">Вес: {tc.weight.toFixed(1)}</Text>
+        )}
       </Stack>
     </Card>
   );

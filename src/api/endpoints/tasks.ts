@@ -6,7 +6,9 @@ import type {
   TaskCriteriaCreateDTO,
   TaskCriteriaUpdateWeightDTO,
   TaskCriteriaResponseDTO,
+  TaskCriteriaCreateBatchDTO,
   SolutionResponseDTO,
+  SuccessOperationDTO,
 } from '../../types';
 
 export const getWorkspaceTasks = async (
@@ -97,6 +99,17 @@ export const getTaskSolutions = async (
 ): Promise<SolutionResponseDTO[]> => {
   const response = await api.get<SolutionResponseDTO[]>(
     `/api/v1/tasks/${taskId}/solutions`
+  );
+  return response.data;
+};
+
+export const addTaskCriteriaBatch = async (
+  taskId: number,
+  data: TaskCriteriaCreateBatchDTO
+): Promise<SuccessOperationDTO> => {
+  const response = await api.post<SuccessOperationDTO>(
+    `/api/v1/tasks/${taskId}/criteria/batch`,
+    data
   );
   return response.data;
 };

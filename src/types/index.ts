@@ -159,6 +159,10 @@ export interface TaskResponseDTO {
   use_exam: boolean;
 }
 
+export interface TaskCriteriaCreateBatchDTO {
+  criterion_ids: number[];
+}
+
 export interface TaskCriteriaCreateDTO {
   criterion_id: number;
   weight: number;

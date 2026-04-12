@@ -43,7 +43,7 @@ export function WorkspaceTasksTab({ workspaceId, showTitle = false }: WorkspaceT
   return (
     <Stack gap="md">
       {showTitle && canManage && (
-        <Group justify="flex-end">
+        <Group>
           <Button
             component={Link}
             to={`/workspaces/${workspaceId}/tasks/new`}

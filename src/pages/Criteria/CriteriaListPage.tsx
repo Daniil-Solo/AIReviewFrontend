@@ -125,7 +125,7 @@ export function CriteriaListPage() {
                       <IconLock size={16} color="gray" />
                       )}
                   </Tooltip>
-                  <Tooltip label={stageLabels[criterion.stage]}>
+                  <Tooltip label={stageLabels[criterion.stage ?? 'null']}>
                     {criterion.stage === 'PROJECT_DOC' && (
                       <IconFileDescription size={16} color="gray" />
                     )}
