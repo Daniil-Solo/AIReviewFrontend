@@ -7,8 +7,6 @@ import {
   Stack,
   Group,
   Tabs,
-  TextInput,
-  Textarea,
   Button,
   Table,
   Badge,
@@ -23,7 +21,6 @@ import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDo
 import {
   getWorkspace,
   getWorkspaceMembers,
-  updateWorkspace,
   deleteWorkspace,
   updateMember,
   leaveWorkspace,
@@ -62,10 +59,6 @@ export function WorkspaceDetailPage() {
   const getRole = useProfileStore((state) => state.getRole);
   const currentRole = getRole(workspaceId) ?? 'STUDENT';
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [nameError, setNameError] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<{ id: number, userId: number; fullname: string; email: string; role: string } | null>(null);
@@ -80,19 +73,6 @@ export function WorkspaceDetailPage() {
   const { data: members, isLoading: membersLoading } = useQuery({
     queryKey: ['workspaceMembers', workspaceId],
     queryFn: () => getWorkspaceMembers(workspaceId),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (data: { name?: string; description?: string }) =>
-      updateWorkspace(workspaceId, data),
-    onSuccess: (updated) => {
-      queryClient.setQueryData(['workspace', workspaceId], updated);
-      setIsEditing(false);
-    },
-    onError: (err: unknown) => {
-      const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || 'Ошибка обновления');
-    },
   });
 
   const deleteMutation = useMutation({
@@ -134,25 +114,6 @@ export function WorkspaceDetailPage() {
     },
   });
 
-  const startEditing = () => {
-    if (workspace) {
-      setEditName(workspace.name);
-      setEditDescription(workspace.description);
-      setIsEditing(true);
-    }
-  };
-
-  const handleSave = () => {
-    if (!editName.trim()) {
-      setNameError('Название обязательно');
-      return;
-    }
-    updateMutation.mutate({
-      name: editName.trim(),
-      description: editDescription.trim(),
-    });
-  };
-
   if (wsLoading || membersLoading) {
     return (
       <Center h={400}>
@@ -168,19 +129,8 @@ export function WorkspaceDetailPage() {
   return (
     <Stack gap="lg">
       <Group justify="space-between">
-        {isEditing ? (
-          <TextInput
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            error={nameError}
-            onFocus={() => setNameError('')}
-            size="lg"
-            style={{ flex: 1 }}
-          />
-        ) : (
-          <Title order={2}>{workspace.name}</Title>
-        )}
-        {(canEdit || canDelete) && !isEditing && (
+        <Title order={2}>{workspace.name}</Title>
+        {(canEdit || canDelete) && (
           <Menu shadow="md" width={200}>
             <Menu.Target>
               <Button variant="subtle" p={8}>
@@ -189,7 +139,10 @@ export function WorkspaceDetailPage() {
             </Menu.Target>
             <Menu.Dropdown>
               {canEdit && (
-                <Menu.Item leftSection={<IconEdit size={14} />} onClick={startEditing}>
+                <Menu.Item 
+                  leftSection={<IconEdit size={14} />} 
+                  onClick={() => navigate(`/workspaces/${workspaceId}/edit`)}
+                >
                   Редактировать
                 </Menu.Item>
               )}
@@ -233,40 +186,19 @@ export function WorkspaceDetailPage() {
 
         <Tabs.Panel value="main" pt="md">
           <Stack gap="md">
-            {isEditing ? (
-              <>
-                <Textarea
-                  label="Описание"
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  minRows={4}
-                />
-                <Group>
-                  <Button onClick={handleSave} loading={updateMutation.isPending}>
-                    Сохранить
-                  </Button>
-                  <Button variant="default" onClick={() => setIsEditing(false)}>
-                    Отмена
-                  </Button>
-                </Group>
-              </>
-            ) : (
-              <>
-                <Text size="sm" c="dimmed">
-                  Описание
-                </Text>
-                <Text>
-                  {workspace.description || 'Описание не указано'}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  Создано {new Date(workspace.created_at).toLocaleDateString('ru-RU')}
-                </Text>
-                {workspace.is_archived && (
-                  <Badge color="red" size="lg">
-                    Архивировано
-                  </Badge>
-                )}
-              </>
+            <Text size="sm" c="dimmed">
+              Описание
+            </Text>
+            <Text>
+              {workspace.description || 'Описание не указано'}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Создано {new Date(workspace.created_at).toLocaleDateString('ru-RU')}
+            </Text>
+            {workspace.is_archived && (
+              <Badge color="red" size="lg">
+                Архивировано
+              </Badge>
             )}
             {currentRole !== 'OWNER' && !workspace.is_archived && (
               <Group>

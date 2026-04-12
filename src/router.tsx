@@ -7,6 +7,7 @@ import { Home } from './pages/Home/Home';
 import { WorkspacesPage } from './pages/Workspaces/WorkspacesPage';
 import { CreateWorkspacePage } from './pages/Workspaces/CreateWorkspacePage';
 import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
+import { EditWorkspacePage } from './pages/Workspaces/EditWorkspacePage';
 import { AuthLayout } from './components/AuthLayout/AuthLayout';
 import { NotFound } from './pages/NotFound/NotFound';
 import { JoinWorkspacePage } from './pages/Join/JoinWorkspacePage';
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
       { path: '/workspaces', element: <WorkspacesPage /> },
       { path: '/workspaces/new', element: <CreateWorkspacePage /> },
       { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
+      { path: '/workspaces/:workspaceId/edit', element: <EditWorkspacePage /> },
       { path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
       { path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
       { path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },
