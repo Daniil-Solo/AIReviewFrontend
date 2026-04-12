@@ -134,9 +134,10 @@ export function TaskEditPage() {
             placeholder="Введите описание задачи (поддерживается Markdown)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            minRows={5}
-            maxRows={15}
             maxLength={5000}
+            autosize
+            minRows={4}
+            maxRows={15}
           />
 
           <Checkbox

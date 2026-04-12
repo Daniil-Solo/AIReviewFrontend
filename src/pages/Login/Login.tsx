@@ -23,7 +23,7 @@ export function Login() {
   const [passwordError, setPasswordError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
-
+  
   const handleSubmit = async () => {
     let hasError = false;
 
@@ -50,9 +50,9 @@ export function Login() {
       const response = await login({ email, password });
       localStorage.setItem('token', response.access_token);
       navigate(redirect || '/home', { replace: true });
-    } catch (error: unknown) {
-      const message = (error.response.data as ErrorResponseDTO).message;
-      setPasswordError(message);
+    } catch (error) {
+      const message = (error.response.data as ErrorResponseDTO).message
+      setPasswordError(message)
     } finally {
       setLoading(false);
     }
@@ -62,8 +62,7 @@ export function Login() {
   const handlePasswordFocus = () => setPasswordError('');
 
   return (
-      <form>
-        <Stack gap={24}>
+    <Stack gap={24}>
           <TextInput
             label="Email"
             placeholder="your@email.com"
@@ -85,6 +84,7 @@ export function Login() {
             required
           />
           <Button
+            type="button"
             onClick={handleSubmit}
             fullWidth
             size="lg"
@@ -103,6 +103,5 @@ export function Login() {
             </Anchor>
           </Box>
         </Stack>
-      </form>
   );
 }

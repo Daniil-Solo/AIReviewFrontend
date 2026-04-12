@@ -154,9 +154,11 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
   return (
     <Stack gap="md">
       {canEdit && (
-        <Button leftSection={<IconPlus size={16} />} onClick={open} variant="light">
-          Добавить критерий
-        </Button>
+        <Group>
+          <Button leftSection={<IconPlus size={16} />} onClick={open} variant="light">
+            Добавить критерий
+          </Button>
+        </Group>
       )}
 
       {taskCriteria && taskCriteria.length > 0 ? (
