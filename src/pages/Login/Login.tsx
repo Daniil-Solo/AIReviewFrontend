@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   TextInput,
   PasswordInput,
@@ -16,6 +16,8 @@ const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
 export function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -49,7 +51,8 @@ export function Login() {
     try {
       const response = await login({ email, password });
       localStorage.setItem('token', response.access_token);
-      navigate('/home', { replace: true });
+      const target = redirect || '/home';
+      navigate(target, { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       const message = err.response?.data?.message || 'Ошибка входа';
@@ -99,7 +102,7 @@ export function Login() {
             <Text span c="dimmed">
               Нет аккаунта?{' '}
             </Text>
-            <Anchor component="a" href="/register" fw={600}>
+            <Anchor component="a" href={redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : '/register'} fw={600}>
               Зарегистрироваться
             </Anchor>
           </Box>

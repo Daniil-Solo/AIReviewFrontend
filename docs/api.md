@@ -32,7 +32,7 @@ DELETE /api/v1/workspaces/{workspace_id}/join_rules/{rule_id} -> auth, path: wor
 PATCH  /api/v1/workspaces/{workspace_id}/members/{member_id} -> auth, path: workspace_id, member_id, req: WorkspaceMemberUpdateDTO, res: WorkspaceMemberResponseDTO
 POST   /api/v1/workspaces/{workspace_id}/leave -> auth, path: workspace_id, res: SuccessOperationDTO
 PATCH  /api/v1/workspaces/{workspace_id}/owner -> auth, path: workspace_id, req: TransferOwnershipDTO, res: WorkspaceResponseDTO
-POST   /api/v1/workspaces/slugs/availability   -> query: slug(string), res: SlugCheckResponseDTO
+GET    /api/v1/workspaces/slugs/availability   -> query: slug(string), res: SlugCheckResponseDTO
 
 POST   /api/v1/joins                          -> auth, req: JoinBySlugDTO, res: JoinResponseDTO
 
@@ -46,6 +46,8 @@ GET    /api/v1/tasks/{task_id}/criteria       -> auth, path: task_id, res: TaskC
 PATCH  /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> auth, path: task_id, task_criterion_id(int), req: TaskCriteriaUpdateWeightDTO, res: TaskCriteriaResponseDTO
 DELETE /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> auth, path: task_id, task_criterion_id, res: SuccessOperationDTO
 GET    /api/v1/tasks/{task_id}/solutions      -> auth, path: task_id, res: SolutionShortResponseDTO[]
+
+GET /api/v1/profile/workspaces                -> auth, res: UserWorkspaceResponseDTO[]
 
 POST   /api/v1/solutions                      -> auth, multipart/form-data: task_id(int), format(SolutionFormatEnum), link(string,opt), file(binary,opt), res: SolutionShortResponseDTO
 GET    /api/v1/solutions/{solution_id}        -> auth, path: solution_id(int), res: SolutionShortResponseDTO
@@ -72,6 +74,7 @@ UserResponseDTO: id, email, fullname, is_admin, is_verified, created_at, hashed_
 WorkspaceCreateDTO: name(1-255), description(0-5000,opt)
 WorkspaceResponseDTO: id, name, description, is_archived, created_at
 WorkspaceUpdateDTO: name, description(opt)
+UserWorkspaceResponseDTO: workspace: WorkspaceResponseDTO, role: WorkspaceMemberRoleEnum
 
 WorkspaceMemberResponseDTO: user_id, workspace_id, role(OWNER|TEACHER|STUDENT), id, fullname, email
 WorkspaceMemberUpdateDTO: role
@@ -79,7 +82,7 @@ WorkspaceMemberRoleEnum: OWNER, TEACHER, STUDENT
 
 WorkspaceJoinRuleRequestCreateDTO: slug(1-255), role, is_active(default true), expired_at(datetime|null), password(1-255|null)
 WorkspaceJoinRuleRequestUpdateDTO: same
-WorkspaceJoinRuleResponseDTO: id, workspace_id, slug, role, expired_at, is_active, has_password
+WorkspaceJoinRuleResponseDTO: id, workspace_id, slug, role, expired_at, is_active, has_password, used_count
 
 JoinBySlugDTO: slug, password(opt)
 JoinResponseDTO: workspace_id
