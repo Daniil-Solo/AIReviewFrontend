@@ -1,0 +1,46 @@
+.section {
+  background: var(--mantine-color-white);
+}
+
+[data-mantine-color-scheme="dark"] .section {
+  background: var(--mantine-color-dark-6);
+}
+
+.stepsWrapper {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .stepsWrapper {
+    display: block;
+  }
+}
+
+.stepperRoot {
+  justify-content: space-between;
+}
+
+.stepLabel {
+  text-align: center;
+  max-width: 200px;
+}
+
+.card {
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--mantine-color-gray-0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+[data-mantine-color-scheme="dark"] .card {
+  background: var(--mantine-color-dark-5);
+}
+
+[data-mantine-color-scheme="dark"] .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}

@@ -7,18 +7,17 @@
 проводит ревью по критериям и выносит итоговый вердикт.
 
 ## Технологический стек
-
-React, TypeScript
-Vite - сборка
-React Router v7 - Маршрутизация
-TanStack Query - серверное состояние
-Zustand - клиентское состояние
-Mantine UI - UI-библиотека (формы, таблицы, графики)
-Axios - HTTP-клиент
-CSS Modules - стилизация
-react-markdown + remark-gf - рендер markdown
-jose - декодирование jwt-токена
-
+React 19 + TypeScript 6 (strict mode, es2023)
+Vite 8 — сборка
+Mantine UI v9 — основная UI-библиотека
+React Router v7 — маршрутизация
+TanStack Query v5 — серверное состояние
+Zustand — клиентское состояние
+Axios — HTTP-клиент
+@tabler/icons-react — иконки
+CSS Modules (*.module.css) — стилизация
+react-markdown + remark-gfm — рендер markdown
+jose — работа с JWT
 
 ## Структура проекта
 src/
@@ -35,7 +34,11 @@ src/
 ## Дополнительные сведения
 
 `docs/api.md` - схема API существующих эндпоинтов
+`docs/about.md` - описание возможностей платформы 
 
-## Полезные ссылки
 
-https://mantine.dev/llms.txt - актуальная документация Mantine
+## Важно
+- всегда используй нативные UI-компоненты из Mantine UI и другие фичи этой библиотеки
+- только в крайних случаях пиши свои кастомные компоненты
+- всегда используй иконки из @tabler/icons-react, не используй смайлики
+- разрабатывай с учетом того, что у нас есть темная и светлая сторона
