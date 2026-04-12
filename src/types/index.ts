@@ -135,3 +135,52 @@ export interface CriterionResponseDTO {
   created_by: number;
   created_at: string;
 }
+
+export interface TaskCreateDTO {
+  workspace_id: number;
+  name: string;
+  description?: string;
+}
+
+export interface TaskUpdateDTO {
+  name: string;
+  description?: string;
+  is_active: boolean;
+}
+
+export interface TaskResponseDTO {
+  id: number;
+  workspace_id: number;
+  name: string;
+  description: string;
+  is_active: boolean;
+  created_by: number;
+  created_at: string;
+  use_exam: boolean;
+}
+
+export interface TaskCriteriaCreateDTO {
+  criterion_id: number;
+  weight: number;
+}
+
+export interface TaskCriteriaUpdateWeightDTO {
+  weight: number;
+}
+
+export interface TaskCriteriaResponseDTO {
+  id: number;
+  task_id: number;
+  criterion_id: number;
+  weight: number;
+  criterion: CriterionResponseDTO;
+}
+
+export interface SolutionResponseDTO {
+  id: number;
+  task_id: number;
+  student_id: number;
+  student_fullname: string;
+  status: string;
+  submitted_at: string;
+}

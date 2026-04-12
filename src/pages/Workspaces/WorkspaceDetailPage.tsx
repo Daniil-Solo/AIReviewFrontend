@@ -19,7 +19,7 @@ import {
   Modal,
   Menu,
 } from '@mantine/core';
-import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDotsVertical, IconUserEdit, IconLink } from '@tabler/icons-react';
+import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDotsVertical, IconUserEdit, IconLink, IconBook } from '@tabler/icons-react';
 import {
   getWorkspace,
   getWorkspaceMembers,
@@ -32,6 +32,7 @@ import {
 import { useProfileStore } from '../../store/profile';
 import { getUserData } from '../../lib/jwt';
 import { WorkspaceInvitesTab } from '../../components/WorkspaceInvitesTab/WorkspaceInvitesTab';
+import { WorkspaceTasksTab } from '../../components/WorkspaceTasksTab/WorkspaceTasksTab';
 import type { WorkspaceMemberRole } from '../../types';
 
 const roleLabels: Record<string, string> = {
@@ -217,6 +218,9 @@ export function WorkspaceDetailPage() {
           <Tabs.Tab value="main" leftSection={<IconInfoCircle size={16} />}>
             Основное
           </Tabs.Tab>
+          <Tabs.Tab value="tasks" leftSection={<IconBook size={16} />}>
+            Задачи
+          </Tabs.Tab>
           <Tabs.Tab value="members" leftSection={<IconUsers size={16} />}>
             Участники
           </Tabs.Tab>
@@ -324,10 +328,14 @@ export function WorkspaceDetailPage() {
                 </Table.Tr>
               ))}
             </Table.Tbody>
-          </Table>
-        </Tabs.Panel>
+            </Table>
+          </Tabs.Panel>
 
-        {canManageInvites && (
+          <Tabs.Panel value="tasks" pt="md">
+            <WorkspaceTasksTab workspaceId={workspaceId} showTitle />
+          </Tabs.Panel>
+
+          {canManageInvites && (
           <Tabs.Panel value="invites" pt="md">
             <WorkspaceInvitesTab workspaceId={workspaceId} />
           </Tabs.Panel>
