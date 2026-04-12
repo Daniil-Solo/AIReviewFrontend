@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { AppShell, NavLink, Group, Text, Avatar, Stack, Burger, Divider } from '@mantine/core';
+import { AppShell, NavLink, Group, Avatar, Stack, Burger, Divider } from '@mantine/core';
 import { useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { IconHome, IconFolders, IconSettings, IconLogout, IconChevronLeft, IconChevronRight, IconSun, IconMoon } from '@tabler/icons-react';
+import { IconHome, IconFolders, IconSettings, IconLogout, IconChevronLeft, IconChevronRight, IconSun, IconMoon, IconChecklist } from '@tabler/icons-react';
 import { getUserData, logout as logoutUtil } from '../../lib/jwt';
 import styles from  "./MainLayout.module.css";
 import { useDisclosure } from '@mantine/hooks';
+import { Logo } from '../Logo/Logo';
 
 
 export function MainLayout() {
@@ -24,6 +25,7 @@ export function MainLayout() {
   const navItems = [
     { label: 'Главная', icon: IconHome, path: '/home' },
     { label: 'Пространства', icon: IconFolders, path: '/workspaces' },
+    { label: 'Критерии', icon: IconChecklist, path: '/criteria' },
     { label: 'Настройки', icon: IconSettings, path: '/settings' },
   ];
 
@@ -46,9 +48,7 @@ export function MainLayout() {
     >
       <AppShell.Header>
         <Group justify="space-between" h="100%" px="md">
-          <Text fw={700} size="lg">
-            AI Review
-          </Text>
+          <Logo />
           <Avatar name={user?.fullname} alt={user?.fullname} size="md" radius="xl" color="initials"/>
           <Burger
             opened={opened}

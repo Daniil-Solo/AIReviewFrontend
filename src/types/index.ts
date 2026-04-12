@@ -109,3 +109,82 @@ export interface ErrorResponseDTO {
   message: string;
   code: string;
 }
+
+export type CriterionStage = 'PROJECT_DOC' | 'CODEBASE' | 'MANUAL' | null;
+
+export interface CriterionCreateDTO {
+  description: string;
+  tags?: string[];
+  stage?: CriterionStage;
+  is_public?: boolean;
+}
+
+export interface CriterionUpdateDTO {
+  description?: string;
+  tags?: string[];
+  stage?: CriterionStage;
+  is_public?: boolean;
+}
+
+export interface CriterionResponseDTO {
+  id: number;
+  description: string;
+  tags: string[];
+  stage: CriterionStage;
+  is_public: boolean;
+  created_by: number;
+  created_at: string;
+}
+
+export interface TaskCreateDTO {
+  workspace_id: number;
+  name: string;
+  description?: string;
+}
+
+export interface TaskUpdateDTO {
+  name: string;
+  description?: string;
+  is_active: boolean;
+}
+
+export interface TaskResponseDTO {
+  id: number;
+  workspace_id: number;
+  name: string;
+  description: string;
+  is_active: boolean;
+  created_by: number;
+  created_at: string;
+  use_exam: boolean;
+}
+
+export interface TaskCriteriaCreateBatchDTO {
+  criterion_ids: number[];
+}
+
+export interface TaskCriteriaCreateDTO {
+  criterion_id: number;
+  weight: number;
+}
+
+export interface TaskCriteriaUpdateWeightDTO {
+  weight: number;
+}
+
+export interface TaskCriteriaResponseDTO {
+  id: number;
+  task_id: number;
+  criterion_id: number;
+  weight: number;
+  criterion: CriterionResponseDTO;
+}
+
+export interface SolutionResponseDTO {
+  id: number;
+  task_id: number;
+  student_id: number;
+  student_fullname: string;
+  status: string;
+  submitted_at: string;
+}

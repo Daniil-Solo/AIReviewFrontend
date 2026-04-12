@@ -7,9 +7,17 @@ import { Home } from './pages/Home/Home';
 import { WorkspacesPage } from './pages/Workspaces/WorkspacesPage';
 import { CreateWorkspacePage } from './pages/Workspaces/CreateWorkspacePage';
 import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
+import { EditWorkspacePage } from './pages/Workspaces/EditWorkspacePage';
 import { AuthLayout } from './components/AuthLayout/AuthLayout';
 import { NotFound } from './pages/NotFound/NotFound';
 import { JoinWorkspacePage } from './pages/Join/JoinWorkspacePage';
+import { CriteriaListPage } from './pages/Criteria/CriteriaListPage';
+import { CriteriaCreatePage } from './pages/Criteria/CriteriaCreatePage';
+import { CriteriaDetailPage } from './pages/Criteria/CriteriaDetailPage';
+import { CriteriaEditPage } from './pages/Criteria/CriteriaEditPage';
+import { TaskCreatePage } from './pages/Tasks/TaskCreatePage';
+import { TaskDetailPage } from './pages/Tasks/TaskDetailPage';
+import { TaskEditPage } from './pages/Tasks/TaskEditPage';
 import { isAuthenticated } from './lib/jwt';
 import { api } from './api/api';
 import { useProfileStore } from './store/profile';
@@ -54,6 +62,14 @@ export const router = createBrowserRouter([
       { path: '/workspaces', element: <WorkspacesPage /> },
       { path: '/workspaces/new', element: <CreateWorkspacePage /> },
       { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
+      { path: '/workspaces/:workspaceId/edit', element: <EditWorkspacePage /> },
+      { path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
+      { path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
+      { path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },
+      { path: '/criteria', element: <CriteriaListPage /> },
+      { path: '/criteria/new', element: <CriteriaCreatePage /> },
+      { path: '/criteria/:criterionId', element: <CriteriaDetailPage /> },
+      { path: '/criteria/:criterionId/edit', element: <CriteriaEditPage /> },
       { path: '/settings', element: <Home /> },
     ],
   },

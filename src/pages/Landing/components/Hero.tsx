@@ -67,7 +67,7 @@ export function Hero() {
               >
                 <IconBrain size={28} />
               </ThemeIcon>
-              <Text fw={700} size="sm" c="white">AI System</Text>
+              <Text fw={600} size="sm"> Платформа</Text>
             </Box>
             <Box className={styles.arrow}>
               <IconArrowRight size={24} />

@@ -1,6 +1,7 @@
-import { Group, Anchor, ActionIcon, Button, Burger, Drawer, Stack, Text } from '@mantine/core'
+import { Group, Anchor, ActionIcon, Button, Burger, Drawer, Stack } from '@mantine/core'
 import { useMantineColorScheme, useComputedColorScheme } from '@mantine/core'
-import { IconCode, IconSun, IconMoon, IconLogin, IconUserPlus } from '@tabler/icons-react'
+import { IconSun, IconMoon, IconLogin, IconUserPlus } from '@tabler/icons-react'
+import { Logo } from '../Logo/Logo'
 
 interface HeaderProps {
   opened: boolean
@@ -26,12 +27,7 @@ export function Header({ opened, onToggle }: HeaderProps) {
             size="sm"
           />
           <Anchor href="/" underline="never">
-            <Group gap="xs">
-              <ActionIcon size="lg" variant="gradient" gradient={{ from: 'blue', to: 'cyan', deg: 45 }}>
-                <IconCode size={18} />
-              </ActionIcon>
-              <Text fw={700} size="lg" c="dimmed">AI Review</Text>
-            </Group>
+            <Logo />
           </Anchor>
         </Group>
 

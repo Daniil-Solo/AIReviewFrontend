@@ -9,8 +9,8 @@ import {
   Anchor,
   Box,
 } from '@mantine/core';
-import type { FormEvent as ReactFormEvent } from 'react';
 import { login } from '../../api/endpoints/auth';
+import type { ErrorResponseDTO } from '../../types';
 
 const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
@@ -23,10 +23,8 @@ export function Login() {
   const [passwordError, setPasswordError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: ReactFormEvent) => {
-    e.preventDefault();
-
+  
+  const handleSubmit = async () => {
     let hasError = false;
 
     if (!PASSWORD_REGEX.test(password)) {
@@ -51,12 +49,10 @@ export function Login() {
     try {
       const response = await login({ email, password });
       localStorage.setItem('token', response.access_token);
-      const target = redirect || '/home';
-      navigate(target, { replace: true });
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      const message = err.response?.data?.message || 'Ошибка входа';
-      setPasswordError(message);
+      navigate(redirect || '/home', { replace: true });
+    } catch (error) {
+      const message = (error.response.data as ErrorResponseDTO).message
+      setPasswordError(message)
     } finally {
       setLoading(false);
     }
@@ -66,8 +62,7 @@ export function Login() {
   const handlePasswordFocus = () => setPasswordError('');
 
   return (
-      <form onSubmit={handleSubmit}>
-        <Stack gap={24}>
+    <Stack gap={24}>
           <TextInput
             label="Email"
             placeholder="your@email.com"
@@ -89,7 +84,8 @@ export function Login() {
             required
           />
           <Button
-            type="submit"
+            type="button"
+            onClick={handleSubmit}
             fullWidth
             size="lg"
             loading={loading}
@@ -107,6 +103,5 @@ export function Login() {
             </Anchor>
           </Box>
         </Stack>
-      </form>
   );
 }
