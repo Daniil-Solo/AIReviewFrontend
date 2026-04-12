@@ -18,7 +18,9 @@ export const getUserData = (): JWTPayload | null => {
 
 export const isAuthenticated = (): boolean => {
   const user = getUserData();
-  return user !== null;
+  if (user === null) return false;
+  if (Date.now() >= user.exp * 1000) return false
+  return true;
 };
 
 export const logout = (): void => {

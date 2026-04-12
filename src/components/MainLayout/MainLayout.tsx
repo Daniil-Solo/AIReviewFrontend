@@ -49,7 +49,7 @@ export function MainLayout() {
           <Text fw={700} size="lg">
             AI Review
           </Text>
-          <Avatar name={user.fullname} alt={user.fullname} size="md" radius="xl" color="initials"/>
+          <Avatar name={user?.fullname} alt={user?.fullname} size="md" radius="xl" color="initials"/>
           <Burger
             opened={opened}
             onClick={toggle}

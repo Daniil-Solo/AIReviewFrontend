@@ -27,6 +27,5 @@ export interface JWTPayload {
   email: string;
   fullname: string;
   is_admin: boolean;
-  iat?: number;
-  exp?: number;
+  exp: number;
 }
