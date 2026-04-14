@@ -7,7 +7,7 @@ import type {
   TaskCriteriaUpdateWeightDTO,
   TaskCriteriaResponseDTO,
   TaskCriteriaCreateBatchDTO,
-  SolutionResponseDTO,
+  SolutionShortResponseDTO,
   SuccessOperationDTO,
 } from '../../types';
 
@@ -96,8 +96,8 @@ export const deleteTaskCriterion = async (
 
 export const getTaskSolutions = async (
   taskId: number
-): Promise<SolutionResponseDTO[]> => {
-  const response = await api.get<SolutionResponseDTO[]>(
+): Promise<SolutionShortResponseDTO[]> => {
+  const response = await api.get<SolutionShortResponseDTO[]>(
     `/api/v1/tasks/${taskId}/solutions`
   );
   return response.data;

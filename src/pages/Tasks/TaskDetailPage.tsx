@@ -27,6 +27,7 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
+import { formatRelativeTime } from '../../lib/date';
 import {
   IconTrash,
   IconPlus,
@@ -43,7 +44,6 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconEdit,
-  IconWeight,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
 import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions } from '../../api/endpoints/tasks';
@@ -51,6 +51,7 @@ import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
 import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
+import { statusLabels, formatLabels } from '../../features/solutions/constants';
 
 
 
@@ -413,7 +414,7 @@ function CriterionCard({
   );
 }
 
-function TaskSolutionsTab({ taskId }: { taskId: number }) {
+function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: number }) {
   const { data: solutions, isLoading } = useQuery({
     queryKey: ['taskSolutions', taskId],
     queryFn: () => getTaskSolutions(taskId),
@@ -425,8 +426,71 @@ function TaskSolutionsTab({ taskId }: { taskId: number }) {
 
   return (
     <Stack gap="md">
-      <Text c="dimmed">Список решений (скоро)</Text>
       <Text size="sm">Всего решений: {solutions?.length || 0}</Text>
+      <Table.ScrollContainer minWidth={600}>
+        <Table striped>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>ID</Table.Th>
+              <Table.Th>Формат</Table.Th>
+              <Table.Th>Статус</Table.Th>
+              <Table.Th>Автор</Table.Th>
+              <Table.Th>Создано</Table.Th>
+              <Table.Th></Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {solutions?.map((solution) => {
+              const progress = (solution.steps.length / 6) * 100;
+              const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
+              return (
+                <Table.Tr key={solution.id}>
+                  <Table.Td>{solution.id}</Table.Td>
+                  <Table.Td>
+                    <Badge variant="outline" color="gray" size="sm">
+                      {formatLabels[solution.format]}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Badge variant="outline" color="gray" size="sm">
+                        {statusLabels[solution.status]}
+                      </Badge>
+                      {showProgress && (
+                        <Badge variant="outline" color="gray" size="sm">
+                          {Math.round(progress)}%
+                        </Badge>
+                      )}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Tooltip label={solution.author.fullname}>
+                      <Text size="sm" style={{ cursor: 'default' }}>
+                        {solution.author.email}
+                      </Text>
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {formatRelativeTime(solution.created_at)}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Button 
+                      component={Link} 
+                      to={`/workspaces/${workspaceId}/tasks/${taskId}/solutions/${solution.id}`}
+                      variant="subtle" 
+                      size="xs"
+                    >
+                      Перейти
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
     </Stack>
   );
 }
@@ -529,7 +593,7 @@ export function TaskDetailPage() {
         </Tabs.Panel>
 
         <Tabs.Panel value="solutions" pt="md">
-          <TaskSolutionsTab taskId={tId} />
+          <TaskSolutionsTab taskId={tId} workspaceId={wsId} />
         </Tabs.Panel>
       </Tabs>
     </Stack>

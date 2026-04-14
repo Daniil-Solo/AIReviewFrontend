@@ -18,6 +18,7 @@ import { CriteriaEditPage } from './pages/Criteria/CriteriaEditPage';
 import { TaskCreatePage } from './pages/Tasks/TaskCreatePage';
 import { TaskDetailPage } from './pages/Tasks/TaskDetailPage';
 import { TaskEditPage } from './pages/Tasks/TaskEditPage';
+import { SolutionDetailPage } from './pages/Solutions/SolutionDetailPage';
 import { isAuthenticated } from './lib/jwt';
 import { api } from './api/api';
 import { useProfileStore } from './store/profile';
@@ -66,6 +67,7 @@ export const router = createBrowserRouter([
       { path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
       { path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
       { path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },
+      { path: '/workspaces/:workspaceId/tasks/:taskId/solutions/:solutionId', element: <SolutionDetailPage /> },
       { path: '/criteria', element: <CriteriaListPage /> },
       { path: '/criteria/new', element: <CriteriaCreatePage /> },
       { path: '/criteria/:criterionId', element: <CriteriaDetailPage /> },

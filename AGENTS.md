@@ -23,7 +23,9 @@ jose — работа с JWT
 src/
   api/           # инстанс axios, эндпоинты
   components/    # переиспользуемые UI-блоки
-  features/      # фичи (reviews, dashboard, ai-chat)
+  features/      # фичи (reviews, dashboard, ai-chat, criteria, solutions)
+  features/criteria/constants.ts   # константы критериев (stageLabels)
+  features/solutions/constants.ts  # константы решений (statusLabels, formatLabels, stepLabels)
   hooks/         # кастомные хуки (useAuth, useStreaming)
   lib/           # утилиты, helpers
   pages/         # роуты

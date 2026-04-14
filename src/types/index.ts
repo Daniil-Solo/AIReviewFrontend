@@ -180,6 +180,68 @@ export interface TaskCriteriaResponseDTO {
   criterion: CriterionResponseDTO;
 }
 
+export type SolutionFormatEnum = 'ZIP' | 'GITHUB';
+
+export type SolutionStatusEnum = 
+  | 'CREATED' 
+  | 'CANCELLED' 
+  | 'ERROR' 
+  | 'AI_REVIEW' 
+  | 'WAITING_EXAM' 
+  | 'EXAMINATION' 
+  | 'HUMAN_REVIEW' 
+  | 'REVIEWED';
+
+export type PipelineStepEnum = 
+  | 'prepare_project_tree' 
+  | 'prepare_project_content' 
+  | 'create_project_doc' 
+  | 'critic' 
+  | 'resolve_gaps' 
+  | 'improve_doc';
+
+export type PipelineTaskStatusEnum = 'pending' | 'running' | 'completed' | 'failed';
+
+export interface SolutionAuthorDTO {
+  id: number;
+  email: string;
+  fullname: string;
+  is_admin: boolean;
+}
+
+export interface SolutionShortResponseDTO {
+  id: number;
+  task_id: number;
+  format: SolutionFormatEnum;
+  link: string;
+  status: SolutionStatusEnum;
+  steps: PipelineStepEnum[];
+  human_grade: number | null;
+  human_feedback: string | null;
+  ai_feedback: string | null;
+  created_at: string;
+  author: SolutionAuthorDTO;
+}
+
+export interface PipelineTaskDTO {
+  id: number;
+  solution_id: number;
+  step: PipelineStepEnum;
+  status: PipelineTaskStatusEnum;
+  error_text: string | null;
+  duration: number | null;
+  last_checked_at: string | null;
+  ran_at: string | null;
+  created_at: string;
+}
+
+export interface PipelineInfoDTO {
+  solution_id: number;
+  solution_status: SolutionStatusEnum;
+  solution_steps: PipelineStepEnum[];
+  pipeline_tasks: PipelineTaskDTO[];
+}
+
 export interface SolutionResponseDTO {
   id: number;
   task_id: number;
