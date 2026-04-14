@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   TextInput,
   Textarea,
@@ -14,6 +14,7 @@ import { createWorkspace } from '../../api/endpoints/workspaces';
 
 export function CreateWorkspacePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [nameError, setNameError] = useState('');
@@ -22,6 +23,7 @@ export function CreateWorkspacePage() {
   const mutation = useMutation({
     mutationFn: createWorkspace,
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['profileWorkspaces'] });
       navigate(`/workspaces/${data.id}`);
     },
     onError: (error: unknown) => {
