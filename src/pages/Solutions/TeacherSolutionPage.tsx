@@ -13,7 +13,7 @@ import {
   Tooltip,
   Alert,
 } from '@mantine/core';
-import { IconArrowLeft, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { IconArrowLeft, IconChevronDown, IconChevronUp, IconArrowUp } from '@tabler/icons-react';
 import { getSolutionInfo, getSolutionArtefact } from '../../api/endpoints/solutions';
 import type { SolutionShortResponseDTO, PipelineStepEnum } from '../../types';
 import { statusLabels, formatLabels, stepLabels } from '../../features/solutions/constants';
@@ -145,7 +145,7 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSo
           </Stack>
         </Tabs.Panel>
 
-        <Tabs.Panel value="artefacts" pt="md">
+        <Tabs.Panel value="artefacts" pt="md" style={{ position: 'relative' }}>
           {isLoadingInfo ? (
             <Loader size="sm" />
           ) : (
@@ -161,6 +161,19 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSo
               ))}
             </Stack>
           )}
+          <Button
+            variant="filled"
+            size="sm"
+            style={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              zIndex: 1000,
+            }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <IconArrowUp size={16} />
+          </Button>
         </Tabs.Panel>
       </Tabs>
     </Stack>
@@ -198,7 +211,13 @@ function ArtefactCollapse({ step, solutionId, isOpen, onToggle }: ArtefactCollap
           {isLoading ? (
             <Loader size="sm" />
           ) : content ? (
-            <MarkdownRenderer content={content} />
+            step === 'prepare_project_tree' || step === 'prepare_project_content' ? (
+              <Text style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                {content}
+              </Text>
+            ) : (
+              <MarkdownRenderer content={content} />
+            )
           ) : isError && error ? (
             <Alert color="red">{error.response.data.message}</Alert>
           ) : null}
