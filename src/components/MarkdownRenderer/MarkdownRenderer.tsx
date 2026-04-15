@@ -1,10 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useComputedColorScheme } from '@mantine/core';
+import { ActionIcon, Tooltip, useComputedColorScheme } from '@mantine/core';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import mermaid from 'mermaid';
+import {
+  IconMaximize,
+  IconMinimize,
+} from '@tabler/icons-react';
 import styles from './MarkdownRenderer.module.css';
 
 interface MarkdownRendererProps {
@@ -13,28 +17,48 @@ interface MarkdownRendererProps {
 
 function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgContainerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const renderDiagram = async () => {
-      const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
-      try {
+      if (await mermaid.parse(code)) {
+        const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
         const { svg } = await mermaid.render(id, code);
         setSvg(svg);
         setError('');
-      } catch (e) {
-        console.error('Mermaid render error:', e);
-        setError(e instanceof Error ? e.message : 'Unknown error');
+      } else {
+        const errorText = `Mermaid render error for code=${code}`
+        console.error(errorText);
+        setError(errorText)
       }
     };
     renderDiagram();
   }, [code]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement && containerRef.current) {
+      await containerRef.current.requestFullscreen();
+    } else if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+  };
+
   if (error) {
     return (
       <div className={styles.mermaidError}>
-        <div className={styles.mermaidErrorLabel}>Mermaid diagram (broken)</div>
+        <div className={styles.mermaidErrorLabel}>Mermaid-диаграмма невалидная</div>
         <SyntaxHighlighter
           style={isDark ? oneDark : oneLight}
           language="mermaid"
@@ -48,15 +72,32 @@ function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
   }
 
   if (!svg) {
-    return <div className={styles.mermaidContainer}>Loading diagram...</div>;
+    return <div className={styles.mermaidContainer}>Рендеринг диаграммы...</div>;
   }
 
   return (
     <div
       ref={containerRef}
-      className={styles.mermaidContainer}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+      className={`${styles.mermaidContainer} ${isFullscreen ? styles.mermaidFullscreen : ''}`}
+    >
+      <div className={styles.mermaidControls}>
+        <Tooltip position="bottom" label={isFullscreen ? 'Выйти из полноэкраного режима (Esc)' : 'Открыть диаграмму в полноэкранном режиме'}>
+            <ActionIcon 
+            onClick={toggleFullscreen}
+            size='sm'
+            variant="light"
+            color="gray"
+          >
+            {isFullscreen ? <IconMinimize size={14}  /> : <IconMaximize size={14} />}
+          </ActionIcon >
+        </Tooltip>
+      </div>
+      <div
+        ref={svgContainerRef}
+        className={styles.svgContainer}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
   );
 }
 

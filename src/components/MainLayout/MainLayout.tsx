@@ -7,7 +7,6 @@ import { getUserData, logout as logoutUtil } from '../../lib/jwt';
 import styles from  "./MainLayout.module.css";
 import { useDisclosure } from '@mantine/hooks';
 import { Logo } from '../Logo/Logo';
-import { useMermaidCleanup } from '../../hooks/useMermaidCleanup';
 
 
 export function MainLayout() {
@@ -18,8 +17,6 @@ export function MainLayout() {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
   const [opened, { toggle }] = useDisclosure();
-
-  useMermaidCleanup();
 
   const toggleTheme = () => {
     setColorScheme(computedColorScheme === 'dark' ? 'light' : 'dark');
