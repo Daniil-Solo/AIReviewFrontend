@@ -14,12 +14,11 @@ import {
   Alert,
 } from '@mantine/core';
 import { IconArrowLeft, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { getSolutionInfo, getSolutionArtefact } from '../../api/endpoints/solutions';
 import type { SolutionShortResponseDTO, PipelineStepEnum } from '../../types';
 import { statusLabels, formatLabels, stepLabels } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 
 interface TeacherSolutionPageProps {
   solution: SolutionShortResponseDTO;
@@ -199,10 +198,10 @@ function ArtefactCollapse({ step, solutionId, isOpen, onToggle }: ArtefactCollap
           {isLoading ? (
             <Loader size="sm" />
           ) : content ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-          ) : isError && error? (
+            <MarkdownRenderer content={content} />
+          ) : isError && error ? (
             <Alert color="red">{error.response.data.message}</Alert>
-          ): null}
+          ) : null}
         </div>
       )}
     </div>

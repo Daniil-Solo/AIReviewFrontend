@@ -17,10 +17,10 @@ export const formatLabels: Record<SolutionFormatEnum, string> = {
 };
 
 export const stepLabels: Record<PipelineStepEnum, string> = {
-  prepare_project_tree: 'Структура проекта',
-  prepare_project_content: 'Содержимое проекта',
-  create_project_doc: 'Документация проекта',
-  critic: 'Критический анализ',
-  resolve_gaps: 'Устранение пробелов',
-  improve_doc: 'Улучшение документации',
+  prepare_project_tree: 'Дерево проекта',
+  prepare_project_content: 'Контента проекта для проверки',
+  create_project_doc: 'Документация проекта (изначальная версия)',
+  critic: 'Критика документации',
+  resolve_gaps: 'Правки документации по замечаниям из критики',
+  improve_doc: 'Документация проекта (улучшенная версия)',
 };

@@ -60,7 +60,7 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
     setGeneralError('');
   }, [editRule]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   useEffect(() => {
     if (!editRule) {
       if (!debouncedSlug.trim()) {

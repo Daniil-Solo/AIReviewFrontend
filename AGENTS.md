@@ -23,11 +23,13 @@ jose — работа с JWT
 src/
   api/           # инстанс axios, эндпоинты
   components/    # переиспользуемые UI-блоки
+  components/MarkdownRenderer/  # компонент для рендеринга markdown с подсветкой синтаксиса и mermaid
   features/      # фичи (reviews, dashboard, ai-chat, criteria, solutions)
   features/criteria/constants.ts   # константы критериев (stageLabels)
   features/solutions/constants.ts  # константы решений (statusLabels, formatLabels, stepLabels)
   hooks/         # кастомные хуки (useAuth, useStreaming)
   lib/           # утилиты, helpers
+  lib/date.ts   # утилиты для даты (formatRelativeTime)
   pages/         # роуты
   store/         # zustand stores
   types/         # TypeScript типы API
