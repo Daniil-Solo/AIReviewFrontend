@@ -13,12 +13,13 @@ import {
   Tooltip,
   Alert,
 } from '@mantine/core';
-import { IconArrowLeft, IconChevronDown, IconChevronUp, IconArrowUp } from '@tabler/icons-react';
+import { IconArrowLeft, IconChevronDown, IconChevronUp, IconArrowUp, IconChartBar } from '@tabler/icons-react';
 import { getSolutionInfo, getSolutionArtefact } from '../../api/endpoints/solutions';
 import type { SolutionShortResponseDTO, PipelineStepEnum } from '../../types';
 import { statusLabels, formatLabels, stepLabels } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
+import { MermaidGantt } from '../../components/MermaidGantt/MermaidGantt';
 
 interface TeacherSolutionPageProps {
   solution: SolutionShortResponseDTO;
@@ -65,6 +66,7 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSo
       <Tabs defaultValue="main">
         <Tabs.List>
           <Tabs.Tab value="main">Основное</Tabs.Tab>
+          <Tabs.Tab value="progress">Прогресс</Tabs.Tab>
           <Tabs.Tab value="artefacts">Артефакты решения</Tabs.Tab>
         </Tabs.List>
 
@@ -143,6 +145,14 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSo
               </Stack>
             )}
           </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="progress" pt="md">
+          {isLoadingInfo ? (
+            <Loader size="sm" />
+          ) : pipelineInfo?.pipeline_tasks ? (
+            <MermaidGantt key={pipelineInfo.solution_id} tasks={pipelineInfo.pipeline_tasks} />
+          ) : null}
         </Tabs.Panel>
 
         <Tabs.Panel value="artefacts" pt="md" style={{ position: 'relative' }}>
