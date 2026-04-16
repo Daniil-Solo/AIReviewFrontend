@@ -242,6 +242,10 @@ export interface PipelineInfoDTO {
   pipeline_tasks: PipelineTaskDTO[];
 }
 
+export interface BalanceResponseDTO {
+  balance: number;
+}
+
 export interface SolutionResponseDTO {
   id: number;
   task_id: number;

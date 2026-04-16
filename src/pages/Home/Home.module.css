@@ -13,16 +13,7 @@
   color: var(--mantine-color-gray-9);
 }
 
-.statCard {
-  background: var(--mantine-color-white);
-  border: 1px solid var(--mantine-color-gray-2);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
 
-.statCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
 
 .statNumber {
   font-weight: 700;
