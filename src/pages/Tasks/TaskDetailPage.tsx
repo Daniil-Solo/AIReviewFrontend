@@ -44,10 +44,12 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconEdit,
+  IconCirclePlus,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
 import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions } from '../../api/endpoints/tasks';
 import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
+import { getMySolutions } from '../../api/endpoints/solutions';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
 import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
@@ -495,6 +497,97 @@ function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId
   );
 }
 
+function MySolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: number }) {
+  const { data: solutions, isLoading } = useQuery({
+    queryKey: ['mySolutions', taskId],
+    queryFn: () => getMySolutions(taskId),
+  });
+
+  if (isLoading) {
+    return <Loader size="sm" />;
+  }
+
+  return (
+    <Stack gap="md">
+      <Group justify="space-between">
+        <Text size="sm">Мои решения: {solutions?.length || 0}</Text>
+        <Button
+          component={Link}
+          to={`/workspaces/${workspaceId}/tasks/${taskId}/solutions/new`}
+          leftSection={<IconCirclePlus size={16} />}
+          variant="light"
+          size="sm"
+        >
+          Отправить решение
+        </Button>
+      </Group>
+      
+      {solutions && solutions.length > 0 ? (
+        <Table.ScrollContainer minWidth={500}>
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>ID</Table.Th>
+                <Table.Th>Формат</Table.Th>
+                <Table.Th>Статус</Table.Th>
+                <Table.Th>Создано</Table.Th>
+                <Table.Th></Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {solutions?.map((solution) => {
+                const progress = (solution.steps.length / 6) * 100;
+                const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
+                return (
+                  <Table.Tr key={solution.id}>
+                    <Table.Td>{solution.id}</Table.Td>
+                    <Table.Td>
+                      <Badge variant="outline" color="gray" size="sm">
+                        {formatLabels[solution.format]}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Badge variant="outline" color="gray" size="sm">
+                          {statusLabels[solution.status]}
+                        </Badge>
+                        {showProgress && (
+                          <Badge variant="outline" color="gray" size="sm">
+                            {Math.round(progress)}%
+                          </Badge>
+                        )}
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" c="dimmed">
+                        {formatRelativeTime(solution.created_at)}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Button 
+                        component={Link} 
+                        to={`/workspaces/${workspaceId}/tasks/${taskId}/solutions/${solution.id}`}
+                        variant="subtle" 
+                        size="xs"
+                      >
+                        Перейти
+                      </Button>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
+      ) : (
+        <Text c="dimmed" ta="center" py="xl">
+          У вас пока нет решений для этой задачи
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
 export function TaskDetailPage() {
   const { workspaceId, taskId } = useParams<{ workspaceId: string; taskId: string }>();
   const wsId = Number(workspaceId);
@@ -580,12 +673,17 @@ export function TaskDetailPage() {
       <Tabs defaultValue="main">
         <Tabs.List>
           <Tabs.Tab value="main">Основное</Tabs.Tab>
+          <Tabs.Tab value="my-solutions">Мои решения</Tabs.Tab>
           <Tabs.Tab value="criteria">Критерии</Tabs.Tab>
-          <Tabs.Tab value="solutions">Решения</Tabs.Tab>
+          <Tabs.Tab value="solutions">Все решения</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="main" pt="md">
           <TaskMainTab task={task} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="my-solutions" pt="md">
+          <MySolutionsTab taskId={tId} workspaceId={wsId} />
         </Tabs.Panel>
 
         <Tabs.Panel value="criteria" pt="md">
