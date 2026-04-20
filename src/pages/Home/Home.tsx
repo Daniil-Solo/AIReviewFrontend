@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Box,
@@ -10,15 +10,22 @@ import {
   Group,
   Skeleton,
   Alert,
+  SimpleGrid,
+  Card,
+  Badge,
 } from '@mantine/core';
-import { IconWallet } from '@tabler/icons-react';
+import { IconWallet, IconPlus } from '@tabler/icons-react';
 import { getBalance } from '../../api';
 import { getUserData } from '../../lib/jwt';
+import { useProfileStore } from '../../store/profile';
 import styles from './Home.module.css';
+import { roleColors, roleLabels } from '../../features/roles/constants';
+
 
 export function Home() {
   const navigate = useNavigate();
   const user = getUserData();
+  const workspaces = useProfileStore((state) => state.workspaces);
 
   const { data: balanceData, isLoading, error } = useQuery({
     queryKey: ['balance'],
@@ -36,6 +43,7 @@ export function Home() {
     return parts[0];
   };
 
+
   return (
         <Stack gap="xl">
           <Box>
@@ -43,14 +51,14 @@ export function Home() {
               Добро пожаловать, {getFirstName(user.fullname)}!
             </Title>
             <Text c="dimmed" mt="xs">
-              Рады видеть вас в системе автоматического ревью
+              Рады видеть вас в системе автоматизированной проверки работ
             </Text>
           </Box>
 
           <Group>
               <Paper p="lg" radius="md" shadow="xs" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/transactions')}>
                 <Group>
-                  <ThemeIcon variant="light" size="lg" radius="md" color="gray">
+                  <ThemeIcon variant="outline" size="lg" radius="md" color="gray">
                     <IconWallet size={20} />
                   </ThemeIcon>
                   {error ? (
@@ -70,6 +78,49 @@ export function Home() {
                 </Group>
               </Paper>
           </Group>
+
+          <Box>
+            <Title order={3} mb="md">Мои пространства</Title>
+            <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }} spacing="md">
+              {workspaces.map((ws) => (
+                <Card
+                  key={ws.workspaceId}
+                  component={Link}
+                  to={`/workspaces/${ws.workspaceId}`}
+                  shadow="sm"
+                  padding="lg"
+                  radius="md"
+                  withBorder
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <Stack gap="xs">
+                    <Badge color={roleColors[ws.role]} variant="outline">
+                      {roleLabels[ws.role]}
+                    </Badge>
+                    <Text fw={500} size="lg" lineClamp={2}>
+                      {ws.name}
+                    </Text>
+                  </Stack>
+                </Card>
+              ))}
+              <Card
+                component={Link}
+                to="/workspaces/new"
+                shadow="sm"
+                padding="lg"
+                radius="md"
+                withBorder
+                style={{ textDecoration: 'none', color: 'inherit', borderStyle: 'dashed' }}
+              >
+                <Stack align="center" gap="xs" >
+                  <ThemeIcon variant="outline" size="xl" radius="md" color="gray">
+                    <IconPlus size={24} />
+                  </ThemeIcon>
+                  <Text size="md" c="dimmed">Создать пространство</Text>
+                </Stack>
+              </Card>
+            </SimpleGrid>
+          </Box>
         </Stack>
   );
 }

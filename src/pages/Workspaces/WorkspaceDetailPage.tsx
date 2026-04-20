@@ -78,7 +78,7 @@ export function WorkspaceDetailPage() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteWorkspace(workspaceId),
     onSuccess: () => {
-      navigate('/workspaces');
+      navigate('/home');
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } } };
@@ -98,7 +98,7 @@ export function WorkspaceDetailPage() {
           role: item.role as WorkspaceMemberRole,
         }))
       );
-      navigate('/workspaces');
+      navigate('/home');
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } } };

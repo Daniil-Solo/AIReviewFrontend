@@ -4,7 +4,6 @@ import { MainLayout } from './components/MainLayout/MainLayout';
 import { Login } from './pages/Login/Login';
 import { Register } from './pages/Register/Register';
 import { Home } from './pages/Home/Home';
-import { WorkspacesPage } from './pages/Workspaces/WorkspacesPage';
 import { CreateWorkspacePage } from './pages/Workspaces/CreateWorkspacePage';
 import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
 import { EditWorkspacePage } from './pages/Workspaces/EditWorkspacePage';
@@ -62,7 +61,6 @@ export const router = createBrowserRouter([
     loader: protectedLoader,
     children: [
       { path: '/home', element: <Home /> },
-      { path: '/workspaces', element: <WorkspacesPage /> },
       { path: '/workspaces/new', element: <CreateWorkspacePage /> },
       { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
       { path: '/workspaces/:workspaceId/edit', element: <EditWorkspacePage /> },
