@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppShell, NavLink, Group, Avatar, Stack, Burger, Divider } from '@mantine/core';
 import { useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { IconHome, IconFolders, IconSettings, IconLogout, IconChevronLeft, IconChevronRight, IconSun, IconMoon, IconChecklist } from '@tabler/icons-react';
+import { IconHome, IconFolders, IconSettings, IconLogout, IconChevronLeft, IconChevronRight, IconSun, IconMoon, IconChecklist, IconWallet } from '@tabler/icons-react';
 import { getUserData, logout as logoutUtil } from '../../lib/jwt';
 import styles from  "./MainLayout.module.css";
 import { useDisclosure } from '@mantine/hooks';
@@ -24,6 +24,7 @@ export function MainLayout() {
 
   const navItems = [
     { label: 'Главная', icon: IconHome, path: '/home' },
+    { label: 'Транзакции', icon: IconWallet, path: '/transactions' },
     { label: 'Пространства', icon: IconFolders, path: '/workspaces' },
     { label: 'Критерии', icon: IconChecklist, path: '/criteria' },
     { label: 'Настройки', icon: IconSettings, path: '/settings' },

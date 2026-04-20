@@ -48,7 +48,7 @@ export function Home() {
           </Box>
 
           <Group>
-              <Paper p="lg" radius="md" shadow="xs" withBorder>
+              <Paper p="lg" radius="md" shadow="xs" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/transactions')}>
                 <Group>
                   <ThemeIcon variant="light" size="lg" radius="md" color="gray">
                     <IconWallet size={20} />
@@ -63,7 +63,7 @@ export function Home() {
                       {isLoading ? (
                         <Skeleton width={100} height={28} />
                       ) : (
-                        <Text size="xl" fw={700}>{balanceData?.balance ?? 0} ₽</Text>
+                        <Text size="xl" fw={700}>{balanceData?.balance.toFixed(1) ?? 0} ₽</Text>
                       )}
                     </Box>
                   )}  

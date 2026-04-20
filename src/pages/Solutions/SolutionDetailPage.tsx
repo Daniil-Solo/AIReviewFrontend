@@ -41,25 +41,28 @@ export function SolutionDetailPage() {
   }
 
   if (isTeacher) {
-    return (
-      <TeacherSolutionPage
-        solution={solution}
-        workspaceId={wsId}
-        taskId={tId}
-      />
-    );
+return (
+    <TeacherSolutionPage
+      solution={solution}
+      workspaceId={wsId}
+      taskId={tId}
+      isTeacher={true}
+    />
+  );
   }
 
   const userData = getUserData();
   const currentUserId = userData?.sub;
-  const isOwner = solution.created_by === currentUserId;
+  const isAuthor = solution.author.id === currentUserId;
 
   return (
     <StudentSolutionPage
       solution={solution}
-      isOwner={isOwner}
+      isOwner={isAuthor}
+      isAuthor={isAuthor}
       workspaceId={wsId}
       taskId={tId}
+      isTeacher={false}
     />
   );
 }

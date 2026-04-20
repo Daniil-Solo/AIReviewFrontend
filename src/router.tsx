@@ -20,6 +20,7 @@ import { TaskDetailPage } from './pages/Tasks/TaskDetailPage';
 import { TaskEditPage } from './pages/Tasks/TaskEditPage';
 import { SolutionDetailPage } from './pages/Solutions/SolutionDetailPage';
 import { SolutionCreatePage } from './pages/Solutions/SolutionCreatePage';
+import { TransactionsPage } from './pages/Transactions/TransactionsPage';
 import { isAuthenticated } from './lib/jwt';
 import { api } from './api/api';
 import { useProfileStore } from './store/profile';
@@ -75,6 +76,7 @@ export const router = createBrowserRouter([
       { path: '/criteria/:criterionId', element: <CriteriaDetailPage /> },
       { path: '/criteria/:criterionId/edit', element: <CriteriaEditPage /> },
       { path: '/settings', element: <Home /> },
+      { path: '/transactions', element: <TransactionsPage /> },
     ],
   },
   {

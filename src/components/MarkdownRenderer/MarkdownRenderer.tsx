@@ -24,7 +24,7 @@ function MermaidDiagram({ code, isDark }: { code: string; isDark: boolean }) {
 
   useEffect(() => {
     const renderDiagram = async () => {
-      if (await mermaid.parse(code)) {
+      if (await mermaid.parse(code, {suppressErrors: true})) {
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
         const { svg } = await mermaid.render(id, code);
         setSvg(svg);

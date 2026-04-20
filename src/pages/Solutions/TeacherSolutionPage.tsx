@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Stack,
   Title,
@@ -13,8 +13,8 @@ import {
   Tooltip,
   Alert,
 } from '@mantine/core';
-import { IconArrowLeft, IconChevronDown, IconChevronUp, IconArrowUp, IconChartBar } from '@tabler/icons-react';
-import { getSolutionInfo, getSolutionArtefact } from '../../api/endpoints/solutions';
+import { IconArrowLeft, IconChevronDown, IconChevronUp, IconArrowUp, IconPlayerPlay, IconX } from '@tabler/icons-react';
+import { getSolutionInfo, getSolutionArtefact, restartSolution, cancelSolution } from '../../api/endpoints/solutions';
 import type { SolutionShortResponseDTO, PipelineStepEnum } from '../../types';
 import { statusLabels, formatLabels, stepLabels } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
@@ -25,14 +25,34 @@ interface TeacherSolutionPageProps {
   solution: SolutionShortResponseDTO;
   workspaceId: number;
   taskId: number;
+  isTeacher: boolean;
 }
 
-export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSolutionPageProps) {
+export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }: TeacherSolutionPageProps) {
   const [openSteps, setOpenSteps] = useState<Set<PipelineStepEnum>>(new Set());
+  const queryClient = useQueryClient();
 
   const { data: pipelineInfo, isLoading: isLoadingInfo } = useQuery({
     queryKey: ['solutionInfo', solution.id],
     queryFn: () => getSolutionInfo(solution.id),
+  });
+
+  const restartMutation = useMutation({
+    mutationFn: () => restartSolution(solution.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
+      queryClient.invalidateQueries({ queryKey: ['solutionInfo', solution.id] });
+      queryClient.invalidateQueries({ queryKey: ['solutionArtefact', solution.id] });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelSolution(solution.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
+      queryClient.invalidateQueries({ queryKey: ['solutionInfo', solution.id] });
+      queryClient.invalidateQueries({ queryKey: ['solutionArtefact', solution.id] });
+    },
   });
 
   const toggleStep = (step: PipelineStepEnum) => {
@@ -46,6 +66,7 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSo
   };
 
   const progress = (solution.steps.length / 6) * 100;
+  const canCancel = isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
 
   return (
     <Stack gap="lg">
@@ -143,6 +164,32 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId }: TeacherSo
                 <Text size="sm" c="dimmed">AI отзыв</Text>
                 <Text>{solution.ai_feedback}</Text>
               </Stack>
+            )}
+
+            {(isTeacher || canCancel) && (
+              <Group gap="sm" mt="md">
+                {isTeacher && (
+                  <Button
+                    leftSection={<IconPlayerPlay size={16} />}
+                    variant="light"
+                    onClick={() => restartMutation.mutate()}
+                    loading={restartMutation.isPending}
+                  >
+                    Перезапустить
+                  </Button>
+                )}
+                {canCancel && (
+                  <Button
+                    leftSection={<IconX size={16} />}
+                    variant="light"
+                    color="red"
+                    onClick={() => cancelMutation.mutate()}
+                    loading={cancelMutation.isPending}
+                  >
+                    Отменить
+                  </Button>
+                )}
+              </Group>
             )}
           </Stack>
         </Tabs.Panel>

@@ -5,6 +5,10 @@ import type {
   SolutionFormatEnum,
 } from '../../types';
 
+interface SuccessOperationDTO {
+  message: string;
+}
+
 export const getMySolutions = async (
   taskId?: number
 ): Promise<SolutionShortResponseDTO[]> => {
@@ -68,6 +72,24 @@ export const getSolutionArtefact = async (
 ): Promise<string> => {
   const response = await api.get<string>(
     `/api/v1/solutions/${solutionId}/artefacts/${step}`
+  );
+  return response.data;
+};
+
+export const restartSolution = async (
+  solutionId: number
+): Promise<SuccessOperationDTO> => {
+  const response = await api.post<SuccessOperationDTO>(
+    `/api/v1/solutions/${solutionId}/restart`
+  );
+  return response.data;
+};
+
+export const cancelSolution = async (
+  solutionId: number
+): Promise<SuccessOperationDTO> => {
+  const response = await api.post<SuccessOperationDTO>(
+    `/api/v1/solutions/${solutionId}/cancel`
   );
   return response.data;
 };

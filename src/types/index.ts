@@ -246,6 +246,22 @@ export interface BalanceResponseDTO {
   balance: number;
 }
 
+export type TransactionTypeEnum = 'WELCOME_BONUS' | 'ADMIN_TOP_UP' | 'LLM_CALL';
+
+export interface TransactionResponseDTO {
+  id: number;
+  user_id: number;
+  amount: number;
+  type: TransactionTypeEnum;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface AdminTopUpDTO {
+  user_id: number;
+  amount: number;
+}
+
 export interface SolutionResponseDTO {
   id: number;
   task_id: number;

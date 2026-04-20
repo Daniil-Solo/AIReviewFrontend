@@ -1,19 +1,35 @@
 import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Stack, Title, Text, Button, Group, Alert, Badge } from '@mantine/core';
-import { IconAlertCircle, IconArrowLeft } from '@tabler/icons-react';
+import { IconAlertCircle, IconArrowLeft, IconX } from '@tabler/icons-react';
 import type { SolutionShortResponseDTO } from '../../types';
 import { statusLabels, formatLabels } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
+import { cancelSolution } from '../../api/endpoints/solutions';
 
 interface StudentSolutionPageProps {
   solution: SolutionShortResponseDTO;
   isOwner: boolean;
+  isAuthor: boolean;
   workspaceId: number;
   taskId: number;
+  isTeacher: boolean;
 }
 
-export function StudentSolutionPage({ solution, isOwner, workspaceId, taskId }: StudentSolutionPageProps) {
+export function StudentSolutionPage({ solution, isOwner, isAuthor, workspaceId, taskId, isTeacher }: StudentSolutionPageProps) {
+  const queryClient = useQueryClient();
   const progress = (solution.steps.length / 6) * 100;
+
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelSolution(solution.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
+      queryClient.invalidateQueries({ queryKey: ['solutionInfo', solution.id] });
+      queryClient.invalidateQueries({ queryKey: ['solutionArtefact', solution.id] });
+    },
+  });
+
+  const canCancel = isAuthor && !isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
 
   return (
     <Stack gap="lg">
@@ -80,6 +96,19 @@ export function StudentSolutionPage({ solution, isOwner, workspaceId, taskId }: 
             </Text>
           </Stack>
         </Group>
+
+        {canCancel && (
+          <Button
+            leftSection={<IconX size={16} />}
+            variant="light"
+            color="red"
+            onClick={() => cancelMutation.mutate()}
+            loading={cancelMutation.isPending}
+            mt="md"
+          >
+            Отменить
+          </Button>
+        )}
       </Stack>
     </Stack>
   );

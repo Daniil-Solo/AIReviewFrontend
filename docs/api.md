@@ -60,7 +60,7 @@ GET    /api/v1/profile/workspaces                           -> res: [UserWorkspa
 
 GET    /api/v1/transactions/balance                         -> res: BalanceResponseDTO
 POST   /api/v1/transactions                                 -> req: AdminTopUpDTO, res: TransactionResponseDTO
-GET    /api/v1/transactions                                 -> query: started_at(date-time|null), ended_at(date-time|null), res: [TransactionHourlyGroupDTO]
+GET    /api/v1/transactions                                 -> query: started_at(date-time|null), ended_at(date-time|null), types(WELCOME_BONUS|ADMIN_TOP_UP|LLM_CALL|null)   res: [TransactionResponseDTO]
 
 GET    /api/internal/health                                 -> res: object
 
@@ -123,8 +123,7 @@ UserWorkspaceResponseDTO: workspace(WorkspaceResponseDTO), role(WorkspaceMemberR
 BalanceResponseDTO: balance(number)
 AdminTopUpDTO: user_id(int), amount(number)
 TransactionResponseDTO: id(int), user_id(int), amount(number), type(TransactionTypeEnum), metadata(object|null), created_at(date-time)
-TransactionHourlyGroupDTO: hour(date-time), amount(number)
-TransactionTypeEnum: "WELCOME_BONUS", "REVIEW", "ADMIN_TOP_UP", "DEPOSIT"
+TransactionTypeEnum: WELCOME_BONUS, ADMIN_TOP_UP, LLM_CALL
 
 HTTPValidationError: detail(ValidationError[])
 ValidationError: loc((string|int)[]), msg(string), type(string)
