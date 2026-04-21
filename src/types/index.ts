@@ -198,7 +198,9 @@ export type PipelineStepEnum =
   | 'create_project_doc' 
   | 'critic' 
   | 'resolve_gaps' 
-  | 'improve_doc';
+  | 'improve_doc'
+  | 'grade_by_codebase'
+  | 'grade_by_project_doc';
 
 export type PipelineTaskStatusEnum = 'pending' | 'running' | 'completed' | 'failed';
 

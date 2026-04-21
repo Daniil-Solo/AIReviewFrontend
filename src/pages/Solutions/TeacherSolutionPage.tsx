@@ -12,8 +12,19 @@ import {
   Badge,
   Tooltip,
   Alert,
+  Card,
+  SimpleGrid,
 } from '@mantine/core';
-import { IconArrowLeft, IconChevronDown, IconChevronUp, IconArrowUp, IconPlayerPlay, IconX } from '@tabler/icons-react';
+import {
+  IconArrowLeft,
+  IconChevronDown,
+  IconChevronUp,
+  IconArrowUp,
+  IconPlayerPlay,
+  IconFileZip,
+  IconProgress,
+  IconStar,
+} from '@tabler/icons-react';
 import { getSolutionInfo, getSolutionArtefact, restartSolution, cancelSolution } from '../../api/endpoints/solutions';
 import type { SolutionShortResponseDTO, PipelineStepEnum } from '../../types';
 import { statusLabels, formatLabels, stepLabels } from '../../features/solutions/constants';
@@ -65,7 +76,7 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
     setOpenSteps(newOpen);
   };
 
-  const progress = (solution.steps.length / 6) * 100;
+  const progress = (solution.steps.length / 8) * 100;
   const canCancel = isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
 
   return (
@@ -84,122 +95,148 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
         </Group>
       </Group>
 
+      <Title order={3}>Решение #{solution.id}</Title>
+
       <Tabs defaultValue="main">
         <Tabs.List>
           <Tabs.Tab value="main">Основное</Tabs.Tab>
-          <Tabs.Tab value="progress">Прогресс</Tabs.Tab>
           <Tabs.Tab value="artefacts">Артефакты решения</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="main" pt="md">
           <Stack gap="md">
-            <Title order={3}>Решение #{solution.id}</Title>
+            <SimpleGrid cols={{ base: 1, sm: 2 }}>
+              <Card withBorder>
+                <Stack gap="sm">
+                  <Group gap="xs">
+                    <IconProgress size={18} color="gray" />
+                    <Text fw={500} size="sm">Основное</Text>
+                  </Group>
+                  <Group gap="lg">
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Статус</Text>
+                      <Badge variant="outline" color="gray" size="sm">
+                        {statusLabels[solution.status]}
+                      </Badge>
+                    </Stack>
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Прогресс</Text>
+                      <Text size="sm">{Math.round(progress)}%</Text>
+                    </Stack>
+                  </Group>
+                </Stack>
+              </Card>
 
-            <Group gap="xl">
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">Формат</Text>
-                <Badge variant="outline" color="gray" size="lg">
-                  {formatLabels[solution.format]}
-                </Badge>
-              </Stack>
+              <Card withBorder>
+                <Stack gap="sm">
+                  <Group gap="xs">
+                    <IconFileZip size={18} color="gray" />
+                    <Text fw={500} size="sm">Попытка</Text>
+                  </Group>
+                  <Group gap="lg">
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Автор</Text>
+                      <Tooltip label={solution.author.fullname}>
+                        <Text size="sm" style={{ cursor: 'default' }}>{solution.author.email}</Text>
+                      </Tooltip>
+                    </Stack>
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Создано</Text>
+                      <Text size="sm">{formatRelativeTime(solution.created_at)}</Text>
+                    </Stack>
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Формат</Text>
+                      <Text size="sm">{formatLabels[solution.format]}</Text>
+                    </Stack>
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Ссылка</Text>
+                      <Text
+                        component="a"
+                        href={solution.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        size="sm"
+                        style={{ color: '#228be6', textDecoration: 'none' }}
+                      >
+                        Открыть
+                      </Text>
+                    </Stack>
+                  </Group>
+                </Stack>
+              </Card>
+            </SimpleGrid>
 
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">Статус</Text>
-                <Badge variant="outline" color="gray" size="lg">
-                  {statusLabels[solution.status]}
-                </Badge>
-              </Stack>
+            <SimpleGrid cols={{ base: 1, sm: 2 }}>
+              {(solution.human_grade !== null || solution.human_feedback || solution.ai_feedback) && (
+                <Card withBorder>
+                  <Stack gap="sm">
+                    <Group gap="xs">
+                      <IconStar size={18} color="gray" />
+                      <Text fw={500} size="sm">Результаты</Text>
+                    </Group>
+                    {solution.human_grade !== null && (
+                      <Text size="sm">
+                        <Text span c="dimmed">Оценка:</Text> {solution.human_grade}
+                      </Text>
+                    )}
+                    {solution.human_feedback && (
+                      <Stack gap={0}>
+                        <Text size="xs" c="dimmed">Обратная связь</Text>
+                        <Text size="sm">{solution.human_feedback}</Text>
+                      </Stack>
+                    )}
+                    {solution.ai_feedback && (
+                      <Stack gap={0}>
+                        <Text size="xs" c="dimmed">AI отзыв</Text>
+                        <Text size="sm">{solution.ai_feedback}</Text>
+                      </Stack>
+                    )}
+                  </Stack>
+                </Card>
+              )}
 
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">Прогресс</Text>
-                <Text>{Math.round(progress)}%</Text>
-              </Stack>
+              {(isTeacher || canCancel) && (
+                <Card withBorder>
+                  <Stack gap="sm">
+                    <Group gap="xs">
+                      <IconPlayerPlay size={18} color="gray" />
+                      <Text fw={500} size="sm">Управление</Text>
+                    </Group>
+                    <Group gap="sm">
+                      {isTeacher && (
+                        <Button
+                          variant="light"
+                          onClick={() => restartMutation.mutate()}
+                          loading={restartMutation.isPending}
+                        >
+                          Перезапустить
+                        </Button>
+                      )}
+                      {canCancel && (
+                        <Button
+                          variant="light"
+                          color="red"
+                          onClick={() => cancelMutation.mutate()}
+                          loading={cancelMutation.isPending}
+                        >
+                          Отменить
+                        </Button>
+                      )}
+                    </Group>
+                  </Stack>
+                </Card>
+              )}
+            </SimpleGrid>
 
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">Ссылка</Text>
-                <Text
-                  component="a"
-                  href={solution.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: '#228be6', textDecoration: 'none' }}
-                >
-                  Открыть
-                </Text>
-              </Stack>
-
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">Создано</Text>
-                <Text size="sm">
-                  {formatRelativeTime(solution.created_at)}
-                </Text>
-              </Stack>
-
-              <Stack gap={4}>
-                <Text size="sm" c="dimmed">Автор</Text>
-                <Tooltip label={solution.author.fullname}>
-                  <Text size="sm" style={{ cursor: 'default' }}>
-                    {solution.author.email}
-                  </Text>
-                </Tooltip>
-              </Stack>
-            </Group>
-
-            {solution.human_grade !== null && (
-              <Stack gap={4} mt="md">
-                <Text size="sm" c="dimmed">Оценка</Text>
-                <Text>{solution.human_grade}</Text>
-              </Stack>
-            )}
-
-            {solution.human_feedback && (
-              <Stack gap={4} mt="md">
-                <Text size="sm" c="dimmed">Обратная связь</Text>
-                <Text>{solution.human_feedback}</Text>
-              </Stack>
-            )}
-
-            {solution.ai_feedback && (
-              <Stack gap={4} mt="md">
-                <Text size="sm" c="dimmed">AI отзыв</Text>
-                <Text>{solution.ai_feedback}</Text>
-              </Stack>
-            )}
-
-            {(isTeacher || canCancel) && (
-              <Group gap="sm" mt="md">
-                {isTeacher && (
-                  <Button
-                    leftSection={<IconPlayerPlay size={16} />}
-                    variant="light"
-                    onClick={() => restartMutation.mutate()}
-                    loading={restartMutation.isPending}
-                  >
-                    Перезапустить
-                  </Button>
-                )}
-                {canCancel && (
-                  <Button
-                    leftSection={<IconX size={16} />}
-                    variant="light"
-                    color="red"
-                    onClick={() => cancelMutation.mutate()}
-                    loading={cancelMutation.isPending}
-                  >
-                    Отменить
-                  </Button>
-                )}
-              </Group>
+            {!isLoadingInfo && pipelineInfo?.pipeline_tasks && (
+              <Card withBorder>
+                <Stack gap="sm">
+                  <Text fw={500}>График выполнения</Text>
+                  <MermaidGantt key={pipelineInfo.solution_id} tasks={pipelineInfo.pipeline_tasks} />
+                </Stack>
+              </Card>
             )}
           </Stack>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="progress" pt="md">
-          {isLoadingInfo ? (
-            <Loader size="sm" />
-          ) : pipelineInfo?.pipeline_tasks ? (
-            <MermaidGantt key={pipelineInfo.solution_id} tasks={pipelineInfo.pipeline_tasks} />
-          ) : null}
         </Tabs.Panel>
 
         <Tabs.Panel value="artefacts" pt="md" style={{ position: 'relative' }}>
@@ -276,7 +313,7 @@ function ArtefactCollapse({ step, solutionId, isOpen, onToggle }: ArtefactCollap
               <MarkdownRenderer content={content} />
             )
           ) : isError && error ? (
-            <Alert color="red">{error.response.data.message}</Alert>
+            <Alert color="red">{(error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Ошибка'}</Alert>
           ) : null}
         </div>
       )}

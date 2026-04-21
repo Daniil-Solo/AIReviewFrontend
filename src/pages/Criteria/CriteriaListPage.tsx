@@ -33,6 +33,7 @@ import {
 } from '@tabler/icons-react';
 import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
 import { getCriterionAccessLabel, stageLabels } from '../../features/criteria/constants';
+import { getUserData } from '../../lib/jwt';
 
 
 export function CriteriaListPage() {
@@ -42,6 +43,7 @@ export function CriteriaListPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [debouncedSelectedTags] = useDebouncedValue(selectedTags, 300);
   const [error, setError] = useState('');
+  const user = getUserData();
 
   const { data: tags = [] } = useQuery({
     queryKey: ['criteriaTags'],
@@ -68,14 +70,18 @@ export function CriteriaListPage() {
   return (
     <Stack gap="lg">
       <Group justify="space-between">
-        <Title order={2}>Критерии оценки</Title>
-        <Button
-          component={Link}
-          to="/criteria/new"
-          leftSection={<IconPlus size={16} />}
-        >
-          Создать критерий
-        </Button>
+        <Title order={2}>Глобальные критерии</Title>
+        {
+          user?.is_admin && (
+            <Button
+              component={Link}
+              to="/criteria/new"
+              leftSection={<IconPlus size={16} />}
+            >
+              Создать критерий
+            </Button>
+          )
+        }
       </Group>
 
       {error && (
