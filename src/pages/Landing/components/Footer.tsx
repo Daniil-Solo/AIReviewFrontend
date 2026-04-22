@@ -9,8 +9,8 @@ const navigation = [
 ]
 
 const legal = [
-  { label: 'Политика конфиденциальности', href: '#' },
-  { label: 'Условия использования', href: '#' },
+  { label: 'Политика конфиденциальности', href: '/privacy' },
+  { label: 'Условия использования', href: '/terms' },
 ]
 
 export function Footer() {

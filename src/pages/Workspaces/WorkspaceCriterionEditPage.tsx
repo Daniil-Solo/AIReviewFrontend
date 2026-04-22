@@ -16,20 +16,21 @@ import {
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { getCriterion, updateCriterion, getAvailableTags } from '../../api/endpoints/criteria';
-import type { CriterionStage, ErrorResponseDTO } from '../../types';
+import type { CriterionStage, CriterionUpdateDTO, ErrorResponseDTO } from '../../types';
 
 const stageOptions = [
-  { value: null, label: 'Автопроверка' },
+  { value: '', label: 'Автопроверка' },
   { value: 'PROJECT_DOC', label: 'Проверка по ProjectDoc' },
   { value: 'CODEBASE', label: 'Проверка по кодовой базе' },
   { value: 'MANUAL', label: 'Ручная проверка' },
 ];
 
-export function CriteriaEditPage() {
+export function WorkspaceCriterionEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { criterionId } = useParams<{ criterionId: string }>();
-  const id = Number(criterionId);
+  const { workspaceId, criterionId } = useParams<{ workspaceId: string; criterionId: string }>();
+  const wsId = Number(workspaceId);
+  const critId = Number(criterionId);
 
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -54,9 +55,9 @@ export function CriteriaEditPage() {
   };
 
   const { data: criterion, isLoading, error } = useQuery({
-    queryKey: ['criterion', id],
-    queryFn: () => getCriterion(id),
-    enabled: !!id,
+    queryKey: ['criterion', critId],
+    queryFn: () => getCriterion(critId),
+    enabled: !!critId,
   });
 
   useEffect(() => {
@@ -68,18 +69,19 @@ export function CriteriaEditPage() {
   }, [criterion]);
 
   const mutation = useMutation({
-    mutationFn: (data: { description: string; tags?: string[]; stage?: CriterionStage }) =>
-      updateCriterion(id, data),
+    mutationFn: (data: CriterionUpdateDTO) =>
+      updateCriterion(critId, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workspaceCriteria', wsId] });
       queryClient.invalidateQueries({ queryKey: ['criteria'] });
       queryClient.invalidateQueries({ queryKey: ['criteriaTags'] });
       queryClient.invalidateQueries({ queryKey: ['availableTags'] });
-      queryClient.invalidateQueries({ queryKey: ['criterion', id] });
-      navigate('/criteria');
+      queryClient.invalidateQueries({ queryKey: ['criterion', critId] });
+      navigate(`/workspaces/${wsId}/criteria/${critId}`);
     },
     onError: (err) => {
-      const data = (err.response.data as ErrorResponseDTO)
-      setGeneralError(data.message);
+      const data = (err as { response?: { data: ErrorResponseDTO } }).response?.data;
+      setGeneralError(data?.message || 'Ошибка обновления');
     },
   });
 
@@ -100,6 +102,7 @@ export function CriteriaEditPage() {
       description: description.trim(),
       tags: tags.length > 0 ? tags : undefined,
       stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
+      workspace_id: wsId,
     });
   };
 
@@ -191,7 +194,7 @@ export function CriteriaEditPage() {
             <Button type="submit" loading={mutation.isPending}>
               Сохранить
             </Button>
-            <Button variant="subtle" onClick={() => navigate('/criteria')}>
+            <Button variant="subtle" onClick={() => navigate(`/workspaces/${wsId}/criteria/${critId}`)}>
               Отмена
             </Button>
           </Group>

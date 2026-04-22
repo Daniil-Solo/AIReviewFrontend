@@ -16,8 +16,9 @@ import {
   Select,
   Modal,
   Menu,
+  SimpleGrid,
 } from '@mantine/core';
-import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDotsVertical, IconUserEdit, IconLink, IconBook } from '@tabler/icons-react';
+import { IconAlertCircle, IconEdit, IconTrash, IconUsers, IconInfoCircle, IconDotsVertical, IconUserEdit, IconLink, IconBook, IconFileDescription, IconPlus } from '@tabler/icons-react';
 import {
   getWorkspace,
   getWorkspaceMembers,
@@ -25,11 +26,13 @@ import {
   updateMember,
   leaveWorkspace,
   getProfileWorkspaces,
+  getWorkspaceCriteria,
 } from '../../api/endpoints/workspaces';
 import { useProfileStore } from '../../store/profile';
 import { getUserData } from '../../lib/jwt';
 import { WorkspaceInvitesTab } from '../../components/WorkspaceInvitesTab/WorkspaceInvitesTab';
 import { WorkspaceTasksTab } from '../../components/WorkspaceTasksTab/WorkspaceTasksTab';
+import { CriterionCard } from '../../components/CriterionCard/CriterionCard';
 import type { WorkspaceMemberRole } from '../../types';
 
 const roleLabels: Record<string, string> = {
@@ -75,10 +78,15 @@ export function WorkspaceDetailPage() {
     queryFn: () => getWorkspaceMembers(workspaceId),
   });
 
+  const { data: criteria = [], isLoading: criteriaLoading } = useQuery({
+    queryKey: ['workspaceCriteria', workspaceId],
+    queryFn: () => getWorkspaceCriteria(workspaceId),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => deleteWorkspace(workspaceId),
     onSuccess: () => {
-      navigate('/workspaces');
+      navigate('/home');
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } } };
@@ -98,7 +106,7 @@ export function WorkspaceDetailPage() {
           role: item.role as WorkspaceMemberRole,
         }))
       );
-      navigate('/workspaces');
+      navigate('/home');
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } } };
@@ -173,6 +181,9 @@ export function WorkspaceDetailPage() {
           </Tabs.Tab>
           <Tabs.Tab value="tasks" leftSection={<IconBook size={16} />}>
             Задачи
+          </Tabs.Tab>
+          <Tabs.Tab value="criteria" leftSection={<IconFileDescription size={16} />}>
+            Критерии
           </Tabs.Tab>
           <Tabs.Tab value="members" leftSection={<IconUsers size={16} />}>
             Участники
@@ -265,6 +276,34 @@ export function WorkspaceDetailPage() {
 
           <Tabs.Panel value="tasks" pt="md">
             <WorkspaceTasksTab workspaceId={workspaceId} showTitle />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="criteria" pt="md">
+            <Group justify="space-between" mb="md">
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={() => navigate(`/workspaces/${workspaceId}/criteria/new`)}
+              >
+                Создать критерий
+              </Button>
+            </Group>
+            {criteriaLoading ? (
+              <Center h={200}>
+                <Loader size="lg" />
+              </Center>
+            ) : criteria.length === 0 ? (
+              <Text c="dimmed">Критерии не найдены</Text>
+            ) : (
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+                {criteria.map((criterion) => (
+                  <CriterionCard
+                    key={criterion.id}
+                    criterion={criterion}
+                    onClick={() => navigate(`/workspaces/${workspaceId}/criteria/${criterion.id}`)}
+                  />
+                ))}
+              </SimpleGrid>
+            )}
           </Tabs.Panel>
 
           {canManageInvites && (

@@ -5,9 +5,15 @@ export const stageLabels: Record<string, string> = {
   null: 'Критерий проверяется на всех стадиях до успешной проверки',
 };
 
-export const getCriterionAccessLabel = (is_public: boolean): string => {
-    if (is_public)
-        return"Критерий доступен всем"
-    else
-        return"Критерий доступен только вам"
-}
+export const getCriterionAccessLabel = (
+  workspaceId: number | null,
+  taskId: number | null
+): string => {
+  if (workspaceId === null && taskId === null) {
+    return 'Критерий доступен всем';
+  }
+  if (workspaceId !== null) {
+    return 'Критерий доступен только в этом пространстве';
+  }
+  return 'Критерий доступен только для этой задачи';
+};

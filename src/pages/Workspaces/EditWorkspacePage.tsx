@@ -14,6 +14,7 @@ import {
 } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { getWorkspace, updateWorkspace } from '../../api/endpoints/workspaces';
+import { useProfileStore } from '../../store/profile';
 
 export function EditWorkspacePage() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -25,24 +26,29 @@ export function EditWorkspacePage() {
   const [description, setDescription] = useState('');
   const [nameError, setNameError] = useState('');
   const [generalError, setGeneralError] = useState('');
+  const profileStore = useProfileStore();
 
-  const { data: workspace, isLoading: wsLoading } = useQuery({
+  const { data: workspace, isLoading: wsLoading, isSuccess } = useQuery({
     queryKey: ['workspace', id],
     queryFn: () => getWorkspace(id),
   });
 
   useEffect(() => {
-    if (workspace) {
+    if (isSuccess && workspace) {
       setName(workspace.name);
       setDescription(workspace.description || '');
     }
-  }, [workspace]);
+  }, [isSuccess, workspace]);
 
   const mutation = useMutation({
     mutationFn: (data: { name: string; description?: string }) =>
       updateWorkspace(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workspace', id] });
+      profileStore.setWorkspaces(
+        [...profileStore.workspaces.filter(ws => ws.workspaceId == data.id), 
+          {workspaceId: data.id, name: data.name, role: profileStore.workspaces.find(ws => ws.workspaceId == data.id)?.role || "STUDENT"}]
+      )
       navigate(`/workspaces/${id}`);
     },
     onError: (error: unknown) => {

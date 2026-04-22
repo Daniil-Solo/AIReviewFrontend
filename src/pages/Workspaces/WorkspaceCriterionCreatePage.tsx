@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Textarea,
   Select,
@@ -8,38 +8,33 @@ import {
   Stack,
   Title,
   Alert,
+  Group,
   MultiSelect,
   TextInput,
-  Group,
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { createCriterion, getAvailableTags } from '../../api/endpoints/criteria';
-import type { CriterionStage } from '../../types';
-import { getUserData } from '../../lib/jwt';
+import type { CriterionStage, CriterionCreateDTO, ErrorResponseDTO } from '../../types';
 
 const stageOptions = [
-  { value: '', label: 'Не выбрано' },
-  { value: 'PROJECT_DOC', label: 'Документация' },
-  { value: 'CODEBASE', label: 'Код' },
+  { value: '', label: 'Автопроверка' },
+  { value: 'PROJECT_DOC', label: 'Проверка по ProjectDoc' },
+  { value: 'CODEBASE', label: 'Проверка по кодовой базе' },
   { value: 'MANUAL', label: 'Ручная проверка' },
 ];
 
-export function CriteriaCreatePage() {
+export function WorkspaceCriterionCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const wsId = Number(workspaceId);
+
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [selectedStage, setSelectedStage] = useState<string | null>('');
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [descriptionError, setDescriptionError] = useState('');
   const [generalError, setGeneralError] = useState('');
-
-  useEffect(() => {
-    const user = getUserData();
-    if (!user?.is_admin) {
-      navigate('/criteria');
-    }
-  }, [navigate]);
 
   const { data: availableTags = [] } = useQuery({
     queryKey: ['availableTags'],
@@ -57,16 +52,17 @@ export function CriteriaCreatePage() {
   };
 
   const mutation = useMutation({
-    mutationFn: createCriterion,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['criteria'] });
+    mutationFn: (data: CriterionCreateDTO) =>
+      createCriterion(data),
+    onSuccess: (newCriterion) => {
+      queryClient.invalidateQueries({ queryKey: ['workspaceCriteria', wsId] });
       queryClient.invalidateQueries({ queryKey: ['criteriaTags'] });
       queryClient.invalidateQueries({ queryKey: ['availableTags'] });
-      navigate('/criteria');
+      navigate(`/workspaces/${wsId}/criteria/${newCriterion.id}`);
     },
-    onError: (err: unknown) => {
-      const e = err as { response?: { data?: { message?: string } } };
-      setGeneralError(e.response?.data?.message || 'Ошибка при создании');
+    onError: (err) => {
+      const data = (err as { response?: { data: ErrorResponseDTO } }).response?.data;
+      setGeneralError(data?.message || 'Ошибка создания');
     },
   });
 
@@ -87,6 +83,7 @@ export function CriteriaCreatePage() {
       description: description.trim(),
       tags: tags.length > 0 ? tags : undefined,
       stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
+      workspace_id: wsId,
     });
   };
 
@@ -102,18 +99,13 @@ export function CriteriaCreatePage() {
 
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
-          <Textarea
-            label="Описание"
-            placeholder="Описание критерия оценки"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            error={descriptionError}
-            onFocus={() => setDescriptionError('')}
-            required
-            autosize
-            minRows={4}
-            maxRows={10}
-            maxLength={1000}
+          <Select
+            label="Этап проверки"
+            placeholder="Выберите этап (необязательно)"
+            value={selectedStage}
+            onChange={(val) => setSelectedStage(val)}
+            data={stageOptions}
+            allowDeselect
           />
 
           <MultiSelect
@@ -142,18 +134,27 @@ export function CriteriaCreatePage() {
             </Button>
           </Group>
 
-          <Select
-            label="Этап проверки"
-            placeholder="Выберите этап (необязательно)"
-            value={selectedStage}
-            onChange={(val) => setSelectedStage(val)}
-            data={stageOptions}
-            allowDeselect
+          <Textarea
+            label="Описание"
+            placeholder="Описание критерия оценки"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            error={descriptionError}
+            onFocus={() => setDescriptionError('')}
+            required
+            autosize
+            minRows={4}
+            maxRows={10}
+            maxLength={1000}
           />
-
-          <Button type="submit" loading={mutation.isPending}>
-            Создать
-          </Button>
+          <Group>
+            <Button type="submit" loading={mutation.isPending}>
+              Создать
+            </Button>
+            <Button variant="subtle" onClick={() => navigate(`/workspaces/${wsId}`)}>
+              Отмена
+            </Button>
+          </Group>
         </Stack>
       </form>
     </Stack>

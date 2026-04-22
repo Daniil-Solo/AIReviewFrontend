@@ -17,7 +17,7 @@ const plans = [
     highlighted: false,
   },
   {
-    title: 'Оплата по факту',
+    title: 'Оплата по факту использования',
     price: 'От 99 ₽',
     description: 'Платите только за то, что используете',
     features: [

@@ -1,109 +1,138 @@
-OpenAPI: 3.1.0
-API: AI Review API v0.1.0
-
 Endpoints:
 
-POST   /api/v1/auth/login                     -> req: UserLoginDTO, res: TokenDTO
-POST   /api/v1/auth/register/start            -> req: EmailRegistrationRequestDTO, res: SuccessOperationDTO
-POST   /api/v1/auth/register/confirm          -> req: EmailConfirmationRequestDTO, res: TokenDTO
+POST /api/v1/auth/login -> body: UserLoginDTO (email: string, password: string), resp: TokenDTO (access_token: string)
+POST /api/v1/auth/register/start -> body: EmailRegistrationRequestDTO (fullname: string, email: string, password: string), resp: SuccessOperationDTO (message: string)
+POST /api/v1/auth/register/confirm -> body: EmailConfirmationRequestDTO (email: string, code: string), resp: TokenDTO
 
-POST   /api/v1/criteria                       -> auth, req: CriterionCreateDTO, res: CriterionResponseDTO
-GET    /api/v1/criteria                       -> auth, params: tags[] (string, opt), search (string, opt), res: CriterionResponseDTO[]
-GET    /api/v1/criteria/available_tags        -> auth, res: string[]
-GET    /api/v1/criteria/{criterion_id}        -> auth, path: criterion_id(int), res: CriterionResponseDTO
-PUT    /api/v1/criteria/{criterion_id}        -> auth, path: criterion_id, req: CriterionUpdateDTO, res: CriterionResponseDTO
-DELETE /api/v1/criteria/{criterion_id}        -> auth, path: criterion_id, res: SuccessOperationDTO
+POST /api/v1/criteria -> body: CriterionCreateDTO (description: string, tags: string[], stage: CriterionStageEnum|null, workspace_id: int|null, task_id: int|null), resp: CriterionResponseDTO
+GET /api/v1/criteria -> query: tags: string[]|null, search: string|null, resp: CriterionResponseDTO[]
+GET /api/v1/criteria/available_tags -> resp: string[]
+GET /api/v1/criteria/{criterion_id} -> resp: CriterionResponseDTO
+PUT /api/v1/criteria/{criterion_id} -> body: CriterionUpdateDTO (description: string, tags: string[], stage: CriterionStageEnum|null, workspace_id: int|null, task_id: int|null), resp: CriterionResponseDTO
+DELETE /api/v1/criteria/{criterion_id} -> resp: SuccessOperationDTO
 
-GET    /api/v1/users                          -> auth, res: UserResponseDTO[]
-POST   /api/v1/users                          -> req: UserCreateDTO, res: UserResponseDTO
-GET    /api/v1/users/{user_id}                -> path: user_id(int), res: UserResponseDTO
-POST   /api/v1/users/admin                    -> req: UserCreateDTO, res: UserResponseDTO
+GET /api/v1/users -> resp: UserResponseDTO[]
+POST /api/v1/users -> body: UserCreateDTO (fullname: string, email: string, password: string, min 8), resp: UserResponseDTO
+GET /api/v1/users/{user_id} -> resp: UserResponseDTO
+POST /api/v1/users/admin -> body: UserCreateDTO, resp: UserResponseDTO
 
-POST   /api/v1/workspaces                     -> auth, req: WorkspaceCreateDTO, res: WorkspaceResponseDTO
-PUT    /api/v1/workspaces/{workspace_id}      -> auth, path: workspace_id(int), req: WorkspaceUpdateDTO, res: WorkspaceResponseDTO
-DELETE /api/v1/workspaces/{workspace_id}      -> auth, path: workspace_id, res: SuccessOperationDTO
-GET    /api/v1/workspaces/{workspace_id}      -> auth, path: workspace_id, res: WorkspaceResponseDTO
-GET    /api/v1/workspaces/{workspace_id}/tasks -> auth, path: workspace_id, res: TaskResponseDTO[]
-GET    /api/v1/workspaces/{workspace_id}/members -> auth, path: workspace_id, res: WorkspaceMemberResponseDTO[]
-GET    /api/v1/workspaces/{workspace_id}/join_rules -> auth, path: workspace_id, res: WorkspaceJoinRuleResponseDTO[]
-POST   /api/v1/workspaces/{workspace_id}/join_rules -> auth, path: workspace_id, req: WorkspaceJoinRuleRequestCreateDTO, res: WorkspaceJoinRuleResponseDTO
-PUT    /api/v1/workspaces/{workspace_id}/join_rules/{rule_id} -> auth, path: workspace_id, rule_id(int), req: WorkspaceJoinRuleRequestUpdateDTO, res: WorkspaceJoinRuleResponseDTO
-DELETE /api/v1/workspaces/{workspace_id}/join_rules/{rule_id} -> auth, path: workspace_id, rule_id, res: SuccessOperationDTO
-PATCH  /api/v1/workspaces/{workspace_id}/members/{member_id} -> auth, path: workspace_id, member_id, req: WorkspaceMemberUpdateDTO, res: WorkspaceMemberResponseDTO
-POST   /api/v1/workspaces/{workspace_id}/leave -> auth, path: workspace_id, res: SuccessOperationDTO
-PATCH  /api/v1/workspaces/{workspace_id}/owner -> auth, path: workspace_id, req: TransferOwnershipDTO, res: WorkspaceResponseDTO
-GET    /api/v1/workspaces/slugs/availability   -> query: slug(string), res: SlugCheckResponseDTO
+POST /api/v1/workspaces -> body: WorkspaceCreateDTO (name: string, description: string|null), resp: WorkspaceResponseDTO
+PUT /api/v1/workspaces/{workspace_id} -> body: WorkspaceUpdateDTO (name: string, description: string|null), resp: WorkspaceResponseDTO
+DELETE /api/v1/workspaces/{workspace_id} -> resp: SuccessOperationDTO
+GET /api/v1/workspaces/{workspace_id} -> resp: WorkspaceResponseDTO
+GET /api/v1/workspaces/{workspace_id}/tasks -> resp: TaskResponseDTO[]
+GET /api/v1/workspaces/{workspace_id}/members -> resp: WorkspaceMemberResponseDTO[]
+GET /api/v1/workspaces/{workspace_id}/join_rules -> resp: WorkspaceJoinRuleResponseDTO[]
+POST /api/v1/workspaces/{workspace_id}/join_rules -> body: WorkspaceJoinRuleRequestCreateDTO (slug: string, role: WorkspaceMemberRoleEnum, is_active: bool, expired_at: datetime|null, password: string|null), resp: WorkspaceJoinRuleResponseDTO
+PUT /api/v1/workspaces/{workspace_id}/join_rules/{rule_id} -> body: WorkspaceJoinRuleRequestUpdateDTO (slug: string, role: WorkspaceMemberRoleEnum, is_active: bool, expired_at: datetime|null, password: string|null), resp: WorkspaceJoinRuleResponseDTO
+DELETE /api/v1/workspaces/{workspace_id}/join_rules/{rule_id} -> resp: SuccessOperationDTO
+PATCH /api/v1/workspaces/{workspace_id}/members/{member_id} -> body: WorkspaceMemberUpdateDTO (role: WorkspaceMemberRoleEnum), resp: WorkspaceMemberResponseDTO
+POST /api/v1/workspaces/{workspace_id}/leave -> resp: SuccessOperationDTO
+PATCH /api/v1/workspaces/{workspace_id}/owner -> body: TransferOwnershipDTO (member_id: int), resp: WorkspaceResponseDTO
+GET /api/v1/workspaces/slugs/availability -> query: slug: string, resp: SlugCheckResponseDTO (slug: string, is_available: bool)
+GET /api/v1/workspaces/{workspace_id}/criteria -> query: tags: string[]|null, search: string|null, resp: CriterionResponseDTO[]
 
-POST   /api/v1/joins                          -> auth, req: JoinBySlugDTO, res: JoinResponseDTO
+POST /api/v1/joins -> body: JoinBySlugDTO (slug: string, password: string|null), resp: JoinResponseDTO (workspace_id: int)
 
-POST   /api/v1/tasks                          -> auth, req: TaskCreateDTO, res: TaskResponseDTO
-PUT    /api/v1/tasks/{task_id}                -> auth, path: task_id(int), req: TaskUpdateDTO, res: TaskResponseDTO
-GET    /api/v1/tasks/{task_id}                -> auth, path: task_id, res: TaskResponseDTO
-DELETE /api/v1/tasks/{task_id}                -> auth, path: task_id, res: SuccessOperationDTO
-GET    /api/v1/tasks/{task_id}/public         -> auth, path: task_id, res: TaskResponseDTO
-POST   /api/v1/tasks/{task_id}/criteria       -> auth, path: task_id, req: TaskCriteriaCreateDTO, res: TaskCriteriaResponseDTO
-GET    /api/v1/tasks/{task_id}/criteria       -> auth, path: task_id, res: TaskCriteriaResponseDTO[]
-PATCH  /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> auth, path: task_id, task_criterion_id(int), req: TaskCriteriaUpdateWeightDTO, res: TaskCriteriaResponseDTO
-DELETE /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> auth, path: task_id, task_criterion_id, res: SuccessOperationDTO
-GET    /api/v1/tasks/{task_id}/solutions      -> auth, path: task_id, res: SolutionShortResponseDTO[]
+POST /api/v1/tasks -> body: TaskCreateDTO (workspace_id: int, name: string, description: string), resp: TaskResponseDTO
+PUT /api/v1/tasks/{task_id} -> body: TaskUpdateDTO (name: string, description: string, is_active: bool), resp: TaskResponseDTO
+GET /api/v1/tasks/{task_id} -> resp: TaskResponseDTO
+DELETE /api/v1/tasks/{task_id} -> resp: SuccessOperationDTO
+GET /api/v1/tasks/{task_id}/public -> resp: TaskResponseDTO
+POST /api/v1/tasks/{task_id}/criteria -> body: TaskCriteriaCreateRequestDTO (criterion_id: int, weight: float >=0), resp: TaskCriteriaResponseDTO
+GET /api/v1/tasks/{task_id}/criteria -> resp: TaskCriteriaFullResponseDTO[]
+POST /api/v1/tasks/{task_id}/criteria/batch -> body: TaskCriteriaCreateBatchDTO (criterion_ids: int[]), resp: SuccessOperationDTO
+PATCH /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> body: TaskCriteriaUpdateWeightDTO (weight: float >=0), resp: TaskCriteriaResponseDTO
+DELETE /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> resp: SuccessOperationDTO
+GET /api/v1/tasks/{task_id}/solutions -> resp: SolutionShortResponseDTO[]
+GET /api/v1/tasks/{task_id}/available_criteria -> query: tags: string[]|null, search: string|null, resp: CriterionResponseDTO[]
 
-GET /api/v1/profile/workspaces                -> auth, res: UserWorkspaceResponseDTO[]
+POST /api/v1/solutions -> multipart: task_id: int, solution_format: SolutionFormatEnum, github_repo_link: string|null, github_repo_branch: string|null, file: binary|null, resp: SolutionShortResponseDTO
+GET /api/v1/solutions/my -> query: task_id: int|null, resp: SolutionShortResponseDTO[]
+GET /api/v1/solutions/{solution_id} -> resp: SolutionShortResponseDTO
+POST /api/v1/solutions/{solution_id}/cancel -> resp: SuccessOperationDTO
+POST /api/v1/solutions/{solution_id}/restart -> resp: SuccessOperationDTO
+GET /api/v1/solutions/{solution_id}/info -> resp: PipelineInfoDTO
+GET /api/v1/solutions/{solution_id}/artefacts/{step} -> resp: binary (raw file)
+POST /api/v1/solutions/{solution_id}/criteria-checks -> body: SolutionCriteriaCheckCreateRequestDTO (task_criterion_id: int, is_passed: bool, comment: string), resp: SuccessOperationDTO
+GET /api/v1/solutions/{solution_id}/criteria-checks -> resp: CriteriaGradingReviewResponseDTO
 
-POST   /api/v1/solutions                      -> auth, multipart/form-data: task_id(int), format(SolutionFormatEnum), link(string,opt), file(binary,opt), res: SolutionShortResponseDTO
-GET    /api/v1/solutions/{solution_id}        -> auth, path: solution_id(int), res: SolutionShortResponseDTO
-POST   /api/v1/solutions/{solution_id}/cancel -> auth, path: solution_id, res: SuccessOperationDTO
+GET /api/v1/profile/workspaces -> resp: UserWorkspaceResponseDTO[]
 
-GET    /api/internal/health                   -> res: object (status)
+GET /api/v1/transactions/balance -> resp: BalanceResponseDTO (balance: float)
+POST /api/v1/transactions -> body: AdminTopUpDTO (user_id: int, amount: float), resp: TransactionResponseDTO
+GET /api/v1/transactions -> query: started_at: datetime|null, ended_at: datetime|null, types: TransactionTypeEnum[]|null, resp: TransactionResponseDTO[]
 
-Schemas (key fields):
+GET /api/internal/health -> resp: object (map[string]bool)
 
-UserLoginDTO: email(string), password(string)
-EmailRegistrationRequestDTO: fullname, email, password
-EmailConfirmationRequestDTO: email, code
-TokenDTO: access_token
-SuccessOperationDTO: message
+Schemas (key fields with types):
 
-CriterionCreateDTO: description(string,1-1000), tags(string[]), stage(PROJECT_DOC|CODEBASE|MANUAL|null), is_public(boolean,default true)
-CriterionResponseDTO: id, description, tags, stage, is_public, created_by(int), created_at(datetime)
-CriterionUpdateDTO: same as Create but all optional except description
-CriterionStageEnum: PROJECT_DOC, CODEBASE, MANUAL
+UserLoginDTO: email: string, password: string
+TokenDTO: access_token: string
+SuccessOperationDTO: message: string
 
-UserCreateDTO: fullname(1-255), email, password(min8)
-UserResponseDTO: id, email, fullname, is_admin, is_verified, created_at, hashed_password
+EmailRegistrationRequestDTO: fullname: string, email: string, password: string
+EmailConfirmationRequestDTO: email: string, code: string
 
-WorkspaceCreateDTO: name(1-255), description(0-5000,opt)
-WorkspaceResponseDTO: id, name, description, is_archived, created_at
-WorkspaceUpdateDTO: name, description(opt)
+CriterionStageEnum: "PROJECT_DOC", "CODEBASE", "MANUAL"
+CriterionCreateDTO: description: string, tags: string[], stage: CriterionStageEnum|null, workspace_id: int|null, task_id: int|null
+CriterionUpdateDTO: same as create
+CriterionResponseDTO: id: int, description: string, tags: string[], stage: CriterionStageEnum|null, workspace_id: int|null, task_id: int|null, created_by: int, created_at: datetime, is_public: bool (readonly)
+
+UserCreateDTO: fullname: string, email: string, password: string (min 8)
+UserResponseDTO: id: int, email: string, fullname: string, is_admin: bool, is_verified: bool, created_at: datetime, hashed_password: string
+
+WorkspaceCreateDTO: name: string, description: string (default "")
+WorkspaceUpdateDTO: name: string, description: string (default "")
+WorkspaceResponseDTO: id: int, name: string, description: string, is_archived: bool, created_at: datetime
+
+WorkspaceMemberRoleEnum: "OWNER", "TEACHER", "STUDENT"
+WorkspaceMemberResponseDTO: user_id: int, workspace_id: int, role: WorkspaceMemberRoleEnum, id: int, fullname: string, email: string
+WorkspaceMemberUpdateDTO: role: WorkspaceMemberRoleEnum
+
+WorkspaceJoinRuleRequestCreateDTO: slug: string, role: WorkspaceMemberRoleEnum, is_active: bool (default true), expired_at: datetime|null, password: string|null
+WorkspaceJoinRuleRequestUpdateDTO: slug: string, role: WorkspaceMemberRoleEnum, is_active: bool (default true), expired_at: datetime|null, password: string|null
+WorkspaceJoinRuleResponseDTO: id: int, workspace_id: int, slug: string, role: WorkspaceMemberRoleEnum, expired_at: datetime|null, is_active: bool, has_password: bool, used_count: int
+
+TransferOwnershipDTO: member_id: int
+JoinBySlugDTO: slug: string, password: string|null
+JoinResponseDTO: workspace_id: int
+SlugCheckResponseDTO: slug: string, is_available: bool
+
+TaskCreateDTO: workspace_id: int, name: string, description: string (default "")
+TaskUpdateDTO: name: string, description: string (default ""), is_active: bool
+TaskResponseDTO: id: int, workspace_id: int, name: string, description: string, is_active: bool, created_by: int, created_at: datetime, use_exam: bool
+
+TaskCriteriaCreateRequestDTO: criterion_id: int, weight: float (>=0)
+TaskCriteriaResponseDTO: id: int, task_id: int, criterion_id: int, weight: float
+TaskCriteriaFullResponseDTO: id: int, task_id: int, criterion_id: int, weight: float, criterion: CriterionResponseDTO
+TaskCriteriaCreateBatchDTO: criterion_ids: int[]
+TaskCriteriaUpdateWeightDTO: weight: float (>=0)
+
+SolutionFormatEnum: "ZIP", "GITHUB"
+SolutionStatusEnum: "CREATED", "CANCELLED", "ERROR", "AI_REVIEW", "WAITING_EXAM", "EXAMINATION", "HUMAN_REVIEW", "REVIEWED"
+PipelineStepEnum: "prepare_project_tree", "prepare_project_content", "create_project_doc", "critic", "resolve_gaps", "improve_doc", "grade_by_project_doc", "grade_by_codebase"
+PipelineTaskStatusEnum: "pending", "running", "completed", "failed"
+
+ShortUserDTO: id: int, email: string, fullname: string, is_admin: bool
+SolutionShortResponseDTO: id: int, task_id: int, format: SolutionFormatEnum, github_repo_link: string|null, github_repo_branch|null, status: SolutionStatusEnum, steps: PipelineStepEnum[], human_grade: int|null, human_feedback: string|null, ai_feedback: string|null, created_at: datetime, created_by: int, author: ShortUserDTO|null
+SolutionResponseDTO: extends SolutionShortResponseDTO (additional fields? includes created_by and full solution info)
+
+PipelineTaskDTO: id: int, solution_id: int, step: PipelineStepEnum, status: PipelineTaskStatusEnum, error_text: string|null, duration: float|null, last_checked_at: datetime|null, ran_at: datetime|null, created_at: datetime
+PipelineInfoDTO: solution_id: int, solution_status: SolutionStatusEnum, solution_steps: PipelineStepEnum[], pipeline_tasks: PipelineTaskDTO[]
+
+CriterionCheckStatusEnum: "SUFFICIENT", "NEEDS_CODE", "NEEDS_STUDENT", "NEEDS_MANUAL", "NOT_APPLICABLE"
+SolutionCriteriaCheckResponseDTO: task_criterion_id: int, solution_id: int, comment: string, stage: CriterionStageEnum, status: CriterionCheckStatusEnum, is_passed: bool|null, id: int, created_at: datetime
+SolutionCriteriaCheckCreateRequestDTO: task_criterion_id: int, is_passed: bool, comment: string (default "")
+GradingCriterionDTO: criterion: CriterionResponseDTO, weight: float, checks: SolutionCriteriaCheckResponseDTO[]
+CriteriaGradingReviewResponseDTO: solution: SolutionResponseDTO, task: TaskResponseDTO, criteria: GradingCriterionDTO[]
+
 UserWorkspaceResponseDTO: workspace: WorkspaceResponseDTO, role: WorkspaceMemberRoleEnum
 
-WorkspaceMemberResponseDTO: user_id, workspace_id, role(OWNER|TEACHER|STUDENT), id, fullname, email
-WorkspaceMemberUpdateDTO: role
-WorkspaceMemberRoleEnum: OWNER, TEACHER, STUDENT
+BalanceResponseDTO: balance: float
+AdminTopUpDTO: user_id: int, amount: float
+TransactionTypeEnum: "WELCOME_BONUS", "ADMIN_TOP_UP", "LLM_CALL"
+TransactionResponseDTO: id: int, user_id: int, amount: float, type: TransactionTypeEnum, metadata: object|null, created_at: datetime
 
-WorkspaceJoinRuleRequestCreateDTO: slug(1-255), role, is_active(default true), expired_at(datetime|null), password(1-255|null)
-WorkspaceJoinRuleRequestUpdateDTO: same
-WorkspaceJoinRuleResponseDTO: id, workspace_id, slug, role, expired_at, is_active, has_password, used_count
-
-JoinBySlugDTO: slug, password(opt)
-JoinResponseDTO: workspace_id
-SlugCheckResponseDTO: slug, is_available
-TransferOwnershipDTO: member_id
-
-TaskCreateDTO: workspace_id, name(1-255), description(0-5000,opt)
-TaskResponseDTO: id, workspace_id, name, description, is_active, created_by, created_at, use_exam
-TaskUpdateDTO: name, description(opt), is_active
-
-TaskCriteriaCreateDTO: task_id, criterion_id, weight(0.0-1.0)
-TaskCriteriaResponseDTO: id, task_id, criterion_id, weight
-TaskCriteriaUpdateWeightDTO: weight(0.0-1.0)
-
-SolutionFormatEnum: ZIP, GITHUB
-SolutionStatusEnum: CREATED, CANCELLED, ERROR, AI_REVIEW, WAITING_EXAM, EXAMINATION, HUMAN_REVIEW, REVIEWED
-SolutionShortResponseDTO: id, task_id, format, link, status, human_grade(int|null), human_feedback(string|null), ai_feedback(string|null), created_at, created_by
-
-Body_create_endpoint_api_v1_solutions_post: task_id, format, link(opt), file(opt)
-
-HTTPValidationError: detail (ValidationError[])
-ValidationError: loc(list), msg, type, input, ctx
-
-Security: HTTPBearer (bearer token)
+HTTPValidationError: detail: ValidationError[]
+ValidationError: loc: (string|int)[], msg: string, type: string

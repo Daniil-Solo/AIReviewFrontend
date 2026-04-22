@@ -11,6 +11,7 @@ import type {
   JoinRequestDTO,
   JoinResponseDTO,
   SlugAvailabilityResponseDTO,
+  CriterionResponseDTO,
 } from '../../types';
 
 export const getProfileWorkspaces = async (): Promise<UserWorkspaceResponseDTO[]> => {
@@ -140,5 +141,14 @@ export const joinWorkspace = async (
   data: JoinRequestDTO
 ): Promise<JoinResponseDTO> => {
   const response = await api.post<JoinResponseDTO>('/api/v1/joins', data);
+  return response.data;
+};
+
+export const getWorkspaceCriteria = async (
+  workspaceId: number
+): Promise<CriterionResponseDTO[]> => {
+  const response = await api.get<CriterionResponseDTO[]>(
+    `/api/v1/workspaces/${workspaceId}/criteria`
+  );
   return response.data;
 };

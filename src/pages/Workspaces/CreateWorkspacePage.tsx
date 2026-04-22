@@ -11,6 +11,7 @@ import {
 } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { createWorkspace } from '../../api/endpoints/workspaces';
+import { useProfileStore } from '../../store/profile';
 
 export function CreateWorkspacePage() {
   const navigate = useNavigate();
@@ -18,10 +19,12 @@ export function CreateWorkspacePage() {
   const [description, setDescription] = useState('');
   const [nameError, setNameError] = useState('');
   const [generalError, setGeneralError] = useState('');
+  const profileStore = useProfileStore();
 
   const mutation = useMutation({
     mutationFn: createWorkspace,
     onSuccess: (data) => {
+      profileStore.setWorkspaces([...profileStore.workspaces, {workspaceId: data.id, name: data.name, role: "OWNER"}])
       navigate(`/workspaces/${data.id}`);
     },
     onError: (error: unknown) => {

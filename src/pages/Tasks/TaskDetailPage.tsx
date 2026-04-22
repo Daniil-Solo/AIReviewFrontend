@@ -27,30 +27,33 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
+import { formatRelativeTime } from '../../lib/date';
 import {
   IconTrash,
   IconPlus,
   IconDotsVertical,
   IconSearch,
-  IconLock,
   IconWorld,
+  IconStack2,
+  IconHelpOctagon,
   IconFileDescription,
   IconCode,
   IconSchool,
-  IconStack2,
   IconExternalLink,
   IconX,
   IconChevronDown,
   IconChevronUp,
   IconEdit,
-  IconWeight,
+  IconCirclePlus,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
-import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions } from '../../api/endpoints/tasks';
-import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
+import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions, getAvailableTaskCriteria } from '../../api/endpoints/tasks';
+import { getAvailableTags } from '../../api/endpoints/criteria';
+import { getMySolutions } from '../../api/endpoints/solutions';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
 import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
+import { statusLabels, formatLabels } from '../../features/solutions/constants';
 
 
 
@@ -122,9 +125,9 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
   });
 
   const { data: allCriteria = [], isLoading: criteriaListLoading } = useQuery({
-    queryKey: ['criteria', debouncedSearch, debouncedSelectedTags],
+    queryKey: ['availableTaskCriteria', taskId, debouncedSearch, debouncedSelectedTags],
     queryFn: () =>
-      getCriteria({
+      getAvailableTaskCriteria(taskId, {
         search: debouncedSearch || undefined,
         tags: debouncedSelectedTags.length > 0 ? debouncedSelectedTags : undefined,
       }),
@@ -135,6 +138,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
       addTaskCriteriaBatch(taskId, { criterion_ids: criterionIds }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
       close();
       setSelectedCriterionIds([]);
     },
@@ -152,12 +156,9 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
     mutationFn: (id: number) => deleteTaskCriterion(taskId, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
     },
   });
-
-  const availableCriteria = allCriteria.filter(
-    (c) => !taskCriteria?.some((tc) => tc.criterion_id === c.id)
-  );
 
   const handleAdd = () => {
     if (selectedCriterionIds.length > 0) {
@@ -246,7 +247,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
 
           {criteriaListLoading ? (
             <Loader size="sm" />
-          ) : availableCriteria.length === 0 ? (
+          ) : allCriteria.length === 0 ? (
             <Text c="dimmed" ta="center" py="lg">Критерии не найдены</Text>
           ) : (
             <Table striped highlightOnHover>
@@ -258,7 +259,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {availableCriteria.map((criterion) => (
+                {allCriteria.map((criterion) => (
                   <Table.Tr key={criterion.id}>
                     <Table.Td>
                       <Checkbox
@@ -273,11 +274,21 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs">
-                        <Tooltip label={criterion.is_public ? 'Публичный' : 'Приватный'}>
-                          {criterion.is_public ? (
-                            <IconWorld size={16} color="gray" />
+                        <Tooltip
+                          label={
+                            criterion.workspace_id !== null
+                              ? 'Критерий доступен только в этом пространстве'
+                              : criterion.task_id !== null
+                              ? 'Критерий доступен только для этой задачи'
+                              : 'Критерий доступен всем'
+                          }
+                        >
+                          {criterion.workspace_id !== null ? (
+                            <IconStack2 size={16} color="gray" />
+                          ) : criterion.task_id !== null ? (
+                            <IconHelpOctagon size={16} color="gray" />
                           ) : (
-                            <IconLock size={16} color="gray" />
+                            <IconWorld size={16} color="gray" />
                           )}
                         </Tooltip>
                         <Tooltip label={criterionStageLabels[criterion.stage ?? 'null'] || 'Все стадии'}>
@@ -333,7 +344,8 @@ function CriterionCard({
 
   const firstLine = tc.criterion.description.split('\n')[0];
 
-  const isPublic = tc.criterion.is_public;
+  const workspaceId = tc.criterion.workspace_id;
+  const taskId = tc.criterion.task_id;
   const stage = tc.criterion.stage ?? null;
   const tags = tc.criterion.tags;
 
@@ -347,8 +359,22 @@ function CriterionCard({
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">
           <Group gap="xs" wrap="nowrap">
-            <Tooltip label={isPublic ? 'Публичный' : 'Приватный'}>
-              {isPublic ? <IconWorld size={16} color="gray" /> : <IconLock size={16} color="gray" />}
+            <Tooltip
+              label={
+                workspaceId !== null
+                  ? 'Критерий доступен только в этом пространстве'
+                  : taskId !== null
+                  ? 'Критерий доступен только для этой задачи'
+                  : 'Критерий доступен всем'
+              }
+            >
+              {workspaceId !== null ? (
+                <IconStack2 size={16} color="gray" />
+              ) : taskId !== null ? (
+                <IconHelpOctagon size={16} color="gray" />
+              ) : (
+                <IconWorld size={16} color="gray" />
+              )}
             </Tooltip>
             <Tooltip label={criterionStageLabels[stage ?? 'null']}>
               {stageIcons[stage ?? 'null']}
@@ -413,7 +439,7 @@ function CriterionCard({
   );
 }
 
-function TaskSolutionsTab({ taskId }: { taskId: number }) {
+function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: number }) {
   const { data: solutions, isLoading } = useQuery({
     queryKey: ['taskSolutions', taskId],
     queryFn: () => getTaskSolutions(taskId),
@@ -425,8 +451,162 @@ function TaskSolutionsTab({ taskId }: { taskId: number }) {
 
   return (
     <Stack gap="md">
-      <Text c="dimmed">Список решений (скоро)</Text>
       <Text size="sm">Всего решений: {solutions?.length || 0}</Text>
+      <Table.ScrollContainer minWidth={600}>
+        <Table striped>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>ID</Table.Th>
+              <Table.Th>Формат</Table.Th>
+              <Table.Th>Статус</Table.Th>
+              <Table.Th>Автор</Table.Th>
+              <Table.Th>Создано</Table.Th>
+              <Table.Th></Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {solutions?.map((solution) => {
+              const progress = (solution.steps.length / 8) * 100;
+              const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
+              return (
+                <Table.Tr key={solution.id}>
+                  <Table.Td>{solution.id}</Table.Td>
+                  <Table.Td>
+                    <Badge variant="outline" color="gray" size="sm">
+                      {formatLabels[solution.format]}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Badge variant="outline" color="gray" size="sm">
+                        {statusLabels[solution.status]}
+                      </Badge>
+                      {showProgress && (
+                        <Badge variant="outline" color="gray" size="sm">
+                          {Math.round(progress)}%
+                        </Badge>
+                      )}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Tooltip label={solution.author.fullname}>
+                      <Text size="sm" style={{ cursor: 'default' }}>
+                        {solution.author.email}
+                      </Text>
+                    </Tooltip>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" c="dimmed">
+                      {formatRelativeTime(solution.created_at)}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Button 
+                      component={Link} 
+                      to={`/workspaces/${workspaceId}/tasks/${taskId}/solutions/${solution.id}`}
+                      variant="subtle" 
+                      size="xs"
+                    >
+                      Перейти
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Stack>
+  );
+}
+
+function MySolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: number }) {
+  const { data: solutions, isLoading } = useQuery({
+    queryKey: ['mySolutions', taskId],
+    queryFn: () => getMySolutions(taskId),
+  });
+
+  if (isLoading) {
+    return <Loader size="sm" />;
+  }
+
+  return (
+    <Stack gap="md">
+      <Group justify="space-between">
+        <Text size="sm">Мои решения: {solutions?.length || 0}</Text>
+        <Button
+          component={Link}
+          to={`/workspaces/${workspaceId}/tasks/${taskId}/solutions/new`}
+          leftSection={<IconCirclePlus size={16} />}
+          variant="light"
+          size="sm"
+        >
+          Отправить решение
+        </Button>
+      </Group>
+      
+      {solutions && solutions.length > 0 ? (
+        <Table.ScrollContainer minWidth={500}>
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>ID</Table.Th>
+                <Table.Th>Формат</Table.Th>
+                <Table.Th>Статус</Table.Th>
+                <Table.Th>Создано</Table.Th>
+                <Table.Th></Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {solutions?.map((solution) => {
+                const progress = (solution.steps.length / 8) * 100;
+                const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
+                return (
+                  <Table.Tr key={solution.id}>
+                    <Table.Td>{solution.id}</Table.Td>
+                    <Table.Td>
+                      <Badge variant="outline" color="gray" size="sm">
+                        {formatLabels[solution.format]}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Badge variant="outline" color="gray" size="sm">
+                          {statusLabels[solution.status]}
+                        </Badge>
+                        {showProgress && (
+                          <Badge variant="outline" color="gray" size="sm">
+                            {Math.round(progress)}%
+                          </Badge>
+                        )}
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" c="dimmed">
+                        {formatRelativeTime(solution.created_at)}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Button 
+                        component={Link} 
+                        to={`/workspaces/${workspaceId}/tasks/${taskId}/solutions/${solution.id}`}
+                        variant="subtle" 
+                        size="xs"
+                      >
+                        Перейти
+                      </Button>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
+      ) : (
+        <Text c="dimmed" ta="center" py="xl">
+          У вас пока нет решений для этой задачи
+        </Text>
+      )}
     </Stack>
   );
 }
@@ -516,12 +696,17 @@ export function TaskDetailPage() {
       <Tabs defaultValue="main">
         <Tabs.List>
           <Tabs.Tab value="main">Основное</Tabs.Tab>
+          <Tabs.Tab value="my-solutions">Мои решения</Tabs.Tab>
           <Tabs.Tab value="criteria">Критерии</Tabs.Tab>
-          <Tabs.Tab value="solutions">Решения</Tabs.Tab>
+          <Tabs.Tab value="solutions">Все решения</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="main" pt="md">
           <TaskMainTab task={task} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="my-solutions" pt="md">
+          <MySolutionsTab taskId={tId} workspaceId={wsId} />
         </Tabs.Panel>
 
         <Tabs.Panel value="criteria" pt="md">
@@ -529,7 +714,7 @@ export function TaskDetailPage() {
         </Tabs.Panel>
 
         <Tabs.Panel value="solutions" pt="md">
-          <TaskSolutionsTab taskId={tId} />
+          <TaskSolutionsTab taskId={tId} workspaceId={wsId} />
         </Tabs.Panel>
       </Tabs>
     </Stack>

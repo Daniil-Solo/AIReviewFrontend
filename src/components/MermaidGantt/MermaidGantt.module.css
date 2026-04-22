@@ -1,0 +1,92 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.diagram {
+  overflow-x: auto;
+  padding: 16px;
+  background: var(--mantine-color-gray-0);
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 8px;
+}
+
+.diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.pendingSection {
+  padding: 16px;
+  background: var(--mantine-color-gray-0);
+  border: 1px solid var(--mantine-color-gray-3);
+  border-radius: 8px;
+}
+
+.pendingTitle {
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: var(--mantine-color-gray-7);
+}
+
+.pendingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--mantine-color-gray-2);
+}
+
+.pendingItem:last-child {
+  border-bottom: none;
+}
+
+.pendingStep {
+  color: var(--mantine-color-gray-7);
+}
+
+.pendingStatus {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.pendingStatus.pending {
+  background: var(--mantine-color-gray-1);
+  color: var(--mantine-color-gray-6);
+}
+
+.pendingStatus.running {
+  background: var(--mantine-color-blue-1);
+  color: var(--mantine-color-blue-7);
+}
+
+.pendingStatus.failed {
+  background: var(--mantine-color-red-1);
+  color: var(--mantine-color-red-7);
+}
+
+[data-mantine-color-scheme="dark"] .diagram,
+[data-mantine-color-scheme="dark"] .pendingSection {
+  background: var(--mantine-color-dark-6);
+  border-color: var(--mantine-color-dark-4);
+}
+
+[data-mantine-color-scheme="dark"] .pendingTitle {
+  color: var(--mantine-color-dark-1);
+}
+
+[data-mantine-color-scheme="dark"] .pendingItem {
+  border-color: var(--mantine-color-dark-5);
+}
+
+[data-mantine-color-scheme="dark"] .pendingStep {
+  color: var(--mantine-color-dark-1);
+}

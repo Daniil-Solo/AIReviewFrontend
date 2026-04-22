@@ -116,14 +116,16 @@ export interface CriterionCreateDTO {
   description: string;
   tags?: string[];
   stage?: CriterionStage;
-  is_public?: boolean;
+  workspace_id?: number;
+  task_id?: number;
 }
 
 export interface CriterionUpdateDTO {
   description?: string;
   tags?: string[];
   stage?: CriterionStage;
-  is_public?: boolean;
+  workspace_id?: number;
+  task_id?: number;
 }
 
 export interface CriterionResponseDTO {
@@ -132,6 +134,8 @@ export interface CriterionResponseDTO {
   tags: string[];
   stage: CriterionStage;
   is_public: boolean;
+  workspace_id: number | null;
+  task_id: number | null;
   created_by: number;
   created_at: string;
 }
@@ -180,11 +184,116 @@ export interface TaskCriteriaResponseDTO {
   criterion: CriterionResponseDTO;
 }
 
-export interface SolutionResponseDTO {
+export type SolutionFormatEnum = 'ZIP' | 'GITHUB';
+
+export type SolutionStatusEnum = 
+  | 'CREATED' 
+  | 'CANCELLED' 
+  | 'ERROR' 
+  | 'AI_REVIEW' 
+  | 'WAITING_EXAM' 
+  | 'EXAMINATION' 
+  | 'HUMAN_REVIEW' 
+  | 'REVIEWED';
+
+export type PipelineStepEnum = 
+  | 'prepare_project_tree' 
+  | 'prepare_project_content' 
+  | 'create_project_doc' 
+  | 'critic' 
+  | 'resolve_gaps' 
+  | 'improve_doc'
+  | 'grade_by_codebase'
+  | 'grade_by_project_doc';
+
+export type PipelineTaskStatusEnum = 'pending' | 'running' | 'completed' | 'failed';
+
+export interface SolutionAuthorDTO {
+  id: number;
+  email: string;
+  fullname: string;
+  is_admin: boolean;
+}
+
+export interface SolutionShortResponseDTO {
   id: number;
   task_id: number;
-  student_id: number;
-  student_fullname: string;
-  status: string;
-  submitted_at: string;
+  format: SolutionFormatEnum;
+  github_repo_link: string | null;
+  github_repo_branch: string | null;
+  status: SolutionStatusEnum;
+  steps: PipelineStepEnum[];
+  human_grade: number | null;
+  human_feedback: string | null;
+  ai_feedback: string | null;
+  created_at: string;
+  created_by: number;
+  author: SolutionAuthorDTO | null;
+}
+
+export interface PipelineTaskDTO {
+  id: number;
+  solution_id: number;
+  step: PipelineStepEnum;
+  status: PipelineTaskStatusEnum;
+  error_text: string | null;
+  duration: number | null;
+  last_checked_at: string | null;
+  ran_at: string | null;
+  created_at: string;
+}
+
+export interface PipelineInfoDTO {
+  solution_id: number;
+  solution_status: SolutionStatusEnum;
+  solution_steps: PipelineStepEnum[];
+  pipeline_tasks: PipelineTaskDTO[];
+}
+
+export interface BalanceResponseDTO {
+  balance: number;
+}
+
+export type TransactionTypeEnum = 'WELCOME_BONUS' | 'ADMIN_TOP_UP' | 'LLM_CALL';
+
+export interface TransactionResponseDTO {
+  id: number;
+  user_id: number;
+  amount: number;
+  type: TransactionTypeEnum;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface AdminTopUpDTO {
+  user_id: number;
+  amount: number;
+}
+
+export type SolutionResponseDTO = SolutionShortResponseDTO;
+
+export type CriterionCheckStatusEnum = 'SUFFICIENT' | 'NEEDS_CODE' | 'NEEDS_STUDENT' | 'NEEDS_MANUAL' | 'NOT_APPLICABLE';
+
+export interface SolutionCriteriaCheckResponseDTO {
+  id: number;
+  task_criterion_id: number;
+  solution_id: number;
+  comment: string;
+  stage: CriterionStage;
+  status: CriterionCheckStatusEnum;
+  is_passed: boolean | null;
+  created_at: string;
+}
+
+export interface GradingCriterionDTO {
+  criterion: CriterionResponseDTO;
+  task_criterion_id: number;
+  weight: number;
+  checks: SolutionCriteriaCheckResponseDTO[];
+}
+
+export interface CriteriaGradingReviewResponseDTO {
+  solution: SolutionShortResponseDTO;
+  task: TaskResponseDTO;
+  criteria: GradingCriterionDTO[];
 }

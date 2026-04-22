@@ -35,7 +35,7 @@ export function HowItWorks() {
         
         <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} mt={48} spacing="lg">
           {steps.map((step, index) => (
-            <Box key={index} className={styles.card}>
+            <Box key={index} className={styles.card} style={{"cursor": "pointer"}}>
               <ThemeIcon 
                 size={56} 
                 radius="xl" 
