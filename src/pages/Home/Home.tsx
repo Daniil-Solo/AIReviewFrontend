@@ -69,13 +69,13 @@ export function Home() {
                     <Text size="sm" fw={600} c="dimmed">
                       Полное имя
                     </Text>
-                    <Text size="sm" c="black">
+                    <Text size="sm" color="black">
                       {user?.fullname}
                     </Text>
                    <Text size="sm" fw={600} c="dimmed" mt="xs">
                       Электронная почта
                     </Text>
-                    <Text size="sm" c="black">{user?.email}</Text>
+                    <Text size="sm" color="black">{user?.email}</Text>
                   </Box>
                 
               </Paper>
@@ -91,13 +91,13 @@ export function Home() {
                   <Text size="sm" fw={600} c="dimmed">
                       Роль в системе
                     </Text>
-                    <Text size="sm" c="black">
+                    <Text size="sm" color="black">
                       {user?.is_admin ? 'Админ' : 'Пользователь'}
                     </Text>
                   <Text size="sm" fw={600} c="dimmed" mt="xs">
                     ID пользователя
                   </Text>
-                  <Text size="sm" c="black" mt={4}>{user?.sub}</Text>
+                  <Text size="sm" color="black" mt={4}>{user?.sub}</Text>
                 </Box>
               </Paper>
 

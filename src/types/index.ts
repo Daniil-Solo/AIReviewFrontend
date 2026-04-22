@@ -219,14 +219,16 @@ export interface SolutionShortResponseDTO {
   id: number;
   task_id: number;
   format: SolutionFormatEnum;
-  link: string;
+  github_repo_link: string | null;
+  github_repo_branch: string | null;
   status: SolutionStatusEnum;
   steps: PipelineStepEnum[];
   human_grade: number | null;
   human_feedback: string | null;
   ai_feedback: string | null;
   created_at: string;
-  author: SolutionAuthorDTO;
+  created_by: number;
+  author: SolutionAuthorDTO | null;
 }
 
 export interface PipelineTaskDTO {
@@ -268,14 +270,7 @@ export interface AdminTopUpDTO {
   amount: number;
 }
 
-export interface SolutionResponseDTO {
-  id: number;
-  task_id: number;
-  student_id: number;
-  student_fullname: string;
-  status: string;
-  submitted_at: string;
-}
+export type SolutionResponseDTO = SolutionShortResponseDTO;
 
 export type CriterionCheckStatusEnum = 'SUFFICIENT' | 'NEEDS_CODE' | 'NEEDS_STUDENT' | 'NEEDS_MANUAL' | 'NOT_APPLICABLE';
 

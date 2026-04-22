@@ -3,6 +3,8 @@ import { LandingPage } from './pages/Landing/Landing';
 import { MainLayout } from './components/MainLayout/MainLayout';
 import { Login } from './pages/Login/Login';
 import { Register } from './pages/Register/Register';
+import { PrivacyPolicy } from './pages/PrivacyPolicy/PrivacyPolicy';
+import { TermsOfUse } from './pages/TermsOfUse/TermsOfUse';
 import { Home } from './pages/Home/Home';
 import { CreateWorkspacePage } from './pages/Workspaces/CreateWorkspacePage';
 import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
@@ -51,6 +53,14 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <LandingPage />,
+  },
+  {
+    path: '/privacy',
+    element: <PrivacyPolicy />,
+  },
+  {
+    path: '/terms',
+    element: <TermsOfUse />,
   },
   {
     element: <AuthLayout/>,

@@ -47,7 +47,7 @@ DELETE /api/v1/tasks/{task_id}/criteria/{task_criterion_id} -> resp: SuccessOper
 GET /api/v1/tasks/{task_id}/solutions -> resp: SolutionShortResponseDTO[]
 GET /api/v1/tasks/{task_id}/available_criteria -> query: tags: string[]|null, search: string|null, resp: CriterionResponseDTO[]
 
-POST /api/v1/solutions -> multipart: task_id: int, format: SolutionFormatEnum, link: string|null, file: binary|null, resp: SolutionShortResponseDTO
+POST /api/v1/solutions -> multipart: task_id: int, solution_format: SolutionFormatEnum, github_repo_link: string|null, github_repo_branch: string|null, file: binary|null, resp: SolutionShortResponseDTO
 GET /api/v1/solutions/my -> query: task_id: int|null, resp: SolutionShortResponseDTO[]
 GET /api/v1/solutions/{solution_id} -> resp: SolutionShortResponseDTO
 POST /api/v1/solutions/{solution_id}/cancel -> resp: SuccessOperationDTO
@@ -115,7 +115,7 @@ PipelineStepEnum: "prepare_project_tree", "prepare_project_content", "create_pro
 PipelineTaskStatusEnum: "pending", "running", "completed", "failed"
 
 ShortUserDTO: id: int, email: string, fullname: string, is_admin: bool
-SolutionShortResponseDTO: id: int, task_id: int, format: SolutionFormatEnum, link: string, status: SolutionStatusEnum, steps: PipelineStepEnum[], human_grade: int|null, human_feedback: string|null, ai_feedback: string|null, created_at: datetime, created_by: int, author: ShortUserDTO|null
+SolutionShortResponseDTO: id: int, task_id: int, format: SolutionFormatEnum, github_repo_link: string|null, github_repo_branch|null, status: SolutionStatusEnum, steps: PipelineStepEnum[], human_grade: int|null, human_feedback: string|null, ai_feedback: string|null, created_at: datetime, created_by: int, author: ShortUserDTO|null
 SolutionResponseDTO: extends SolutionShortResponseDTO (additional fields? includes created_by and full solution info)
 
 PipelineTaskDTO: id: int, solution_id: int, step: PipelineStepEnum, status: PipelineTaskStatusEnum, error_text: string|null, duration: float|null, last_checked_at: datetime|null, ran_at: datetime|null, created_at: datetime

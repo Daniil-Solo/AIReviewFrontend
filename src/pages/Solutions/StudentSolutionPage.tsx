@@ -80,7 +80,7 @@ export function StudentSolutionPage({ solution, isOwner, isAuthor, workspaceId, 
             <Text size="sm" c="dimmed">Ссылка</Text>
             <Text
               component="a"
-              href={solution.link}
+              href={solution.github_repo_link ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#228be6', textDecoration: 'none' }}

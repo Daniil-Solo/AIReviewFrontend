@@ -12,8 +12,8 @@ export const statusLabels: Record<SolutionStatusEnum, string> = {
 };
 
 export const formatLabels: Record<SolutionFormatEnum, string> = {
-  ZIP: 'ZIP-архив',
-  GITHUB: 'GitHub-репозиторий',
+  ZIP: 'ZIP',
+  GITHUB: 'GitHub',
 };
 
 export const stepLabels: Record<PipelineStepEnum, string> = {
@@ -65,6 +65,12 @@ export const getCriterionCurrentStatus = (
 ): string => {
   if (criterion.checks.length === 0) return "Требует проверки"
   const lastCheck = criterion.checks[criterion.checks.length - 1]
+  if (lastCheck.status === "NOT_APPLICABLE") {
+    return "Не применим"
+  }
+  if (lastCheck.is_passed === null){
+    return "Требует проверки"
+  }
   return lastCheck.is_passed? "Выполнен": "Не выполнен"
 };
 
@@ -73,5 +79,8 @@ export const getCriterionColor = (
 ): string => {
   if (criterion.checks.length === 0) return "yellow"
   const lastCheck = criterion.checks[criterion.checks.length - 1]
+  if (lastCheck.is_passed === null){
+    return "yellow"
+  }
   return lastCheck.is_passed? "green": "red"
 };

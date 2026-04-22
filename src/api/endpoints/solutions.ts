@@ -30,14 +30,18 @@ export const getMySolutions = async (
 export const createSolution = async (data: {
   task_id: number;
   format: SolutionFormatEnum;
-  link?: string;
+  github_repo_link?: string;
+  github_repo_branch?: string;
   file?: File;
 }): Promise<SolutionShortResponseDTO> => {
   const formData = new FormData();
   formData.append('task_id', String(data.task_id));
-  formData.append('format', data.format);
-  if (data.link) {
-    formData.append('link', data.link);
+  formData.append('solution_format', data.format);
+  if (data.github_repo_link) {
+    formData.append('github_repo_link', data.github_repo_link);
+  }
+  if (data.github_repo_branch) {
+    formData.append('github_repo_branch', data.github_repo_branch);
   }
   if (data.file) {
     formData.append('file', data.file);

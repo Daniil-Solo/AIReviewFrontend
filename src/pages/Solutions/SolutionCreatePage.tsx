@@ -16,7 +16,7 @@ import {
   Card,
   Container,
 } from '@mantine/core';
-import { IconUpload, IconLink, IconSend } from '@tabler/icons-react';
+import { IconUpload, IconLink, IconSend, IconGitBranch } from '@tabler/icons-react';
 import { createSolution } from '../../api/endpoints/solutions';
 import { getTask } from '../../api/endpoints/tasks';
 
@@ -31,7 +31,8 @@ export function SolutionCreatePage() {
   const queryClient = useQueryClient();
 
   const [format, setFormat] = useState<string | null>(null);
-  const [link, setLink] = useState('');
+  const [githubRepoLink, setGithubRepoLink] = useState('');
+  const [githubRepoBranch, setGithubRepoBranch] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
   const { data: task, isLoading: taskLoading } = useQuery({
@@ -45,7 +46,8 @@ export function SolutionCreatePage() {
       createSolution({
         task_id: tId,
         format: format as 'ZIP' | 'GITHUB',
-        link: format === 'GITHUB' ? link : undefined,
+        github_repo_link: format === 'GITHUB' ? githubRepoLink : undefined,
+        github_repo_branch: format === 'GITHUB' ? githubRepoBranch : undefined,
         file: format === 'ZIP' ? file ?? undefined : undefined,
       }),
     onSuccess: (solution) => {
@@ -61,7 +63,7 @@ export function SolutionCreatePage() {
 
   const isValid = () => {
     if (!format) return false;
-    if (format === 'GITHUB' && !link.trim()) return false;
+    if (format === 'GITHUB' && (!githubRepoLink.trim() || !githubRepoBranch.trim())) return false;
     if (format === 'ZIP' && !file) return false;
     return true;
   };
@@ -107,21 +109,32 @@ export function SolutionCreatePage() {
               value={format}
               onChange={(v) => {
                 setFormat(v);
-                setLink('');
+                setGithubRepoLink('');
+                setGithubRepoBranch('');
                 setFile(null);
               }}
               required
             />
 
             {format === 'GITHUB' && (
-              <TextInput
-                label="Ссылка на репозиторий"
-                placeholder="https://github.com/username/repo"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                leftSection={<IconLink size={16} />}
-                required
-              />
+              <>
+                <TextInput
+                  label="Ссылка на репозиторий"
+                  placeholder="https://github.com/username/repo"
+                  value={githubRepoLink}
+                  onChange={(e) => setGithubRepoLink(e.target.value)}
+                  leftSection={<IconLink size={16} />}
+                  required
+                />
+                <TextInput
+                  label="Ветка"
+                  placeholder="main"
+                  value={githubRepoBranch}
+                  onChange={(e) => setGithubRepoBranch(e.target.value)}
+                  leftSection={<IconGitBranch size={16} />}
+                  required
+                />
+              </>
             )}
 
             {format === 'ZIP' && (

@@ -34,7 +34,7 @@ import {
   IconPlus,
 } from '@tabler/icons-react';
 import { getSolutionInfo, getSolutionArtefact, restartSolution, cancelSolution, getSolutionCriteriaChecks, createSolutionCriteriaCheck } from '../../api/endpoints/solutions';
-import type { SolutionShortResponseDTO, PipelineStepEnum, GradingCriterionDTO, SolutionCriteriaCheckResponseDTO, CriterionCheckStatusEnum } from '../../types';
+import type { SolutionShortResponseDTO, PipelineStepEnum, GradingCriterionDTO, SolutionCriteriaCheckResponseDTO } from '../../types';
 import { statusLabels, formatLabels, stepLabels, checkStatusLabels, getCriterionStageLabel, getCriterionCurrentStatus, getCriterionColor } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
@@ -333,8 +333,8 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
                   <Group gap="lg">
                     <Stack gap={0}>
                       <Text size="xs" c="dimmed">Автор</Text>
-                      <Tooltip label={solution.author.fullname}>
-                        <Text size="sm" style={{ cursor: 'default' }}>{solution.author.email}</Text>
+                      <Tooltip label={solution.author?.fullname}>
+                        <Text size="sm" style={{ cursor: 'default' }}>{solution.author?.email ?? 'Unknown'}</Text>
                       </Tooltip>
                     </Stack>
                     <Stack gap={0}>
@@ -345,19 +345,21 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
                       <Text size="xs" c="dimmed">Формат</Text>
                       <Text size="sm">{formatLabels[solution.format]}</Text>
                     </Stack>
-                    <Stack gap={0}>
-                      <Text size="xs" c="dimmed">Ссылка</Text>
-                      <Text
-                        component="a"
-                        href={solution.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        size="sm"
-                        style={{ color: '#228be6', textDecoration: 'none' }}
-                      >
-                        Открыть
-                      </Text>
-                    </Stack>
+                    {solution.format === 'GITHUB' && solution.github_repo_link && (
+                      <Stack gap={0}>
+                        <Text size="xs" c="dimmed">Ссылка</Text>
+                        <Text
+                          component="a"
+                          href={solution.github_repo_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          size="sm"
+                          style={{ color: '#228be6', textDecoration: 'none' }}
+                        >
+                          Открыть
+                        </Text>
+                      </Stack>
+                    )}
                   </Group>
                 </Stack>
               </Card>
