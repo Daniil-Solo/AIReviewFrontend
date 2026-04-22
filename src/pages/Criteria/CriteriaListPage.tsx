@@ -4,9 +4,7 @@ import { useQuery} from '@tanstack/react-query';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   SimpleGrid,
-  Card,
   Text,
-  Badge,
   Button,
   Group,
   Title,
@@ -16,23 +14,16 @@ import {
   TextInput,
   MultiSelect,
   ActionIcon,
-  Tooltip,
   Alert,
 } from '@mantine/core';
 import {
   IconPlus,
-  IconLock,
   IconSearch,
   IconAlertCircle,
-  IconWorld,
-  IconFileDescription,
-  IconCode,
-  IconSchool,
-  IconStack2,
   IconX
 } from '@tabler/icons-react';
 import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
-import { getCriterionAccessLabel, stageLabels } from '../../features/criteria/constants';
+import { CriterionCard } from '../../components/CriterionCard/CriterionCard';
 import { getUserData } from '../../lib/jwt';
 
 
@@ -113,57 +104,11 @@ export function CriteriaListPage() {
       ) : (
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
           {criteria.map((criterion) => (
-            <Card
+            <CriterionCard
               key={criterion.id}
-              shadow="sm"
-              padding="lg"
-              radius="md"
-              withBorder
-              style={{ cursor: 'pointer' }}
+              criterion={criterion}
               onClick={() => navigate(`/criteria/${criterion.id}`)}
-            >
-              <Stack gap="xs">
-                <Group gap="xs">
-                  <Tooltip label={getCriterionAccessLabel(criterion.is_public)}>
-                      {criterion.is_public ? (
-                      <IconWorld size={16} color="gray" />
-                      ) : (
-                      <IconLock size={16} color="gray" />
-                      )}
-                  </Tooltip>
-                  <Tooltip label={stageLabels[criterion.stage ?? 'null']}>
-                    {criterion.stage === 'PROJECT_DOC' && (
-                      <IconFileDescription size={16} color="gray" />
-                    )}
-                    {criterion.stage === 'CODEBASE' && (
-                      <IconCode size={16} color="gray" />
-                    )}
-                    {criterion.stage === 'MANUAL' && (
-                      <IconSchool size={16} color="gray" />
-                    )}
-                    {criterion.stage === null && (
-                      <IconStack2 size={16} color="gray" />
-                    )}
-                  </Tooltip>
-                </Group>
-
-                {criterion.tags.length > 0 && (
-                  <Group gap="xs">
-                    {criterion.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" size="sm" color="gray">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </Group>
-                )}
-
-                <Text
-                  lineClamp={2}
-                >
-                  {criterion.description}
-                </Text>
-              </Stack>
-            </Card>
+            />
           ))}
         </SimpleGrid>
       )}

@@ -1,4 +1,4 @@
-import type { SolutionStatusEnum, SolutionFormatEnum, PipelineStepEnum } from '../../types';
+import type { SolutionStatusEnum, SolutionFormatEnum, PipelineStepEnum, CriterionCheckStatusEnum, CriterionStage, GradingCriterionDTO } from '../../types';
 
 export const statusLabels: Record<SolutionStatusEnum, string> = {
   CREATED: 'Создано',
@@ -36,4 +36,42 @@ export const stepProcessLabels: Record<PipelineStepEnum, string> = {
   improve_doc: 'Улучшение ProjectDoc',
   grade_by_codebase: 'Проверка критериев по коду',
   grade_by_project_doc: 'Проверка критериев по ProjectDoc'
+};
+
+export const checkStatusLabels: Record<CriterionCheckStatusEnum, string> = {
+  SUFFICIENT: 'Достаточно информации',
+  NEEDS_CODE: 'Нужно посмотреть код',
+  NEEDS_STUDENT: 'Нужен ответ студента',
+  NEEDS_MANUAL: 'Нужна ручная проверка',
+  NOT_APPLICABLE: 'Критерий не применим',
+};
+
+export const getCriterionStageLabel = (
+  stage: CriterionStage,
+): string => {
+  if (stage === "PROJECT_DOC") {
+    return 'Проверка по документации';
+  } else if (stage === "CODEBASE") {
+    return 'Проверка по коду';
+  } else if (stage === "MANUAL") {
+    return 'Ручная проверка';
+  }
+  return 'Автопроверка'
+};
+
+
+export const getCriterionCurrentStatus = (
+  criterion: GradingCriterionDTO,
+): string => {
+  if (criterion.checks.length === 0) return "Требует проверки"
+  const lastCheck = criterion.checks[criterion.checks.length - 1]
+  return lastCheck.is_passed? "Выполнен": "Не выполнен"
+};
+
+export const getCriterionColor = (
+  criterion: GradingCriterionDTO,
+): string => {
+  if (criterion.checks.length === 0) return "yellow"
+  const lastCheck = criterion.checks[criterion.checks.length - 1]
+  return lastCheck.is_passed? "green": "red"
 };

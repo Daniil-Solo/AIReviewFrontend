@@ -116,14 +116,16 @@ export interface CriterionCreateDTO {
   description: string;
   tags?: string[];
   stage?: CriterionStage;
-  is_public?: boolean;
+  workspace_id?: number;
+  task_id?: number;
 }
 
 export interface CriterionUpdateDTO {
   description?: string;
   tags?: string[];
   stage?: CriterionStage;
-  is_public?: boolean;
+  workspace_id?: number;
+  task_id?: number;
 }
 
 export interface CriterionResponseDTO {
@@ -132,6 +134,8 @@ export interface CriterionResponseDTO {
   tags: string[];
   stage: CriterionStage;
   is_public: boolean;
+  workspace_id: number | null;
+  task_id: number | null;
   created_by: number;
   created_at: string;
 }
@@ -271,4 +275,30 @@ export interface SolutionResponseDTO {
   student_fullname: string;
   status: string;
   submitted_at: string;
+}
+
+export type CriterionCheckStatusEnum = 'SUFFICIENT' | 'NEEDS_CODE' | 'NEEDS_STUDENT' | 'NEEDS_MANUAL' | 'NOT_APPLICABLE';
+
+export interface SolutionCriteriaCheckResponseDTO {
+  id: number;
+  task_criterion_id: number;
+  solution_id: number;
+  comment: string;
+  stage: CriterionStage;
+  status: CriterionCheckStatusEnum;
+  is_passed: boolean | null;
+  created_at: string;
+}
+
+export interface GradingCriterionDTO {
+  criterion: CriterionResponseDTO;
+  task_criterion_id: number;
+  weight: number;
+  checks: SolutionCriteriaCheckResponseDTO[];
+}
+
+export interface CriteriaGradingReviewResponseDTO {
+  solution: SolutionShortResponseDTO;
+  task: TaskResponseDTO;
+  criteria: GradingCriterionDTO[];
 }

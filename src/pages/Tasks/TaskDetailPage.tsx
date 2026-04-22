@@ -33,12 +33,12 @@ import {
   IconPlus,
   IconDotsVertical,
   IconSearch,
-  IconLock,
   IconWorld,
+  IconStack2,
+  IconHelpOctagon,
   IconFileDescription,
   IconCode,
   IconSchool,
-  IconStack2,
   IconExternalLink,
   IconX,
   IconChevronDown,
@@ -47,8 +47,8 @@ import {
   IconCirclePlus,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
-import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions } from '../../api/endpoints/tasks';
-import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
+import { getTaskCriteria, addTaskCriteriaBatch, updateTaskCriterionWeight, deleteTaskCriterion, getTaskSolutions, getAvailableTaskCriteria } from '../../api/endpoints/tasks';
+import { getAvailableTags } from '../../api/endpoints/criteria';
 import { getMySolutions } from '../../api/endpoints/solutions';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
@@ -125,9 +125,9 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
   });
 
   const { data: allCriteria = [], isLoading: criteriaListLoading } = useQuery({
-    queryKey: ['criteria', debouncedSearch, debouncedSelectedTags],
+    queryKey: ['availableTaskCriteria', taskId, debouncedSearch, debouncedSelectedTags],
     queryFn: () =>
-      getCriteria({
+      getAvailableTaskCriteria(taskId, {
         search: debouncedSearch || undefined,
         tags: debouncedSelectedTags.length > 0 ? debouncedSelectedTags : undefined,
       }),
@@ -138,6 +138,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
       addTaskCriteriaBatch(taskId, { criterion_ids: criterionIds }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
       close();
       setSelectedCriterionIds([]);
     },
@@ -155,12 +156,9 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
     mutationFn: (id: number) => deleteTaskCriterion(taskId, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
     },
   });
-
-  const availableCriteria = allCriteria.filter(
-    (c) => !taskCriteria?.some((tc) => tc.criterion_id === c.id)
-  );
 
   const handleAdd = () => {
     if (selectedCriterionIds.length > 0) {
@@ -249,7 +247,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
 
           {criteriaListLoading ? (
             <Loader size="sm" />
-          ) : availableCriteria.length === 0 ? (
+          ) : allCriteria.length === 0 ? (
             <Text c="dimmed" ta="center" py="lg">Критерии не найдены</Text>
           ) : (
             <Table striped highlightOnHover>
@@ -261,7 +259,7 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {availableCriteria.map((criterion) => (
+                {allCriteria.map((criterion) => (
                   <Table.Tr key={criterion.id}>
                     <Table.Td>
                       <Checkbox
@@ -276,11 +274,21 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs">
-                        <Tooltip label={criterion.is_public ? 'Публичный' : 'Приватный'}>
-                          {criterion.is_public ? (
-                            <IconWorld size={16} color="gray" />
+                        <Tooltip
+                          label={
+                            criterion.workspace_id !== null
+                              ? 'Критерий доступен только в этом пространстве'
+                              : criterion.task_id !== null
+                              ? 'Критерий доступен только для этой задачи'
+                              : 'Критерий доступен всем'
+                          }
+                        >
+                          {criterion.workspace_id !== null ? (
+                            <IconStack2 size={16} color="gray" />
+                          ) : criterion.task_id !== null ? (
+                            <IconHelpOctagon size={16} color="gray" />
                           ) : (
-                            <IconLock size={16} color="gray" />
+                            <IconWorld size={16} color="gray" />
                           )}
                         </Tooltip>
                         <Tooltip label={criterionStageLabels[criterion.stage ?? 'null'] || 'Все стадии'}>
@@ -336,7 +344,8 @@ function CriterionCard({
 
   const firstLine = tc.criterion.description.split('\n')[0];
 
-  const isPublic = tc.criterion.is_public;
+  const workspaceId = tc.criterion.workspace_id;
+  const taskId = tc.criterion.task_id;
   const stage = tc.criterion.stage ?? null;
   const tags = tc.criterion.tags;
 
@@ -350,8 +359,22 @@ function CriterionCard({
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">
           <Group gap="xs" wrap="nowrap">
-            <Tooltip label={isPublic ? 'Публичный' : 'Приватный'}>
-              {isPublic ? <IconWorld size={16} color="gray" /> : <IconLock size={16} color="gray" />}
+            <Tooltip
+              label={
+                workspaceId !== null
+                  ? 'Критерий доступен только в этом пространстве'
+                  : taskId !== null
+                  ? 'Критерий доступен только для этой задачи'
+                  : 'Критерий доступен всем'
+              }
+            >
+              {workspaceId !== null ? (
+                <IconStack2 size={16} color="gray" />
+              ) : taskId !== null ? (
+                <IconHelpOctagon size={16} color="gray" />
+              ) : (
+                <IconWorld size={16} color="gray" />
+              )}
             </Tooltip>
             <Tooltip label={criterionStageLabels[stage ?? 'null']}>
               {stageIcons[stage ?? 'null']}

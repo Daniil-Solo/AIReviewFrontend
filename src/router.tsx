@@ -6,6 +6,8 @@ import { Register } from './pages/Register/Register';
 import { Home } from './pages/Home/Home';
 import { CreateWorkspacePage } from './pages/Workspaces/CreateWorkspacePage';
 import { WorkspaceDetailPage } from './pages/Workspaces/WorkspaceDetailPage';
+import { WorkspaceCriterionDetailPage } from './pages/Workspaces/WorkspaceCriterionDetailPage';
+import { WorkspaceCriterionEditPage } from './pages/Workspaces/WorkspaceCriterionEditPage';
 import { EditWorkspacePage } from './pages/Workspaces/EditWorkspacePage';
 import { AuthLayout } from './components/AuthLayout/AuthLayout';
 import { NotFound } from './pages/NotFound/NotFound';
@@ -14,6 +16,7 @@ import { CriteriaListPage } from './pages/Criteria/CriteriaListPage';
 import { CriteriaCreatePage } from './pages/Criteria/CriteriaCreatePage';
 import { CriteriaDetailPage } from './pages/Criteria/CriteriaDetailPage';
 import { CriteriaEditPage } from './pages/Criteria/CriteriaEditPage';
+import { WorkspaceCriterionCreatePage } from './pages/Workspaces/WorkspaceCriterionCreatePage';
 import { TaskCreatePage } from './pages/Tasks/TaskCreatePage';
 import { TaskDetailPage } from './pages/Tasks/TaskDetailPage';
 import { TaskEditPage } from './pages/Tasks/TaskEditPage';
@@ -64,6 +67,9 @@ export const router = createBrowserRouter([
       { path: '/workspaces/new', element: <CreateWorkspacePage /> },
       { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
       { path: '/workspaces/:workspaceId/edit', element: <EditWorkspacePage /> },
+      { path: '/workspaces/:workspaceId/criteria/new', element: <WorkspaceCriterionCreatePage /> },
+      { path: '/workspaces/:workspaceId/criteria/:criterionId', element: <WorkspaceCriterionDetailPage /> },
+      { path: '/workspaces/:workspaceId/criteria/:criterionId/edit', element: <WorkspaceCriterionEditPage /> },
       { path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
       { path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
       { path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },

@@ -9,7 +9,9 @@ import type {
   TaskCriteriaCreateBatchDTO,
   SolutionShortResponseDTO,
   SuccessOperationDTO,
+  CriterionResponseDTO,
 } from '../../types';
+import { paramsSerialize } from '../utils';
 
 export const getWorkspaceTasks = async (
   workspaceId: number
@@ -110,6 +112,23 @@ export const addTaskCriteriaBatch = async (
   const response = await api.post<SuccessOperationDTO>(
     `/api/v1/tasks/${taskId}/criteria/batch`,
     data
+  );
+  return response.data;
+};
+
+export const getAvailableTaskCriteria = async (
+  taskId: number,
+  params?: {
+    search?: string;
+    tags?: string[];
+  }
+): Promise<CriterionResponseDTO[]> => {
+  const response = await api.get<CriterionResponseDTO[]>(
+    `/api/v1/tasks/${taskId}/available_criteria`,
+    {
+      params,
+      paramsSerializer: paramsSerialize,
+    }
   );
   return response.data;
 };

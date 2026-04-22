@@ -3,7 +3,14 @@ import type {
   SolutionShortResponseDTO,
   PipelineInfoDTO,
   SolutionFormatEnum,
+  CriteriaGradingReviewResponseDTO,
 } from '../../types';
+
+interface CreateCriteriaCheckDTO {
+  task_criterion_id: number;
+  is_passed: boolean;
+  comment?: string;
+}
 
 interface SuccessOperationDTO {
   message: string;
@@ -90,6 +97,26 @@ export const cancelSolution = async (
 ): Promise<SuccessOperationDTO> => {
   const response = await api.post<SuccessOperationDTO>(
     `/api/v1/solutions/${solutionId}/cancel`
+  );
+  return response.data;
+};
+
+export const getSolutionCriteriaChecks = async (
+  solutionId: number
+): Promise<CriteriaGradingReviewResponseDTO> => {
+  const response = await api.get<CriteriaGradingReviewResponseDTO>(
+    `/api/v1/solutions/${solutionId}/criteria-checks`
+  );
+  return response.data;
+};
+
+export const createSolutionCriteriaCheck = async (
+  solutionId: number,
+  data: CreateCriteriaCheckDTO
+): Promise<SuccessOperationDTO> => {
+  const response = await api.post<SuccessOperationDTO>(
+    `/api/v1/solutions/${solutionId}/criteria-checks`,
+    data
   );
   return response.data;
 };
