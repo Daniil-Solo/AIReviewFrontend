@@ -559,7 +559,7 @@ function MySolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: 
             </Table.Thead>
             <Table.Tbody>
               {solutions?.map((solution) => {
-                const progress = (solution.steps.length / 6) * 100;
+                const progress = (solution.steps.length / 8) * 100;
                 const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
                 return (
                   <Table.Tr key={solution.id}>

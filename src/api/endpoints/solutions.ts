@@ -16,6 +16,12 @@ interface SuccessOperationDTO {
   message: string;
 }
 
+interface SolutionFinalReviewDTO {
+  human_grade: number;
+  human_feedback?: string;
+  ai_feedback?: string;
+}
+
 export const getMySolutions = async (
   taskId?: number
 ): Promise<SolutionShortResponseDTO[]> => {
@@ -120,6 +126,17 @@ export const createSolutionCriteriaCheck = async (
 ): Promise<SuccessOperationDTO> => {
   const response = await api.post<SuccessOperationDTO>(
     `/api/v1/solutions/${solutionId}/criteria-checks`,
+    data
+  );
+  return response.data;
+};
+
+export const submitFinalReview = async (
+  solutionId: number,
+  data: SolutionFinalReviewDTO
+): Promise<SolutionShortResponseDTO> => {
+  const response = await api.post<SolutionShortResponseDTO>(
+    `/api/v1/solutions/${solutionId}/final-review`,
     data
   );
   return response.data;

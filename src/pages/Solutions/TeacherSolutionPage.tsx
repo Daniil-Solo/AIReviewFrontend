@@ -19,6 +19,7 @@ import {
   Modal,
   Collapse,
   Box,
+  NumberInput,
 } from '@mantine/core';
 import {
   IconArrowLeft,
@@ -33,7 +34,7 @@ import {
   IconX,
   IconPlus,
 } from '@tabler/icons-react';
-import { getSolutionInfo, getSolutionArtefact, restartSolution, cancelSolution, getSolutionCriteriaChecks, createSolutionCriteriaCheck } from '../../api/endpoints/solutions';
+import { getSolutionInfo, getSolutionArtefact, restartSolution, cancelSolution, getSolutionCriteriaChecks, createSolutionCriteriaCheck, submitFinalReview } from '../../api/endpoints/solutions';
 import type { SolutionShortResponseDTO, PipelineStepEnum, GradingCriterionDTO, SolutionCriteriaCheckResponseDTO } from '../../types';
 import { statusLabels, formatLabels, stepLabels, checkStatusLabels, getCriterionStageLabel, getCriterionCurrentStatus, getCriterionColor } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
@@ -237,6 +238,10 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 
 export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }: TeacherSolutionPageProps) {
   const [openSteps, setOpenSteps] = useState<Set<PipelineStepEnum>>(new Set());
+  const [humanGrade, setHumanGrade] = useState<number | string>(solution.human_grade ?? '');
+  const [humanFeedback, setHumanFeedback] = useState(solution.human_feedback ?? '');
+  const [aiFeedback, setAiFeedback] = useState(solution.ai_feedback ?? '');
+  const [finalReviewEdit, setFinalReviewEdit] = useState(solution.human_grade === null);
   const queryClient = useQueryClient();
 
   const { data: pipelineInfo, isLoading: isLoadingInfo } = useQuery({
@@ -259,6 +264,19 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
       queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
       queryClient.invalidateQueries({ queryKey: ['solutionInfo', solution.id] });
       queryClient.invalidateQueries({ queryKey: ['solutionArtefact', solution.id] });
+    },
+  });
+
+  const finalReviewMutation = useMutation({
+    mutationFn: () =>
+      submitFinalReview(solution.id, {
+        human_grade: Number(humanGrade),
+        human_feedback: humanFeedback || undefined,
+        ai_feedback: aiFeedback || undefined,
+      }),
+    onSuccess: () => {
+      setFinalReviewEdit(false);
+      queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
     },
   });
 
@@ -298,6 +316,7 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
           <Tabs.Tab value="main">Основное</Tabs.Tab>
           <Tabs.Tab value="artefacts">Артефакты решения</Tabs.Tab>
           <Tabs.Tab value="criteria">Проверка по критериям</Tabs.Tab>
+          <Tabs.Tab value="final-review">Финальный вердикт</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="main" pt="md">
@@ -312,9 +331,7 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
                   <Group gap="lg">
                     <Stack gap={0}>
                       <Text size="xs" c="dimmed">Статус</Text>
-                      <Badge variant="outline" color="gray" size="sm">
-                        {statusLabels[solution.status]}
-                      </Badge>
+                      <Text size="sm">{statusLabels[solution.status]}</Text>
                     </Stack>
                     <Stack gap={0}>
                       <Text size="xs" c="dimmed">Прогресс</Text>
@@ -366,30 +383,17 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
             </SimpleGrid>
 
             <SimpleGrid cols={{ base: 1, sm: 2 }}>
-              {(solution.human_grade !== null || solution.human_feedback || solution.ai_feedback) && (
+              {(solution.human_grade !== null) && (
                 <Card withBorder>
                   <Stack gap="sm">
                     <Group gap="xs">
                       <IconStar size={18} color="gray" />
                       <Text fw={500} size="sm">Результаты</Text>
                     </Group>
-                    {solution.human_grade !== null && (
-                      <Text size="sm">
-                        <Text span c="dimmed">Оценка:</Text> {solution.human_grade}
-                      </Text>
-                    )}
-                    {solution.human_feedback && (
-                      <Stack gap={0}>
-                        <Text size="xs" c="dimmed">Обратная связь</Text>
-                        <Text size="sm">{solution.human_feedback}</Text>
-                      </Stack>
-                    )}
-                    {solution.ai_feedback && (
-                      <Stack gap={0}>
-                        <Text size="xs" c="dimmed">AI отзыв</Text>
-                        <Text size="sm">{solution.ai_feedback}</Text>
-                      </Stack>
-                    )}
+                    <Stack gap={0}>
+                      <Text size="xs" c="dimmed">Оценка</Text>
+                      <Text size="sm">{solution.human_grade}</Text>
+                    </Stack>
                   </Stack>
                 </Card>
               )}
@@ -471,6 +475,103 @@ export function TeacherSolutionPage({ solution, workspaceId, taskId, isTeacher }
 
         <Tabs.Panel value="criteria" pt="md">
           <CriteriaChecksPanel solutionId={solution.id} isTeacher={isTeacher} />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="final-review" pt="md">
+          {solution.status === 'HUMAN_REVIEW' || finalReviewEdit ? (
+              <Stack gap="md">
+                <Text size="sm" c="dimmed">
+                  Оцените решение и оставьте обратную связь для студента
+                </Text>
+
+                <NumberInput
+                  label="Оценка"
+                  placeholder="Введите оценку (0-100)"
+                  value={humanGrade}
+                  onChange={setHumanGrade}
+                  min={0}
+                  max={100}
+                  required
+                />
+
+                <Textarea
+                  label="Обратная связь"
+                  placeholder="Комментарий для студента (необязательно)"
+                  value={humanFeedback}
+                  onChange={(e) => setHumanFeedback(e.currentTarget.value)}
+                  autosize
+                  minRows={3}
+                  maxRows={12}
+                />
+
+                <Textarea
+                  label="AI отзыв"
+                  placeholder="AI-комментарий (необязательно)"
+                  value={aiFeedback}
+                  onChange={(e) => setAiFeedback(e.currentTarget.value)}
+                  autosize
+                  minRows={3}
+                  maxRows={12}
+                />
+
+                <Group>
+                  <Button
+                    onClick={() => finalReviewMutation.mutate()}
+                    loading={finalReviewMutation.isPending}
+                    disabled={!humanGrade}
+                  >
+                    Сохранить вердикт
+                  </Button>
+                </Group>
+              </Stack>
+          ): solution.status === 'REVIEWED' ? (
+              <Stack gap="md">
+                {solution.human_grade !== null && (
+                  <Card withBorder>
+                    <Stack gap="xs">
+                      <Group gap="xs">
+                        <Text fw={500} size="sm">Оценка</Text>
+                      </Group>
+                      <Text size="xl" fw={700}>{solution.human_grade}</Text>
+                    </Stack>
+                  </Card>
+                )}
+
+                {solution.human_feedback && (
+                  <Card withBorder>
+                    <Stack gap="xs">
+                      <Text fw={500} size="sm">Обратная связь</Text>
+                      <div>
+                        <MarkdownRenderer content={solution.human_feedback} />
+                      </div>
+                    </Stack>
+                  </Card>
+                )}
+
+                {solution.ai_feedback && (
+                  <Card withBorder>
+                    <Stack gap="xs">
+                      <Text fw={500} size="sm">AI отзыв</Text>
+                      <div>
+                        <MarkdownRenderer content={solution.ai_feedback} />
+                      </div>
+                    </Stack>
+                  </Card>
+                )}
+
+                <Group>
+                  <Button
+                    onClick={() => setFinalReviewEdit(true)}
+                  >
+                    Изменить
+                  </Button>
+                </Group>
+              </Stack>
+          ) : (
+            <Alert color="gray">
+              Форма будет доступна, когда решение перейдёт в статус «Ожидает вердикта преподавателя»
+            </Alert>
+          )}
         </Tabs.Panel>
       </Tabs>
     </Stack>

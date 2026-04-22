@@ -7,7 +7,7 @@ export const statusLabels: Record<SolutionStatusEnum, string> = {
   AI_REVIEW: 'На AI-проверке',
   WAITING_EXAM: 'Ожидает экзамен',
   EXAMINATION: 'Экзамен',
-  HUMAN_REVIEW: 'Ожидает ручной проверки',
+  HUMAN_REVIEW: 'Ожидает вердикта преподавателя',
   REVIEWED: 'Проверено',
 };
 
