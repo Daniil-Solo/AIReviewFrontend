@@ -1,9 +1,9 @@
-.bordered_link{
-  border-radius: 8px;
+.bordered_link {
+	border-radius: 8px;
 }
 
 .bordered_link.collapsed {
-  span:where([data-position='left']) {
-    margin-inline-end: 0 !important;
-  }
+	span:where([data-position='left']) {
+		margin-inline-end: 0 !important;
+	}
 }

@@ -31,6 +31,8 @@ POST /api/v1/workspaces/{workspace_id}/leave -> resp: SuccessOperationDTO
 PATCH /api/v1/workspaces/{workspace_id}/owner -> body: TransferOwnershipDTO (member_id: int), resp: WorkspaceResponseDTO
 GET /api/v1/workspaces/slugs/availability -> query: slug: string, resp: SlugCheckResponseDTO (slug: string, is_available: bool)
 GET /api/v1/workspaces/{workspace_id}/criteria -> query: tags: string[]|null, search: string|null, resp: CriterionResponseDTO[]
+GET /api/v1/workspaces/{workspace_id}/grades -> query: task_ids: int[]|null, user_ids: int[]|null, resp: StudentGradesDTO[]
+GET /api/v1/workspaces/{workspace_id}/grades/csv -> query: task_ids: int[]|null, user_ids: int[]|null, resp: csv-file
 
 POST /api/v1/joins -> body: JoinBySlugDTO (slug: string, password: string|null), resp: JoinResponseDTO (workspace_id: int)
 
@@ -80,6 +82,7 @@ CriterionUpdateDTO: same as create
 CriterionResponseDTO: id: int, description: string, tags: string[], stage: CriterionStageEnum|null, workspace_id: int|null, task_id: int|null, created_by: int, created_at: datetime, is_public: bool (readonly)
 
 UserCreateDTO: fullname: string, email: string, password: string (min 8)
+ShortUserDTO: id: int, email: string, fullname: string, is_admin: bool
 UserResponseDTO: id: int, email: string, fullname: string, is_admin: bool, is_verified: bool, created_at: datetime, hashed_password: string
 
 WorkspaceCreateDTO: name: string, description: string (default "")
@@ -93,6 +96,9 @@ WorkspaceMemberUpdateDTO: role: WorkspaceMemberRoleEnum
 WorkspaceJoinRuleRequestCreateDTO: slug: string, role: WorkspaceMemberRoleEnum, is_active: bool (default true), expired_at: datetime|null, password: string|null
 WorkspaceJoinRuleRequestUpdateDTO: slug: string, role: WorkspaceMemberRoleEnum, is_active: bool (default true), expired_at: datetime|null, password: string|null
 WorkspaceJoinRuleResponseDTO: id: int, workspace_id: int, slug: string, role: WorkspaceMemberRoleEnum, expired_at: datetime|null, is_active: bool, has_password: bool, used_count: int
+
+TaskGradeDTO: task_id: int, task_name: string, grade: int|null, best_solution_id: int|null
+StudentGradesDTO: user: ShortUserDTO, tasks: TaskGradeDTO[]
 
 TransferOwnershipDTO: member_id: int
 JoinBySlugDTO: slug: string, password: string|null

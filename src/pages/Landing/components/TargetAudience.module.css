@@ -1,39 +1,41 @@
 .section {
-  background: var(--mantine-color-white);
+	background: var(--mantine-color-white);
 }
 
-[data-mantine-color-scheme="dark"] .section {
-  background: var(--mantine-color-dark-6);
+[data-mantine-color-scheme='dark'] .section {
+	background: var(--mantine-color-dark-6);
 }
 
 .tabsContainer {
-  max-width: 800px;
-  margin: 0 auto;
+	max-width: 800px;
+	margin: 0 auto;
 }
 
 .tabCard {
-  background: var(--mantine-color-gray-0);
+	background: var(--mantine-color-gray-0);
 }
 
-[data-mantine-color-scheme="dark"] .tabCard {
-  background: var(--mantine-color-dark-5);
+[data-mantine-color-scheme='dark'] .tabCard {
+	background: var(--mantine-color-dark-5);
 }
 
 .cardsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 24px;
 }
 
 .audienceCard {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+	transition:
+		transform 0.3s ease,
+		box-shadow 0.3s ease;
 }
 
 .audienceCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+	transform: translateY(-4px);
+	box-shadow: 0 8px 24px rgb(0, 0, 0, 10%);
 }
 
-[data-mantine-color-scheme="dark"] .audienceCard:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+[data-mantine-color-scheme='dark'] .audienceCard:hover {
+	box-shadow: 0 8px 24px rgb(0, 0, 0, 30%);
 }

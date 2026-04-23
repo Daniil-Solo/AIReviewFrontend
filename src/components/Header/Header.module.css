@@ -1,141 +1,141 @@
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--header-height, 72px);
-  background: rgba(250, 250, 250, 0.85);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  z-index: 100;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: var(--header-height, 72px);
+	background: rgb(250, 250, 250, 85%);
+	border-bottom: 1px solid var(--border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 32px;
+	z-index: 100;
+	backdrop-filter: blur(16px);
+	backdrop-filter: blur(16px);
 }
 
-[data-theme="dark"] .header {
-  background: rgba(11, 12, 20, 0.85);
+[data-theme='dark'] .header {
+	background: rgb(11, 12, 20, 85%);
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--heading);
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--text-h);
-  text-decoration: none;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-family: var(--heading);
+	font-weight: 700;
+	font-size: 18px;
+	color: var(--text-h);
+	text-decoration: none;
 }
 
 .logoIcon {
-  width: 36px;
-  height: 36px;
-  background: var(--accent-gradient);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
+	width: 36px;
+	height: 36px;
+	background: var(--accent-gradient);
+	border-radius: var(--radius-sm);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
 }
 
 .nav {
-  display: flex;
-  align-items: center;
-  gap: 28px;
+	display: flex;
+	align-items: center;
+	gap: 28px;
 }
 
 .link {
-  color: var(--text);
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  transition: color 0.2s;
+	color: var(--text);
+	text-decoration: none;
+	font-size: 15px;
+	font-weight: 500;
+	transition: color 0.2s;
 }
 
 .link:hover {
-  color: var(--text-h);
+	color: var(--text-h);
 }
 
 .actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
 }
 
 .themeToggle {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-  transition: all 0.2s;
+	width: 40px;
+	height: 40px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--bg);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text);
+	transition: all 0.2s;
 }
 
 .themeToggle:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent);
 }
 
 .btnGhost,
 .btnPrimary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius);
-  font-family: var(--sans);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 18px;
+	border-radius: var(--radius);
+	font-family: var(--sans);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: all 0.2s;
 }
 
 .btnGhost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-h);
+	background: transparent;
+	border: 1px solid var(--border);
+	color: var(--text-h);
 }
 
 .btnGhost:hover {
-  background: var(--code-bg);
+	background: var(--code-bg);
 }
 
 .btnPrimary {
-  background: var(--accent-gradient);
-  border: none;
-  color: #fff;
-  box-shadow: 0 0 20px var(--accent-glow);
+	background: var(--accent-gradient);
+	border: none;
+	color: #fff;
+	box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .btnPrimary:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 0 30px var(--accent-glow);
+	filter: brightness(1.1);
+	box-shadow: 0 0 30px var(--accent-glow);
 }
 
-@media (max-width: 768px) {
-  .header {
-    padding: 0 16px;
-  }
-  
-  .nav {
-    display: none;
-  }
-  
-  .btnGhost span,
-  .btnPrimary span {
-    display: none;
-  }
-  
-  .btnGhost,
-  .btnPrimary {
-    padding: 10px;
-  }
+@media (width <= 768px) {
+	.header {
+		padding: 0 16px;
+	}
+
+	.nav {
+		display: none;
+	}
+
+	.btnGhost span,
+	.btnPrimary span {
+		display: none;
+	}
+
+	.btnGhost,
+	.btnPrimary {
+		padding: 10px;
+	}
 }
