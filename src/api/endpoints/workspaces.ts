@@ -14,6 +14,7 @@ import type {
 	CriterionResponseDTO,
 	StudentGradesDTO,
 } from '../../types';
+import { paramsSerialize } from '../utils';
 
 export const getProfileWorkspaces = async (): Promise<UserWorkspaceResponseDTO[]> => {
 	const response = await api.get<UserWorkspaceResponseDTO[]>('/api/v1/profile/workspaces');
@@ -142,6 +143,22 @@ export const getWorkspaceGrades = async (
 ): Promise<StudentGradesDTO[]> => {
 	const response = await api.get<StudentGradesDTO[]>(`/api/v1/workspaces/${workspaceId}/grades`, {
 		params,
+		paramsSerializer: paramsSerialize,
+	});
+	return response.data;
+};
+
+export const downloadWorkspaceGradesCsv = async (
+	workspaceId: number,
+	params?: {
+		task_ids?: number[];
+		user_ids?: number[];
+	}
+): Promise<Blob> => {
+	const response = await api.get<Blob>(`/api/v1/workspaces/${workspaceId}/grades/csv`, {
+		params,
+		paramsSerializer: paramsSerialize,
+		responseType: 'blob',
 	});
 	return response.data;
 };

@@ -11,9 +11,14 @@ import {
 	Loader,
 	Center,
 	Anchor,
+	Button,
 } from '@mantine/core';
-import { IconAlertCircle } from '@tabler/icons-react';
-import { getWorkspaceGrades, getWorkspaceMembers } from '../../api/endpoints/workspaces';
+import { IconAlertCircle, IconDownload } from '@tabler/icons-react';
+import {
+	getWorkspaceGrades,
+	getWorkspaceMembers,
+	downloadWorkspaceGradesCsv,
+} from '../../api/endpoints/workspaces';
 import { getWorkspaceTasks } from '../../api/endpoints/tasks';
 import { useDebouncedValue } from '@mantine/hooks';
 
@@ -65,19 +70,19 @@ export function WorkspaceGradesTab({ workspaceId }: WorkspaceGradesTabProps) {
 	const taskOptions =
 		tasks?.map((task) => ({
 			value: task.id.toString(),
-			label: `${task.id}: ${task.name}`,
+			label: `${task.name}`,
 		})) || [];
 
 	const userOptions =
 		members?.map((member) => ({
 			value: member.user_id.toString(),
-			label: `${member.user_id}: ${member.fullname}`,
+			label: `${member.fullname}`,
 		})) || [];
 
 	const isLoading = tasksLoading || membersLoading || gradesLoading;
 	const error = tasksError || membersError || gradesError;
 
-	if (isLoading) {
+	if (isLoading || grades === undefined) {
 		return (
 			<Center h={200}>
 				<Loader size="md" />
@@ -94,16 +99,9 @@ export function WorkspaceGradesTab({ workspaceId }: WorkspaceGradesTabProps) {
 		);
 	}
 
-	const displayTasks =
-		selectedTaskIds.length > 0
-			? tasks?.filter((task) => selectedTaskIds.includes(task.id)) || []
-			: tasks || [];
-
-	const displayGrades = grades || [];
-
 	return (
 		<Stack gap="md">
-			<Group>
+			<Group justify="space-between">
 				<MultiSelect
 					label="Пользователи"
 					placeholder="Выберите пользователей"
@@ -126,9 +124,35 @@ export function WorkspaceGradesTab({ workspaceId }: WorkspaceGradesTabProps) {
 					nothingFoundMessage="Задачи не найдены"
 					style={{ flex: 1 }}
 				/>
+				<Group pt={'22px'}>
+					<Button
+						variant="light"
+						leftSection={<IconDownload size={16} />}
+						onClick={async () => {
+							try {
+								const blob = await downloadWorkspaceGradesCsv(workspaceId, {
+									task_ids: debouncedTaskIds.length > 0 ? debouncedTaskIds : undefined,
+									user_ids: debouncedUserIds.length > 0 ? debouncedUserIds : undefined,
+								});
+								const url = window.URL.createObjectURL(blob);
+								const a = document.createElement('a');
+								a.href = url;
+								a.download = `grades-${workspaceId}.csv`;
+								document.body.appendChild(a);
+								a.click();
+								window.URL.revokeObjectURL(url);
+								document.body.removeChild(a);
+							} catch (e) {
+								console.error('Ошибка скачивания CSV:', e);
+							}
+						}}
+					>
+						CSV
+					</Button>
+				</Group>
 			</Group>
 
-			{displayGrades.length === 0 ? (
+			{grades.length === 0 ? (
 				<Text c="dimmed">Нет данных для отображения</Text>
 			) : (
 				<div style={{ overflowX: 'auto' }}>
@@ -136,24 +160,21 @@ export function WorkspaceGradesTab({ workspaceId }: WorkspaceGradesTabProps) {
 						<Table.Thead>
 							<Table.Tr>
 								<Table.Th>Пользователь</Table.Th>
-								{displayTasks.map((task) => (
-									<Table.Th key={task.id}>{task.name}</Table.Th>
+								{grades[0].tasks.map((task) => (
+									<Table.Th key={task.task_id}>{task.task_name}</Table.Th>
 								))}
 							</Table.Tr>
 						</Table.Thead>
 						<Table.Tbody>
-							{displayGrades.map((studentGrade) => (
+							{grades.map((studentGrade) => (
 								<Table.Tr key={studentGrade.user.id}>
 									<Table.Td>
-										<Text fw={500}>{studentGrade.user.fullname}</Text>
-										<Text size="xs" c="dimmed">
-											ID: {studentGrade.user.id}
-										</Text>
+										<Text fw={400}>{studentGrade.user.fullname}</Text>
 									</Table.Td>
-									{displayTasks.map((task) => {
-										const taskGrade = studentGrade.tasks.find((t) => t.task_id === task.id);
+									{studentGrade.tasks.map((task) => {
+										const taskGrade = studentGrade.tasks.find((t) => t.task_id === task.task_id);
 										return (
-											<Table.Td key={task.id}>
+											<Table.Td key={task.task_id}>
 												{!taskGrade || taskGrade.grade === null ? (
 													<Text size="sm" c="dimmed">
 														Оценки нет
