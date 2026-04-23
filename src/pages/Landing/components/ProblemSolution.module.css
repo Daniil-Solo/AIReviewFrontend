@@ -1,29 +1,29 @@
 .section {
-  background: var(--mantine-color-gray-0);
+	background: var(--mantine-color-gray-0);
 }
 
-[data-mantine-color-scheme="dark"] .section {
-  background: var(--mantine-color-dark-8);
+[data-mantine-color-scheme='dark'] .section {
+	background: var(--mantine-color-dark-8);
 }
 
 .column {
-  padding: 24px;
-  border-radius: 16px;
-  background: var(--mantine-color-white);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+	padding: 24px;
+	border-radius: 16px;
+	background: var(--mantine-color-white);
+	box-shadow: 0 2px 12px rgb(0, 0, 0, 6%);
 }
 
-[data-mantine-color-scheme="dark"] .column {
-  background: var(--mantine-color-dark-7);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+[data-mantine-color-scheme='dark'] .column {
+	background: var(--mantine-color-dark-7);
+	box-shadow: 0 2px 12px rgb(0, 0, 0, 20%);
 }
 
 .item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
 }
 
 .item p {
-  flex: 1;
+	flex: 1;
 }

@@ -30,81 +30,95 @@ import { api } from './api/api';
 import { useProfileStore } from './store/profile';
 
 const protectedLoader = async () => {
-  if (!isAuthenticated()) {
-    return redirect('/login');
-  }
+	if (!isAuthenticated()) {
+		return redirect('/login');
+	}
 
-  try {
-    const response = await api.get<{ workspace: { id: number; name: string }; role: string }[]>('/api/v1/profile/workspaces');
-    const workspaces = response.data.map((item) => ({
-      workspaceId: item.workspace.id,
-      name: item.workspace.name,
-      role: item.role as 'OWNER' | 'TEACHER' | 'STUDENT',
-    }));
-    useProfileStore.getState().setWorkspaces(workspaces);
-  } catch {
-    return redirect('/login');
-  }
+	try {
+		const response = await api.get<{ workspace: { id: number; name: string }; role: string }[]>(
+			'/api/v1/profile/workspaces'
+		);
+		const workspaces = response.data.map((item) => ({
+			workspaceId: item.workspace.id,
+			name: item.workspace.name,
+			role: item.role as 'OWNER' | 'TEACHER' | 'STUDENT',
+		}));
+		useProfileStore.getState().setWorkspaces(workspaces);
+	} catch {
+		return redirect('/login');
+	}
 
-  return null;
+	return null;
 };
 
 export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <LandingPage />,
-  },
-  {
-    path: '/privacy',
-    element: <PrivacyPolicy />,
-  },
-  {
-    path: '/terms',
-    element: <TermsOfUse />,
-  },
-  {
-    element: <AuthLayout/>,
-    children: [
-      {path: '/login', element: <Login />},
-      {path: '/register', element: <Register />},
-    ]
-  },
-  {
-    element: <MainLayout/>,
-    loader: protectedLoader,
-    children: [
-      { path: '/home', element: <Home /> },
-      { path: '/workspaces/new', element: <CreateWorkspacePage /> },
-      { path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
-      { path: '/workspaces/:workspaceId/edit', element: <EditWorkspacePage /> },
-      { path: '/workspaces/:workspaceId/criteria/new', element: <WorkspaceCriterionCreatePage /> },
-      { path: '/workspaces/:workspaceId/criteria/:criterionId', element: <WorkspaceCriterionDetailPage /> },
-      { path: '/workspaces/:workspaceId/criteria/:criterionId/edit', element: <WorkspaceCriterionEditPage /> },
-      { path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
-      { path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
-      { path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },
-      { path: '/workspaces/:workspaceId/tasks/:taskId/solutions/:solutionId', element: <SolutionDetailPage /> },
-      { path: '/workspaces/:workspaceId/tasks/:taskId/solutions/new', element: <SolutionCreatePage /> },
-      { path: '/criteria', element: <CriteriaListPage /> },
-      { path: '/criteria/new', element: <CriteriaCreatePage /> },
-      { path: '/criteria/:criterionId', element: <CriteriaDetailPage /> },
-      { path: '/criteria/:criterionId/edit', element: <CriteriaEditPage /> },
-      { path: '/settings', element: <Home /> },
-      { path: '/transactions', element: <TransactionsPage /> },
-    ],
-  },
-  {
-    path: '/join/:slug',
-    loader: async () => {
-      if (!isAuthenticated()) {
-        return redirect('/login');
-      }
-      return null;
-    },
-    element: <JoinWorkspacePage />,
-  },
-  {
-    path: '*',
-    element: <NotFound />,
-  },
+	{
+		path: '/',
+		element: <LandingPage />,
+	},
+	{
+		path: '/privacy',
+		element: <PrivacyPolicy />,
+	},
+	{
+		path: '/terms',
+		element: <TermsOfUse />,
+	},
+	{
+		element: <AuthLayout />,
+		children: [
+			{ path: '/login', element: <Login /> },
+			{ path: '/register', element: <Register /> },
+		],
+	},
+	{
+		element: <MainLayout />,
+		loader: protectedLoader,
+		children: [
+			{ path: '/home', element: <Home /> },
+			{ path: '/workspaces/new', element: <CreateWorkspacePage /> },
+			{ path: '/workspaces/:id', element: <WorkspaceDetailPage /> },
+			{ path: '/workspaces/:workspaceId/edit', element: <EditWorkspacePage /> },
+			{ path: '/workspaces/:workspaceId/criteria/new', element: <WorkspaceCriterionCreatePage /> },
+			{
+				path: '/workspaces/:workspaceId/criteria/:criterionId',
+				element: <WorkspaceCriterionDetailPage />,
+			},
+			{
+				path: '/workspaces/:workspaceId/criteria/:criterionId/edit',
+				element: <WorkspaceCriterionEditPage />,
+			},
+			{ path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
+			{ path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
+			{ path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },
+			{
+				path: '/workspaces/:workspaceId/tasks/:taskId/solutions/:solutionId',
+				element: <SolutionDetailPage />,
+			},
+			{
+				path: '/workspaces/:workspaceId/tasks/:taskId/solutions/new',
+				element: <SolutionCreatePage />,
+			},
+			{ path: '/criteria', element: <CriteriaListPage /> },
+			{ path: '/criteria/new', element: <CriteriaCreatePage /> },
+			{ path: '/criteria/:criterionId', element: <CriteriaDetailPage /> },
+			{ path: '/criteria/:criterionId/edit', element: <CriteriaEditPage /> },
+			{ path: '/settings', element: <Home /> },
+			{ path: '/transactions', element: <TransactionsPage /> },
+		],
+	},
+	{
+		path: '/join/:slug',
+		loader: async () => {
+			if (!isAuthenticated()) {
+				return redirect('/login');
+			}
+			return null;
+		},
+		element: <JoinWorkspacePage />,
+	},
+	{
+		path: '*',
+		element: <NotFound />,
+	},
 ]);

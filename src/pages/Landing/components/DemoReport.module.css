@@ -1,59 +1,59 @@
 .section {
-  background: var(--mantine-color-gray-0);
+	background: var(--mantine-color-gray-0);
 }
 
-[data-mantine-color-scheme="dark"] .section {
-  background: var(--mantine-color-dark-8);
+[data-mantine-color-scheme='dark'] .section {
+	background: var(--mantine-color-dark-8);
 }
 
 .reportCard {
-  background: var(--mantine-color-white);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+	background: var(--mantine-color-white);
+	box-shadow: 0 4px 24px rgb(0, 0, 0, 8%);
 }
 
-[data-mantine-color-scheme="dark"] .reportCard {
-  background: var(--mantine-color-dark-6);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+[data-mantine-color-scheme='dark'] .reportCard {
+	background: var(--mantine-color-dark-6);
+	box-shadow: 0 4px 24px rgb(0, 0, 0, 30%);
 }
 
 .tabs .mantine-Tabs-tab {
-  font-weight: 500;
+	font-weight: 500;
 }
 
 .criteriaItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--mantine-color-gray-0);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	border-radius: 8px;
+	background: var(--mantine-color-gray-0);
 }
 
-[data-mantine-color-scheme="dark"] .criteriaItem {
-  background: var(--mantine-color-dark-5);
+[data-mantine-color-scheme='dark'] .criteriaItem {
+	background: var(--mantine-color-dark-5);
 }
 
 .criteriaItem > div {
-  flex: 1;
+	flex: 1;
 }
 
 .codeBlock {
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--mantine-color-dark-6);
-  color: var(--mantine-color-gray-1);
-  font-family: monospace;
-  overflow-x: auto;
+	padding: 16px;
+	border-radius: 8px;
+	background: var(--mantine-color-dark-6);
+	color: var(--mantine-color-gray-1);
+	font-family: monospace;
+	overflow-x: auto;
 }
 
 .examExample {
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--mantine-color-blue-0);
-  border-left: 3px solid var(--mantine-color-blue-5);
+	padding: 16px;
+	border-radius: 8px;
+	background: var(--mantine-color-blue-0);
+	border-left: 3px solid var(--mantine-color-blue-5);
 }
 
-[data-mantine-color-scheme="dark"] .examExample {
-  background: var(--mantine-color-dark-5);
-  border-left-color: var(--mantine-color-blue-5);
+[data-mantine-color-scheme='dark'] .examExample {
+	background: var(--mantine-color-dark-5);
+	border-left-color: var(--mantine-color-blue-5);
 }

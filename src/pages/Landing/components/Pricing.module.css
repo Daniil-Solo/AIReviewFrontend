@@ -1,46 +1,48 @@
 .section {
-  background: var(--mantine-color-gray-1);
+	background: var(--mantine-color-gray-1);
 }
 
-[data-mantine-color-scheme="dark"] .section {
-  background: var(--mantine-color-dark-8);
+[data-mantine-color-scheme='dark'] .section {
+	background: var(--mantine-color-dark-8);
 }
 
 .planCard {
-  background: var(--mantine-color-white);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 2px solid transparent;
+	background: var(--mantine-color-white);
+	transition:
+		transform 0.3s ease,
+		box-shadow 0.3s ease;
+	border: 2px solid transparent;
 }
 
-[data-mantine-color-scheme="dark"] .planCard {
-  background: var(--mantine-color-dark-6);
+[data-mantine-color-scheme='dark'] .planCard {
+	background: var(--mantine-color-dark-6);
 }
 
 .planCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+	transform: translateY(-4px);
+	box-shadow: 0 8px 24px rgb(0, 0, 0, 10%);
 }
 
 .highlighted {
-  border-color: var(--mantine-color-blue-5);
-  position: relative;
+	border-color: var(--mantine-color-blue-5);
+	position: relative;
 }
 
-[data-mantine-color-scheme="dark"] .highlighted {
-  border-color: var(--mantine-color-blue-4);
+[data-mantine-color-scheme='dark'] .highlighted {
+	border-color: var(--mantine-color-blue-4);
 }
 
 .badge {
-  display: inline-block;
-  padding: 4px 12px;
-  background: linear-gradient(135deg, var(--mantine-color-blue-5), var(--mantine-color-cyan-5));
-  color: white;
-  border-radius: 20px;
+	display: inline-block;
+	padding: 4px 12px;
+	background: linear-gradient(135deg, var(--mantine-color-blue-5), var(--mantine-color-cyan-5));
+	color: white;
+	border-radius: 20px;
 }
 
 .priceHighlight {
-  background: linear-gradient(45deg, var(--mantine-color-blue-5), var(--mantine-color-cyan-5));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+	background: linear-gradient(45deg, var(--mantine-color-blue-5), var(--mantine-color-cyan-5));
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 }
