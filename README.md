@@ -48,6 +48,13 @@ src/
 └── types/        # TypeScript типы API
 ```
 
+## Компоненты
+
+| Компонент | Описание | Ссылка |
+|-----------|----------|--------|
+| **Frontend** | Веб-интерфейс | Текущий репозиторий |
+| **Backend** | API сервер | [AIReviewBackend](https://github.com/Daniil-Solo/AIReviewBackend) |
+
 ## Документация
 
 - [API схема](./docs/api.md) — описание всех эндпоинтов и схем данных
