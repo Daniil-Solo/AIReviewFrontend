@@ -1,0 +1,32 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: prod.Dockerfile
+    restart: unless-stopped
+    networks:
+      - autoreviewer
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - autoreviewer
+    depends_on:
+      - nginx
+
+networks:
+  autoreviewer:
+    external: true
+    name: autoreviewer-network
+
+volumes:
+  caddy_data:
+  caddy_config:

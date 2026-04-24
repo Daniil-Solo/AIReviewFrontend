@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log*
+
+# Build output
+dist
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+prod.Dockerfile
+docker-compose.yaml
+prod.docker-compose.yaml
+.dockerignore
+
+# Docs (optional, uncomment if not needed in image)
+docs
+
+# Tests
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+coverage
+
+# Configs for local dev
+.env
+.env.local
+.env.*.local
+
+# Caddy
+Caddyfile
+
+# Logs
+*.log
+
+# Cache
+.cache
+.eslintcache

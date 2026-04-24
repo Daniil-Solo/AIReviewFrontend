@@ -13,4 +13,5 @@ services:
 
 networks:
   autoreviewer:
-    driver: bridge
+    external: true
+    name: autoreviewer-network
