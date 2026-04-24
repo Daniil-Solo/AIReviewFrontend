@@ -42,9 +42,11 @@ export function Login() {
 			const response = await login({ email, password });
 			localStorage.setItem('token', response.access_token);
 			navigate(redirect || '/home', { replace: true });
-		} catch (error) {
-			const message = (error.response.data as ErrorResponseDTO).message;
-			setPasswordError(message);
+		} catch (err: any) {
+			const data = err.response?.data as ErrorResponseDTO;
+			if (data) {
+				setPasswordError(data.message);
+			}
 		} finally {
 			setLoading(false);
 		}
