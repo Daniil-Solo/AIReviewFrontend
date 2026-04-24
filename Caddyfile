@@ -1,0 +1,19 @@
+YOUR_DOMAIN.com {
+    reverse_proxy /api/* app:8000
+    reverse_proxy /* nginx:80
+
+    tls {
+        issuer/acme {
+            email admin@YOUR_DOMAIN.com
+        }
+    }
+}
+
+:80 {
+    redir https://{host}{uri} permanent
+}
+
+# HTTP -> HTTPS редирект (для любого хоста)
+:80 {
+    redir https://{host}{uri} permanent
+}

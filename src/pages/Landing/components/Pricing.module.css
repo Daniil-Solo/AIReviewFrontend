@@ -42,7 +42,6 @@
 
 .priceHighlight {
 	background: linear-gradient(45deg, var(--mantine-color-blue-5), var(--mantine-color-cyan-5));
-	background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
 }
