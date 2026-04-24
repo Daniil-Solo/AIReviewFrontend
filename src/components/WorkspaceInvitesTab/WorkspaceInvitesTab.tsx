@@ -144,8 +144,8 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
 		const data: JoinRuleCreateDTO = {
 			slug: slug.trim(),
 			role,
-			password: password || null,
-			expired_at: expiredAt?.toISOString() || null,
+			password: password || undefined,
+			expired_at: expiredAt?.toISOString(),
 			is_active: isActive,
 		};
 
@@ -418,3 +418,4 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
 		</Stack>
 	);
 }
+

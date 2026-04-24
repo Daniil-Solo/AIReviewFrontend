@@ -228,7 +228,7 @@ export interface SolutionShortResponseDTO {
 	ai_feedback: string | null;
 	created_at: string;
 	created_by: number;
-	author: SolutionAuthorDTO | null;
+	author: SolutionAuthorDTO;
 }
 
 export interface PipelineTaskDTO {

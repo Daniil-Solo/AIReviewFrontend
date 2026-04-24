@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import {
 	Container,
 	Paper,
@@ -28,16 +29,16 @@ export function JoinWorkspacePage() {
 	const [requiresPassword, setRequiresPassword] = useState(false);
 
 	const joinMutation = useMutation({
-		mutationFn: (pwd: string | null) => joinWorkspace({ slug: slug, password: pwd }),
+		mutationFn: (pwd: string | undefined) => joinWorkspace({ slug: slug ?? '', password: pwd }),
 		onSuccess: async (data) => {
 			await handleJoinSuccess(data.workspace_id);
 		},
-		onError: (err) => {
-			const data = err.response.data as ErrorResponseDTO;
-			if (data.code === 'required_joining_password') {
+		onError: (err: AxiosError<ErrorResponseDTO>) => {
+			const data = err.response?.data;
+			if (data?.code === 'required_joining_password') {
 				setRequiresPassword(true);
 			}
-			setError(data.message || 'Не удалось присоединиться к пространству');
+			setError(data?.message || 'Не удалось присоединиться к пространству');
 		},
 	});
 
@@ -63,7 +64,7 @@ export function JoinWorkspacePage() {
 	);
 
 	useEffect(() => {
-		joinMutation.mutate(null);
+		joinMutation.mutate(undefined);
 	}, []);
 
 	const handleSubmit = (e: React.FormEvent) => {

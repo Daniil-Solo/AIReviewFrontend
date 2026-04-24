@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import {
 	Textarea,
 	Select,
@@ -18,8 +19,8 @@ import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { getCriterion, updateCriterion, getAvailableTags } from '../../api/endpoints/criteria';
 import type { CriterionStage, ErrorResponseDTO } from '../../types';
 
-const stageOptions = [
-	{ value: null, label: 'Автопроверка' },
+const stageOptions: { value: string; label: string }[] = [
+	{ value: '', label: 'Автопроверка' },
 	{ value: 'PROJECT_DOC', label: 'Проверка по ProjectDoc' },
 	{ value: 'CODEBASE', label: 'Проверка по кодовой базе' },
 	{ value: 'MANUAL', label: 'Ручная проверка' },
@@ -34,7 +35,7 @@ export function CriteriaEditPage() {
 	const [description, setDescription] = useState('');
 	const [tags, setTags] = useState<string[]>([]);
 	const [newTag, setNewTag] = useState('');
-	const [selectedStage, setSelectedStage] = useState<string | null>(null);
+	const [selectedStage, setSelectedStage] = useState<string | null | undefined>(null);
 	const [descriptionError, setDescriptionError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
@@ -81,9 +82,11 @@ export function CriteriaEditPage() {
 			queryClient.invalidateQueries({ queryKey: ['criterion', id] });
 			navigate('/criteria');
 		},
-		onError: (err) => {
-			const data = err.response.data as ErrorResponseDTO;
-			setGeneralError(data.message);
+		onError: (err: AxiosError<ErrorResponseDTO>) => {
+			const data = err.response?.data;
+			if (data) {
+				setGeneralError(data.message);
+			}
 		},
 	});
 
@@ -147,7 +150,7 @@ export function CriteriaEditPage() {
 						label="Этап проверки"
 						placeholder="Выберите этап (необязательно)"
 						value={selectedStage}
-						onChange={(val) => setSelectedStage(val)}
+						onChange={(val) => setSelectedStage(val === '' ? null : val)}
 						data={stageOptions}
 						allowDeselect
 					/>
