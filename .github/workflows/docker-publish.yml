@@ -32,5 +32,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ai-review-frontend:latest
-            ai-review-frontend:${{ steps.sha.outputs.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/ai-review-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/ai-review-frontend:${{ steps.sha.outputs.sha }}
