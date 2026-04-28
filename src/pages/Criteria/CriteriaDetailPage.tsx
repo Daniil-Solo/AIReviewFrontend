@@ -3,7 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Stack, Title, Button, Loader, Center, Alert, Menu, Divider, Group } from '@mantine/core';
 import { useModals } from '@mantine/modals';
-import { IconAlertCircle, IconEdit, IconTrash, IconDotsVertical } from '@tabler/icons-react';
+import {
+	IconAlertCircle,
+	IconArrowLeft,
+	IconEdit,
+	IconTrash,
+	IconDotsVertical,
+} from '@tabler/icons-react';
 import { getCriterion, deleteCriterion } from '../../api/endpoints/criteria';
 import { CriterionDetail } from '../../components/CriterionDetail/CriterionDetail';
 import type { ErrorResponseDTO } from '../../types';
@@ -68,6 +74,16 @@ export function CriteriaDetailPage() {
 
 	return (
 		<Stack gap="lg">
+			<Group>
+				<Button
+					variant="subtle"
+					leftSection={<IconArrowLeft size={16} />}
+					onClick={() => navigate('/criteria')}
+				>
+					Назад к критериям
+				</Button>
+			</Group>
+
 			<Group justify="space-between">
 				<Title order={2}>Критерий</Title>
 				<Menu shadow="md" width={200}>

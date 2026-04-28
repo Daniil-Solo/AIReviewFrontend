@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TextInput, PasswordInput, Button, Stack, Text, Anchor, Box } from '@mantine/core';
+import { useQueryClient } from '@tanstack/react-query';
 import { login } from '../../api/endpoints/auth';
 import type { ErrorResponseDTO } from '../../types';
 
@@ -10,6 +11,7 @@ export function Login() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const redirect = searchParams.get('redirect');
+	const queryClient = useQueryClient();
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [passwordError, setPasswordError] = useState('');
@@ -41,6 +43,7 @@ export function Login() {
 		try {
 			const response = await login({ email, password });
 			localStorage.setItem('token', response.access_token);
+			queryClient.invalidateQueries();
 			navigate(redirect || '/home', { replace: true });
 		} catch (err: any) {
 			const data = err.response?.data as ErrorResponseDTO;

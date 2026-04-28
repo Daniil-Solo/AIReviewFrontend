@@ -17,6 +17,8 @@ import {
 	Modal,
 	Menu,
 	SimpleGrid,
+	FileInput,
+	Code,
 } from '@mantine/core';
 import {
 	IconAlertCircle,
@@ -32,6 +34,7 @@ import {
 	IconPlus,
 	IconChartBar,
 	IconBrain,
+	IconUpload,
 } from '@tabler/icons-react';
 import {
 	getWorkspace,
@@ -42,6 +45,7 @@ import {
 	getProfileWorkspaces,
 	getWorkspaceCriteria,
 } from '../../api/endpoints/workspaces';
+import { importCriteria } from '../../api/endpoints/criteria';
 import { useProfileStore } from '../../store/profile';
 import { getUserData } from '../../lib/jwt';
 import { WorkspaceInvitesTab } from '../../components/WorkspaceInvitesTab/WorkspaceInvitesTab';
@@ -90,6 +94,9 @@ export function WorkspaceDetailPage() {
 	} | null>(null);
 	const [newRole, setNewRole] = useState<string>('');
 	const [error, setError] = useState('');
+	const [importModalOpen, setImportModalOpen] = useState(false);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [importError, setImportError] = useState('');
 
 	const { data: workspace, isLoading: wsLoading } = useQuery({
 		queryKey: ['workspace', workspaceId],
@@ -145,6 +152,22 @@ export function WorkspaceDetailPage() {
 			updateMember(workspaceId, memberId, { role }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['workspaceMembers', workspaceId] });
+		},
+	});
+
+	const importMutation = useMutation({
+		mutationFn: (file: File) => importCriteria(file, workspaceId, null),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['workspaceCriteria', workspaceId] });
+			setImportModalOpen(false);
+			setSelectedFile(null);
+			setImportError('');
+		},
+		onError: (err: unknown) => {
+			const message =
+				(err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Ошибка при импорте критериев';
+			setImportError(message);
 		},
 	});
 
@@ -320,12 +343,23 @@ export function WorkspaceDetailPage() {
 
 				<Tabs.Panel value="criteria" pt="md">
 					<Group justify="space-between" mb="md">
-						<Button
-							leftSection={<IconPlus size={16} />}
-							onClick={() => navigate(`/workspaces/${workspaceId}/criteria/new`)}
-						>
-							Создать критерий
-						</Button>
+						<Group>
+							<Button
+								leftSection={<IconPlus size={16} />}
+								onClick={() => navigate(`/workspaces/${workspaceId}/criteria/new`)}
+							>
+								Создать критерий
+							</Button>
+							{canEdit && (
+								<Button
+									variant="outline"
+									leftSection={<IconUpload size={16} />}
+									onClick={() => setImportModalOpen(true)}
+								>
+									Загрузить критерии
+								</Button>
+							)}
+						</Group>
 					</Group>
 					{criteriaLoading ? (
 						<Center h={200}>
@@ -433,6 +467,76 @@ export function WorkspaceDetailPage() {
 						</Group>
 					</Stack>
 				)}
+			</Modal>
+
+			<Modal
+				opened={importModalOpen}
+				onClose={() => {
+					setImportModalOpen(false);
+					setSelectedFile(null);
+				}}
+				title="Импорт критериев"
+				size="lg"
+			>
+				<Stack gap="md">
+					<Text size="sm">Загрузите файл в формате JSON со списком критериев.</Text>
+
+					<Stack gap="xs">
+						<Text size="sm" fw={500}>
+							Формат JSON:
+						</Text>
+						<Code block>{`[
+  {
+    "description": "Описание критерия",
+    "prompt": "Промпт для проверки критерия (необязательно)",
+    "stage": "CODEBASE",
+    "tags": ["architecture", "backend"]
+  }
+]`}</Code>
+					</Stack>
+
+					<FileInput
+						label="Файл"
+						placeholder="Выберите файл"
+						accept="application/json"
+						value={selectedFile}
+						onChange={(file) => {
+							setSelectedFile(file);
+							setImportError('');
+						}}
+						clearable
+					/>
+
+					{importError && (
+						<Alert
+							color="red"
+							icon={<IconAlertCircle size={16} />}
+							withCloseButton
+							onClose={() => setImportError('')}
+						>
+							{importError}
+						</Alert>
+					)}
+
+					<Group justify="flex-end">
+						<Button
+							variant="subtle"
+							onClick={() => {
+								setImportModalOpen(false);
+								setSelectedFile(null);
+							}}
+						>
+							Отмена
+						</Button>
+						<Button
+							onClick={() => selectedFile && importMutation.mutate(selectedFile)}
+							loading={importMutation.isPending}
+							disabled={!selectedFile}
+						>
+							Загрузить
+						</Button>
+					</Group>
+				</Stack>
 			</Modal>
 		</Stack>
 	);

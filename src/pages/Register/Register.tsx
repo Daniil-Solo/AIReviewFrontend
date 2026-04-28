@@ -10,6 +10,7 @@ import {
 	Box,
 	PinInput,
 } from '@mantine/core';
+import { useQueryClient } from '@tanstack/react-query';
 import { useInterval } from '@mantine/hooks';
 import type { FormEvent } from 'react';
 import { registerStart, registerConfirm } from '../../api/endpoints/auth';
@@ -22,6 +23,7 @@ export function Register() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const redirect = searchParams.get('redirect');
+	const queryClient = useQueryClient();
 	const { step, fullname, email, password, setStep, setCredentials, reset } = useRegisterStore();
 
 	const [formFullname, setFormFullname] = useState(fullname);
@@ -143,6 +145,7 @@ export function Register() {
 				code,
 			});
 			localStorage.setItem('token', response.access_token);
+			queryClient.invalidateQueries();
 			const target = redirect || '/home';
 			navigate(target, { replace: true });
 		} catch (error: unknown) {

@@ -11,9 +11,12 @@ import {
 	MultiSelect,
 	TextInput,
 	Group,
+	Box,
+	Text,
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { createCriterion, getAvailableTags } from '../../api/endpoints/criteria';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import type { CriterionStage } from '../../types';
 import { getUserData } from '../../lib/jwt';
 
@@ -28,6 +31,7 @@ export function CriteriaCreatePage() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [description, setDescription] = useState('');
+	const [prompt, setPrompt] = useState('');
 	const [tags, setTags] = useState<string[]>([]);
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null>('');
@@ -58,11 +62,11 @@ export function CriteriaCreatePage() {
 
 	const mutation = useMutation({
 		mutationFn: createCriterion,
-		onSuccess: () => {
+		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ['criteria'] });
 			queryClient.invalidateQueries({ queryKey: ['criteriaTags'] });
 			queryClient.invalidateQueries({ queryKey: ['availableTags'] });
-			navigate('/criteria');
+			navigate(`/criteria/${data.id}`);
 		},
 		onError: (err: unknown) => {
 			const e = err as { response?: { data?: { message?: string } } };
@@ -85,6 +89,7 @@ export function CriteriaCreatePage() {
 		setDescriptionError('');
 		mutation.mutate({
 			description: description.trim(),
+			prompt: prompt.trim() || undefined,
 			tags: tags.length > 0 ? tags : undefined,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 		});
@@ -115,6 +120,25 @@ export function CriteriaCreatePage() {
 						maxRows={10}
 						maxLength={1000}
 					/>
+
+					<Textarea
+						label="Промпт для LLM"
+						placeholder="Промпт для автоматической проверки (необязательно)"
+						value={prompt}
+						onChange={(e) => setPrompt(e.target.value)}
+						autosize
+						minRows={3}
+						maxRows={8}
+					/>
+
+					{prompt && (
+						<Box>
+							<Text size="sm" c="dimmed" mb="xs">
+								Предпросмотр
+							</Text>
+							<MarkdownRenderer content={prompt} />
+						</Box>
+					)}
 
 					<MultiSelect
 						label="Теги"
