@@ -75,6 +75,7 @@ export function WorkspaceDetailPage() {
 	const canManageInvites = useProfileStore((state) => state.canManageInvites(workspaceId));
 	const getRole = useProfileStore((state) => state.getRole);
 	const currentRole = getRole(workspaceId) ?? 'STUDENT';
+	const profileStore = useProfileStore();
 
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [roleModalOpen, setRoleModalOpen] = useState(false);
@@ -106,6 +107,9 @@ export function WorkspaceDetailPage() {
 	const deleteMutation = useMutation({
 		mutationFn: () => deleteWorkspace(workspaceId),
 		onSuccess: () => {
+			profileStore.setWorkspaces(
+				profileStore.workspaces.filter((workspace) => workspace.workspaceId !== workspaceId)
+			);
 			navigate('/home');
 		},
 		onError: (err: unknown) => {
@@ -220,10 +224,14 @@ export function WorkspaceDetailPage() {
 
 				<Tabs.Panel value="main" pt="md">
 					<Stack gap="md">
-						<Text size="sm" c="dimmed">
-							Описание
-						</Text>
-						<Text>{workspace.description || 'Описание не указано'}</Text>
+						<Stack gap={0}>
+							<Text size="sm" c="dimmed">
+								Описание
+							</Text>
+							<Text style={{ whiteSpace: 'pre-line' }}>
+								{workspace.description || 'Описание не указано'}
+							</Text>
+						</Stack>
 						<Text size="sm" c="dimmed">
 							Создано {new Date(workspace.created_at).toLocaleDateString('ru-RU')}
 						</Text>
@@ -341,7 +349,7 @@ export function WorkspaceDetailPage() {
 			<Modal
 				opened={deleteModalOpen}
 				onClose={() => setDeleteModalOpen(false)}
-				title="Архивировать пространство"
+				title="Архивация пространства"
 			>
 				<Text>Вы уверены, что хотите архивировать пространство "{workspace.name}"?</Text>
 				<Group justify="flex-end" mt="lg">
