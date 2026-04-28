@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
 	SimpleGrid,
@@ -15,19 +15,25 @@ import {
 	MultiSelect,
 	ActionIcon,
 	Alert,
+	Modal,
+	FileInput,
+	Code,
 } from '@mantine/core';
-import { IconPlus, IconSearch, IconAlertCircle, IconX } from '@tabler/icons-react';
-import { getCriteria, getAvailableTags } from '../../api/endpoints/criteria';
+import { IconPlus, IconSearch, IconAlertCircle, IconX, IconUpload } from '@tabler/icons-react';
+import { getCriteria, getAvailableTags, importCriteria } from '../../api/endpoints/criteria';
 import { CriterionCard } from '../../components/CriterionCard/CriterionCard';
 import { getUserData } from '../../lib/jwt';
 
 export function CriteriaListPage() {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const [search, setSearch] = useState('');
 	const [debouncedSearch] = useDebouncedValue(search, 500);
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const [debouncedSelectedTags] = useDebouncedValue(selectedTags, 300);
-	const [error, setError] = useState('');
+	const [importModalOpen, setImportModalOpen] = useState(false);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [importError, setImportError] = useState('');
 	const user = getUserData();
 
 	const { data: tags = [] } = useQuery({
@@ -44,6 +50,22 @@ export function CriteriaListPage() {
 			}),
 	});
 
+	const importMutation = useMutation({
+		mutationFn: (file: File) => importCriteria(file, null, null),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['criteria'] });
+			setImportModalOpen(false);
+			setSelectedFile(null);
+			setImportError('');
+		},
+		onError: (err: unknown) => {
+			const message =
+				(err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Ошибка при импорте критериев';
+			setImportError(message);
+		},
+	});
+
 	if (isLoading) {
 		return (
 			<Center h={400}>
@@ -57,22 +79,20 @@ export function CriteriaListPage() {
 			<Group justify="space-between">
 				<Title order={2}>Глобальные критерии</Title>
 				{user?.is_admin && (
-					<Button component={Link} to="/criteria/new" leftSection={<IconPlus size={16} />}>
-						Создать критерий
-					</Button>
+					<Group>
+						<Button component={Link} to="/criteria/new" leftSection={<IconPlus size={16} />}>
+							Создать критерий
+						</Button>
+						<Button
+							variant="outline"
+							leftSection={<IconUpload size={16} />}
+							onClick={() => setImportModalOpen(true)}
+						>
+							Загрузить критерии
+						</Button>
+					</Group>
 				)}
 			</Group>
-
-			{error && (
-				<Alert
-					color="red"
-					icon={<IconAlertCircle size={16} />}
-					onClose={() => setError('')}
-					withCloseButton
-				>
-					{error}
-				</Alert>
-			)}
 
 			<Group grow>
 				<TextInput
@@ -109,6 +129,79 @@ export function CriteriaListPage() {
 					))}
 				</SimpleGrid>
 			)}
+
+			<Modal
+				opened={importModalOpen}
+				onClose={() => {
+					setImportModalOpen(false);
+					setSelectedFile(null);
+				}}
+				title="Импорт критериев"
+				size="lg"
+			>
+				<Stack gap="md">
+					<Text size="sm">
+						Загрузите файл в формате JSON со списком критериев. Критерии будут добавлены как
+						глобальные (workspace_id=null, task_id=null).
+					</Text>
+
+					<Stack gap="xs">
+						<Text size="sm" fw={500}>
+							Формат JSON:
+						</Text>
+						<Code block>{`[
+  {
+    "description": "Описание критерия",
+    "prompt": "Промпт для проверки критерия (необязательно)",
+    "stage": "CODEBASE",
+    "tags": ["architecture", "backend"]
+  }
+]`}</Code>
+					</Stack>
+
+					<FileInput
+						label="Файл"
+						placeholder="Выберите файл"
+						accept="application/json"
+						value={selectedFile}
+						onChange={(file) => {
+							setSelectedFile(file);
+							setImportError('');
+						}}
+						clearable
+					/>
+
+					{importError && (
+						<Alert
+							color="red"
+							icon={<IconAlertCircle size={16} />}
+							withCloseButton
+							onClose={() => setImportError('')}
+						>
+							{importError}
+						</Alert>
+					)}
+
+					<Group justify="flex-end">
+						<Button
+							variant="subtle"
+							onClick={() => {
+								setImportModalOpen(false);
+								setSelectedFile(null);
+							}}
+						>
+							Отмена
+						</Button>
+						<Button
+							onClick={() => selectedFile && importMutation.mutate(selectedFile)}
+							loading={importMutation.isPending}
+							disabled={!selectedFile}
+						>
+							Загрузить
+						</Button>
+					</Group>
+				</Stack>
+			</Modal>
 		</Stack>
 	);
 }

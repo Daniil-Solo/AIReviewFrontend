@@ -114,6 +114,7 @@ export type CriterionStage = 'PROJECT_DOC' | 'CODEBASE' | 'MANUAL' | null;
 
 export interface CriterionCreateDTO {
 	description: string;
+	prompt?: string;
 	tags?: string[];
 	stage?: CriterionStage;
 	workspace_id?: number;
@@ -122,6 +123,7 @@ export interface CriterionCreateDTO {
 
 export interface CriterionUpdateDTO {
 	description?: string;
+	prompt?: string;
 	tags?: string[];
 	stage?: CriterionStage;
 	workspace_id?: number;
@@ -131,6 +133,7 @@ export interface CriterionUpdateDTO {
 export interface CriterionResponseDTO {
 	id: number;
 	description: string;
+	prompt?: string;
 	tags: string[];
 	stage: CriterionStage;
 	is_public: boolean;
