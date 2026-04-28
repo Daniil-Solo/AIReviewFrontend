@@ -321,3 +321,49 @@ export interface StudentGradesDTO {
 	user: ShortUserDTO;
 	tasks: TaskGradeDTO[];
 }
+
+export interface CustomModelDTO {
+	id: number;
+	workspace_id: number;
+	name: string;
+	model: string;
+	base_url: string;
+	encrypted_api_key: string;
+	created_by: number;
+	created_at: string;
+}
+
+export interface CustomModelRequestCreateDTO {
+	name: string;
+	model: string;
+	base_url: string;
+	api_key: string;
+}
+
+export interface CustomModelRequestUpdateDTO {
+	name: string;
+	model: string;
+	base_url: string;
+	api_key: string;
+}
+
+export interface CustomModelWithAPIKeyDTO {
+	id: number;
+	workspace_id: number;
+	name: string;
+	model: string;
+	base_url: string;
+	api_key: string;
+	created_by: number;
+	created_at: string;
+}
+
+export interface TaskStepsModelDTO {
+	task_id: number;
+	steps: Record<string, number | null>;
+	created_at: string;
+}
+
+export interface TaskStepsModelRequestCreateDTO {
+	steps: Record<string, number | null>;
+}

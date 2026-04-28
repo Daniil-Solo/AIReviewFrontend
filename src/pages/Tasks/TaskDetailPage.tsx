@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -24,6 +24,7 @@ import {
 	Checkbox,
 	Tooltip,
 	NumberInput,
+	Select,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
@@ -47,6 +48,7 @@ import {
 	IconCirclePlus,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
+import { getTaskStepsModels, setTaskStepsModels } from '../../api/endpoints/tasks';
 import {
 	getTaskCriteria,
 	addTaskCriteriaBatch,
@@ -55,12 +57,13 @@ import {
 	getTaskSolutions,
 	getAvailableTaskCriteria,
 } from '../../api/endpoints/tasks';
+import { getCustomModels } from '../../api/endpoints/workspaces';
 import { getAvailableTags } from '../../api/endpoints/criteria';
 import { getMySolutions } from '../../api/endpoints/solutions';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
 import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
-import { statusLabels, formatLabels } from '../../features/solutions/constants';
+import { statusLabels, formatLabels, stepProcessLabels } from '../../features/solutions/constants';
 
 const stageIcons: Record<string, React.ReactNode> = {
 	PROJECT_DOC: <IconFileDescription size={16} color="gray" />,
@@ -633,6 +636,109 @@ function MySolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: 
 	);
 }
 
+function TaskModelsTab({
+	taskId,
+	workspaceId,
+	canEdit,
+}: {
+	taskId: number;
+	workspaceId: number;
+	canEdit: boolean;
+}) {
+	const queryClient = useQueryClient();
+	const [savedSteps, setSavedSteps] = useState<Record<string, number | null>>({});
+
+	const { data: stepsModels, isLoading: loadingStepsModels } = useQuery({
+		queryKey: ['taskStepsModels', taskId],
+		queryFn: () => getTaskStepsModels(taskId),
+	});
+
+	useEffect(() => {
+		if (stepsModels?.steps) {
+			setSavedSteps(stepsModels.steps);
+		}
+	}, [stepsModels]);
+
+	const { data: customModels = [], isLoading: loadingModels } = useQuery({
+		queryKey: ['customModels', workspaceId],
+		queryFn: () => getCustomModels(workspaceId),
+	});
+
+	const updateMutation = useMutation({
+		mutationFn: (steps: Record<string, number | null>) => setTaskStepsModels(taskId, { steps }),
+		onSuccess: (data) => {
+			queryClient.invalidateQueries({ queryKey: ['taskStepsModels', taskId] });
+			setSavedSteps(data.steps);
+		},
+		onError: (err: unknown) => {
+			const e = err as { response?: { data?: { message?: string } } };
+			console.error(e.response?.data?.message || 'Ошибка сохранения');
+		},
+	});
+
+	const handleStepChange = (step: string, modelId: string | null) => {
+		const newSteps = { ...savedSteps, [step]: modelId ? Number(modelId) : null };
+		setSavedSteps(newSteps);
+		updateMutation.mutate(newSteps);
+	};
+
+	const isLoading = loadingStepsModels || loadingModels;
+
+	if (isLoading) {
+		return <Loader size="sm" />;
+	}
+
+	const steps = stepsModels?.steps || {};
+	const stepKeys = Object.keys(steps);
+
+	const modelOptions = [
+		{ value: '', label: 'Не выбрано' },
+		...customModels.map((m) => ({ value: String(m.id), label: m.name })),
+	];
+
+	return (
+		<Stack gap="md">
+			<Text size="sm" c="dimmed">
+				Выберите модель для каждого этапа проверки решений. Если модель не выбрана, будет
+				использоваться модель по умолчанию.
+			</Text>
+
+			{updateMutation.isPending && (
+				<Text size="sm" c="dimmed">
+					Сохранение...
+				</Text>
+			)}
+
+			{stepKeys.length === 0 ? (
+				<Text c="dimmed">Нет доступных этапов</Text>
+			) : (
+				<Stack gap="xs">
+					{stepKeys.map((step) => (
+						<Group key={step} justify="space-between" gap="md">
+							<Text size="sm" style={{ minWidth: 220 }}>
+								{stepProcessLabels[step as keyof typeof stepProcessLabels] || step}
+							</Text>
+							<Select
+								placeholder="Выберите модель"
+								data={modelOptions}
+								value={
+									savedSteps[step] !== undefined
+										? String(savedSteps[step] || '')
+										: String(steps[step] || '')
+								}
+								onChange={(value) => handleStepChange(step, value)}
+								disabled={!canEdit}
+								style={{ minWidth: 200 }}
+								allowDeselect
+							/>
+						</Group>
+					))}
+				</Stack>
+			)}
+		</Stack>
+	);
+}
+
 export function TaskDetailPage() {
 	const { workspaceId, taskId } = useParams<{ workspaceId: string; taskId: string }>();
 	const wsId = Number(workspaceId);
@@ -722,6 +828,7 @@ export function TaskDetailPage() {
 			<Tabs defaultValue="main">
 				<Tabs.List>
 					<Tabs.Tab value="main">Основное</Tabs.Tab>
+					<Tabs.Tab value="settings">Настройки</Tabs.Tab>
 					<Tabs.Tab value="my-solutions">Мои решения</Tabs.Tab>
 					<Tabs.Tab value="criteria">Критерии</Tabs.Tab>
 					<Tabs.Tab value="solutions">Все решения</Tabs.Tab>
@@ -729,6 +836,15 @@ export function TaskDetailPage() {
 
 				<Tabs.Panel value="main" pt="md">
 					<TaskMainTab task={task} />
+				</Tabs.Panel>
+
+				<Tabs.Panel value="settings" pt="md">
+					<Stack gap="lg">
+						<Text fw={500} size="lg">
+							Модели
+						</Text>
+						<TaskModelsTab taskId={tId} workspaceId={wsId} canEdit={!!isOwnerOrTeacher} />
+					</Stack>
 				</Tabs.Panel>
 
 				<Tabs.Panel value="my-solutions" pt="md">

@@ -31,6 +31,7 @@ import {
 	IconFileDescription,
 	IconPlus,
 	IconChartBar,
+	IconBrain,
 } from '@tabler/icons-react';
 import {
 	getWorkspace,
@@ -46,6 +47,7 @@ import { getUserData } from '../../lib/jwt';
 import { WorkspaceInvitesTab } from '../../components/WorkspaceInvitesTab/WorkspaceInvitesTab';
 import { WorkspaceTasksTab } from '../../components/WorkspaceTasksTab/WorkspaceTasksTab';
 import { WorkspaceGradesTab } from '../../components/WorkspaceGradesTab/WorkspaceGradesTab';
+import { WorkspaceModelsTab } from '../../components/WorkspaceModelsTab/WorkspaceModelsTab';
 import { CriterionCard } from '../../components/CriterionCard/CriterionCard';
 import type { WorkspaceMemberRole } from '../../types';
 
@@ -220,6 +222,11 @@ export function WorkspaceDetailPage() {
 							Приглашения
 						</Tabs.Tab>
 					)}
+					{canEdit && (
+						<Tabs.Tab value="models" leftSection={<IconBrain size={16} />}>
+							Модели
+						</Tabs.Tab>
+					)}
 				</Tabs.List>
 
 				<Tabs.Panel value="main" pt="md">
@@ -342,6 +349,12 @@ export function WorkspaceDetailPage() {
 				{canManageInvites && (
 					<Tabs.Panel value="invites" pt="md">
 						<WorkspaceInvitesTab workspaceId={workspaceId} />
+					</Tabs.Panel>
+				)}
+
+				{canEdit && (
+					<Tabs.Panel value="models" pt="md">
+						<WorkspaceModelsTab workspaceId={workspaceId} />
 					</Tabs.Panel>
 				)}
 			</Tabs>
