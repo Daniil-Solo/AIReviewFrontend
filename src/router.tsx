@@ -22,6 +22,9 @@ import { WorkspaceCriterionCreatePage } from './pages/Workspaces/WorkspaceCriter
 import { TaskCreatePage } from './pages/Tasks/TaskCreatePage';
 import { TaskDetailPage } from './pages/Tasks/TaskDetailPage';
 import { TaskEditPage } from './pages/Tasks/TaskEditPage';
+import { TaskCriterionCreatePage } from './pages/Tasks/TaskCriterionCreatePage';
+import { TaskCriterionDetailPage } from './pages/Tasks/TaskCriterionDetailPage';
+import { TaskCriterionEditPage } from './pages/Tasks/TaskCriterionEditPage';
 import { SolutionDetailPage } from './pages/Solutions/SolutionDetailPage';
 import { SolutionCreatePage } from './pages/Solutions/SolutionCreatePage';
 import { TransactionsPage } from './pages/Transactions/TransactionsPage';
@@ -91,6 +94,18 @@ export const router = createBrowserRouter([
 			{ path: '/workspaces/:workspaceId/tasks/new', element: <TaskCreatePage /> },
 			{ path: '/workspaces/:workspaceId/tasks/:taskId', element: <TaskDetailPage /> },
 			{ path: '/workspaces/:workspaceId/tasks/:taskId/edit', element: <TaskEditPage /> },
+			{
+				path: '/workspaces/:workspaceId/tasks/:taskId/criteria/new',
+				element: <TaskCriterionCreatePage />,
+			},
+			{
+				path: '/workspaces/:workspaceId/tasks/:taskId/criteria/:criterionId',
+				element: <TaskCriterionDetailPage />,
+			},
+			{
+				path: '/workspaces/:workspaceId/tasks/:taskId/criteria/:criterionId/edit',
+				element: <TaskCriterionEditPage />,
+			},
 			{
 				path: '/workspaces/:workspaceId/tasks/:taskId/solutions/:solutionId',
 				element: <SolutionDetailPage />,

@@ -47,7 +47,6 @@ import {
 	IconChevronUp,
 	IconEdit,
 	IconCirclePlus,
-	IconArrowNarrowRight,
 	IconArrowBigRight,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
@@ -219,8 +218,15 @@ function TaskCriteriaTab({
 		<Stack gap="md">
 			{canEdit && (
 				<Group>
+					<Button
+						component={Link}
+						to={`/workspaces/${workspaceId}/tasks/${taskId}/criteria/new`}
+						variant="light"
+					>
+						Создать новый критерий
+					</Button>
 					<Button leftSection={<IconPlus size={16} />} onClick={handleOpen} variant="light">
-						Добавить критерий
+						Добавить существующий критерий
 					</Button>
 				</Group>
 			)}

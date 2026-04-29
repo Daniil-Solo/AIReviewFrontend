@@ -59,7 +59,7 @@ export function CriterionDetail({ criterion, actions }: CriterionDetailProps) {
 					<Text size="sm" c="dimmed">
 						Промпт для LLM
 					</Text>
-					<Box mt="xs">
+					<Box>
 						<MarkdownRenderer content={criterion.prompt} />
 					</Box>
 				</Stack>
