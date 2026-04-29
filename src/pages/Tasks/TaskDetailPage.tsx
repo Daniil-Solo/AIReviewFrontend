@@ -48,6 +48,8 @@ import {
 	IconEdit,
 	IconCirclePlus,
 	IconArrowBigRight,
+	IconFileDots,
+	IconArrowLeft,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
 import { getTaskStepsModels, setTaskStepsModels } from '../../api/endpoints/tasks';
@@ -236,6 +238,8 @@ function TaskCriteriaTab({
 					{taskCriteria.map((tc) => (
 						<CriterionCard
 							key={tc.id}
+							globalWorkspaceId={workspaceId}
+							globalTaskId={taskId}
 							tc={tc}
 							canEdit={canEdit}
 							onUpdateWeight={(weight) => updateMutation.mutate({ id: tc.id, weight })}
@@ -369,11 +373,15 @@ function CriterionCard({
 	canEdit,
 	onUpdateWeight,
 	onDelete,
+	globalWorkspaceId,
+	globalTaskId,
 }: {
 	tc: TaskCriteriaResponseDTO;
 	canEdit: boolean;
 	onUpdateWeight: (weight: number) => void;
 	onDelete: () => void;
+	globalWorkspaceId: number;
+	globalTaskId: number;
 }) {
 	const [expanded, setExpanded] = useState(false);
 	const [editing, setEditing] = useState(false);
@@ -406,7 +414,7 @@ function CriterionCard({
 							{workspaceId !== null ? (
 								<IconStack2 size={16} color="gray" />
 							) : taskId !== null ? (
-								<IconHelpOctagon size={16} color="gray" />
+								<IconFileDots size={16} color="gray" />
 							) : (
 								<IconWorld size={16} color="gray" />
 							)}
@@ -446,10 +454,10 @@ function CriterionCard({
 								<Menu.Item color="blue" leftSection={<IconArrowBigRight size={14} />}>
 									<Anchor
 										href={
-											workspaceId !== null
-												? `/workspaces/${workspaceId}/criteria/${tc.criterion.id}`
-												: taskId !== null
-													? `/workspaces/${workspaceId}/tasks/${taskId}/criteria/${tc.criterion.id}`
+											tc.criterion.workspace_id !== null
+												? `/workspaces/${globalWorkspaceId}/criteria/${tc.criterion.id}`
+												: tc.criterion.task_id !== null
+													? `/workspaces/${globalWorkspaceId}/tasks/${globalTaskId}/criteria/${tc.criterion.id}`
 													: `/criteria/${tc.criterion.id}`
 										}
 										fz={14}
@@ -843,6 +851,16 @@ export function TaskDetailPage() {
 
 	return (
 		<Stack gap="lg">
+			<Group>
+				<Button
+					variant="subtle"
+					leftSection={<IconArrowLeft size={16} />}
+					onClick={() => navigate(`/workspaces/${wsId}`)}
+				>
+					Назад к пространству
+				</Button>
+			</Group>
+
 			<Group justify="space-between">
 				<Title order={2}>{task.name}</Title>
 				{isOwnerOrTeacher && (
