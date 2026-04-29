@@ -123,8 +123,8 @@ export interface CriterionCreateDTO {
 
 export interface CriterionUpdateDTO {
 	description?: string;
-	prompt?: string;
-	tags?: string[];
+	prompt: string;
+	tags: string[];
 	stage?: CriterionStage;
 	workspace_id?: number;
 	task_id?: number;
@@ -133,7 +133,7 @@ export interface CriterionUpdateDTO {
 export interface CriterionResponseDTO {
 	id: number;
 	description: string;
-	prompt?: string;
+	prompt: string;
 	tags: string[];
 	stage: CriterionStage;
 	is_public: boolean;

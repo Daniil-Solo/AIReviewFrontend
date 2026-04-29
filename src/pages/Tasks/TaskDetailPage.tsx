@@ -25,6 +25,7 @@ import {
 	Tooltip,
 	NumberInput,
 	Select,
+	Anchor,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
@@ -46,6 +47,8 @@ import {
 	IconChevronUp,
 	IconEdit,
 	IconCirclePlus,
+	IconArrowNarrowRight,
+	IconArrowBigRight,
 } from '@tabler/icons-react';
 import { getTask, getTaskPublic, deleteTask } from '../../api/endpoints/tasks';
 import { getTaskStepsModels, setTaskStepsModels } from '../../api/endpoints/tasks';
@@ -64,6 +67,7 @@ import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
 import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
 import { statusLabels, formatLabels, stepProcessLabels } from '../../features/solutions/constants';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 
 const stageIcons: Record<string, React.ReactNode> = {
 	PROJECT_DOC: <IconFileDescription size={16} color="gray" />,
@@ -104,7 +108,15 @@ function TaskMainTab({ task }: { task: TaskResponseDTO }) {
 	);
 }
 
-function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean }) {
+function TaskCriteriaTab({
+	taskId,
+	workspaceId,
+	canEdit,
+}: {
+	taskId: number;
+	workspaceId: number;
+	canEdit: boolean;
+}) {
 	const [opened, { open, close }] = useDisclosure(false);
 	const [search, setSearch] = useState('');
 	const [debouncedSearch] = useDebouncedValue(search, 500);
@@ -312,7 +324,13 @@ function TaskCriteriaTab({ taskId, canEdit }: { taskId: number; canEdit: boolean
 													<ActionIcon
 														variant="subtle"
 														component="a"
-														href={`/criteria/${criterion.id}`}
+														href={
+															criterion.workspace_id !== null
+																? `/workspaces/${workspaceId}/criteria/${criterion.id}`
+																: criterion.task_id !== null
+																	? `/workspaces/${workspaceId}/tasks/${taskId}/criteria/${criterion.id}`
+																	: `/criteria/${criterion.id}`
+														}
 														target="_blank"
 														rel="noopener noreferrer"
 													>
@@ -354,8 +372,6 @@ function CriterionCard({
 	const [expanded, setExpanded] = useState(false);
 	const [editing, setEditing] = useState(false);
 	const [newWeight, setNewWeight] = useState(tc.weight);
-
-	const firstLine = tc.criterion.description.split('\n')[0];
 
 	const workspaceId = tc.criterion.workspace_id;
 	const taskId = tc.criterion.task_id;
@@ -421,6 +437,22 @@ function CriterionCard({
 								<Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
 									Удалить
 								</Menu.Item>
+								<Menu.Item color="blue" leftSection={<IconArrowBigRight size={14} />}>
+									<Anchor
+										href={
+											workspaceId !== null
+												? `/workspaces/${workspaceId}/criteria/${tc.criterion.id}`
+												: taskId !== null
+													? `/workspaces/${workspaceId}/tasks/${taskId}/criteria/${tc.criterion.id}`
+													: `/criteria/${tc.criterion.id}`
+										}
+										fz={14}
+										target="_blank"
+										underline="hover"
+									>
+										Перейти
+									</Anchor>
+								</Menu.Item>
 							</Menu.Dropdown>
 						</Menu>
 					)}
@@ -433,9 +465,15 @@ function CriterionCard({
 						lineClamp={expanded ? undefined : 1}
 						style={{ whiteSpace: 'pre-wrap' }}
 					>
-						{expanded ? tc.criterion.description : firstLine}
+						{tc.criterion.description}
 					</Text>
 				</Group>
+
+				{expanded && (
+					<div>
+						<MarkdownRenderer content={tc.criterion.prompt} />
+					</div>
+				)}
 
 				{editing ? (
 					<Group gap="xs">
@@ -830,7 +868,7 @@ export function TaskDetailPage() {
 					<Tabs.Tab value="main">Основное</Tabs.Tab>
 					<Tabs.Tab value="settings">Настройки</Tabs.Tab>
 					<Tabs.Tab value="my-solutions">Мои решения</Tabs.Tab>
-					<Tabs.Tab value="criteria">Критерии</Tabs.Tab>
+					<Tabs.Tab value="criteria">Оценивание</Tabs.Tab>
 					<Tabs.Tab value="solutions">Все решения</Tabs.Tab>
 				</Tabs.List>
 
@@ -852,7 +890,7 @@ export function TaskDetailPage() {
 				</Tabs.Panel>
 
 				<Tabs.Panel value="criteria" pt="md">
-					<TaskCriteriaTab taskId={tId} canEdit={!!isOwnerOrTeacher} />
+					<TaskCriteriaTab taskId={tId} workspaceId={wsId} canEdit={!!isOwnerOrTeacher} />
 				</Tabs.Panel>
 
 				<Tabs.Panel value="solutions" pt="md">
