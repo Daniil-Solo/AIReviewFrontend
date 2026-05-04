@@ -1,71 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Box, Loader, Table, Text } from '@mantine/core';
-import mermaid from 'mermaid';
+import { Box, Table, Text } from '@mantine/core';
 import styles from './MermaidGantt.module.css';
 import type { PipelineTaskDTO } from '../../types';
 import { stepProcessLabels } from '../../features/solutions/constants';
+import { formatDate } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface MermaidGanttProps {
 	tasks: PipelineTaskDTO[];
 }
 
 export function MermaidGantt({ tasks }: MermaidGanttProps) {
-	const [svg, setSvg] = useState('');
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		const finishedTasks = tasks.filter((t) => t.status === 'completed' || t.status === 'failed');
-
-		if (finishedTasks.length === 0) {
-			setLoading(false);
-			return;
-		}
-
-		const taskLines = finishedTasks
-			.map((task) => {
-				const status = 'done';
-				return `    ${task.step} :${status}, t${task.id}, ${task.ran_at}, ${task.duration?.toFixed(1)}s`;
-			})
-			.join('\n');
-
-		const mermaidCode = `gantt
-    dateFormat YYYY-MM-DDTHH:mm:ss.SSSZ
-    axisFormat %d-%m %H:%M
-
-${taskLines}`;
-
-		const renderDiagram = async () => {
-			try {
-				mermaid.initialize({
-					startOnLoad: false,
-					theme: 'default',
-					securityLevel: 'loose',
-				});
-
-				if (await mermaid.parse(mermaidCode)) {
-					const id = `gantt-${Math.random().toString(36).substring(2, 9)}`;
-					const { svg: rendered } = await mermaid.render(id, mermaidCode);
-					setSvg(rendered);
-				}
-			} catch (err) {
-				console.error('Mermaid render error:', err);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		renderDiagram();
-	}, [tasks]);
-
 	return (
 		<Box className={styles.container}>
-			{loading ? (
-				<Box className={styles.loading}>
-					<Loader size="sm" />
-				</Box>
-			) : svg ? (
-				<Box className={styles.diagram} dangerouslySetInnerHTML={{ __html: svg }} />
-			) : null}
 			{tasks.length > 0 ? (
 				<Table>
 					<Table.Thead>
@@ -73,7 +19,8 @@ ${taskLines}`;
 							<Table.Th>Шаг</Table.Th>
 							<Table.Th>Описание</Table.Th>
 							<Table.Th>Статус</Table.Th>
-							<Table.Th>Время</Table.Th>
+							<Table.Th>Запущен</Table.Th>
+							<Table.Th>Время, с</Table.Th>
 							<Table.Th></Table.Th>
 						</Table.Tr>
 					</Table.Thead>
@@ -83,7 +30,14 @@ ${taskLines}`;
 								<Table.Td>{task.step}</Table.Td>
 								<Table.Td>{stepProcessLabels[task.step]}</Table.Td>
 								<Table.Td>{task.status}</Table.Td>
-								<Table.Td>{task.duration?.toFixed(1)}</Table.Td>
+								<Table.Td>
+									{task.ran_at === null
+										? 'Нет'
+										: formatDate(task.ran_at, 'yyyy-MM-dd hh:mm:ss', {
+												locale: ru,
+											})}
+								</Table.Td>
+								<Table.Td>{task.duration === null ? 'Нет' : task.duration.toFixed(1)}</Table.Td>
 							</Table.Tr>
 						))}
 					</Table.Tbody>

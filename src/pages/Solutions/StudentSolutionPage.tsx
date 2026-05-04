@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -50,14 +50,14 @@ function ProjectDocValidationTab({
 	onSuccess: () => void;
 }) {
 	const [isEditing, setIsEditing] = useState(false);
-	const [editContent, setEditContent] = useState('');
-	const [savedContent, setSavedContent] = useState<string | null>(null);
+	const [content, setContent] = useState('');
 	const queryClient = useQueryClient();
 
-	const debouncedContent = useDebounce(editContent, 500);
+	const debouncedContent = useDebounce(content, 500);
 
 	const {
 		data: artefact,
+		isSuccess,
 		isLoading,
 		error,
 	} = useQuery({
@@ -65,29 +65,31 @@ function ProjectDocValidationTab({
 		queryFn: () => getSolutionArtefact(solutionId, 'create_project_doc'),
 	});
 
+	useEffect(() => {
+		if (isSuccess && artefact) {
+			setContent(artefact);
+		}
+	}, [artefact, isSuccess]);
+
 	const approveMutation = useMutation({
 		mutationFn: (file: string) => approveSolution(solutionId, file),
 		onSuccess: () => {
 			setIsEditing(false);
-			setSavedContent(null);
 			queryClient.invalidateQueries({ queryKey: ['solution', solutionId] });
 			onSuccess();
 		},
 	});
 
 	const handleEdit = () => {
-		setEditContent(artefact || '');
 		setIsEditing(true);
 	};
 
 	const handleSave = () => {
-		setSavedContent(editContent);
 		setIsEditing(false);
 	};
 
 	const handleConfirm = () => {
-		const contentToSubmit = savedContent ?? editContent ?? artefact ?? '';
-		approveMutation.mutate(contentToSubmit);
+		approveMutation.mutate(content);
 	};
 
 	if (isLoading) {
@@ -97,8 +99,6 @@ function ProjectDocValidationTab({
 	if (error) {
 		return <Alert color="red">Не удалось загрузить документацию проекта</Alert>;
 	}
-
-	const displayContent = isEditing ? editContent : (savedContent ?? artefact ?? '');
 
 	return (
 		<Stack gap="md">
@@ -117,7 +117,6 @@ function ProjectDocValidationTab({
 							variant="subtle"
 							onClick={() => {
 								setIsEditing(false);
-								setEditContent('');
 							}}
 						>
 							Отмена
@@ -145,14 +144,14 @@ function ProjectDocValidationTab({
 				<Stack gap="md">
 					<Textarea
 						label="Редактирование документации"
-						value={editContent}
-						onChange={(e) => setEditContent(e.currentTarget.value)}
+						value={content}
+						onChange={(e) => setContent(e.currentTarget.value)}
 						minRows={10}
 						maxRows={20}
 						autosize
 						styles={{ input: { fontFamily: 'monospace' } }}
 					/>
-					{editContent && (
+					{content && (
 						<Card withBorder>
 							<Text size="sm" fw={500} mb="sm">
 								Предпросмотр:
@@ -163,7 +162,7 @@ function ProjectDocValidationTab({
 				</Stack>
 			) : (
 				<Card withBorder>
-					<MarkdownRenderer content={displayContent} />
+					<MarkdownRenderer content={content} />
 				</Card>
 			)}
 		</Stack>

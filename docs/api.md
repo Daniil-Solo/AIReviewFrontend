@@ -72,6 +72,10 @@
 // Path: {solution_id: number}
 // Response: PipelineInfoDTO
 
+// GET /api/v1/solutions/{solution_id}/score
+// Path: {solution_id: number}
+// Response: SolutionScoreDTO
+
 // GET /api/v1/solutions/{solution_id}/wind-rose
 // Path: {solution_id: number}
 // Response: WindRosePointDTO[]
@@ -513,6 +517,12 @@ interface SolutionResponseDTO {
   label?: string;
   created_by: number;
   created_at: string;
+}
+
+interface SolutionScoreDTO {
+  score: number;
+  total_criteria: number;
+  passed_criteria: number;
 }
 
 interface SolutionShortResponseDTO {

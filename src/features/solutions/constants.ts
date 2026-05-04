@@ -30,6 +30,7 @@ export const stepLabels: Record<PipelineStepEnum, string> = {
 	critic: 'Критика документации',
 	resolve_gaps: 'Правки документации по замечаниям из критики',
 	improve_doc: 'Документация проекта (улучшенная версия)',
+	validate_project_doc: 'Документация проекта (провалидированная студентом)',
 	grade_by_codebase: 'Проверка критериев по коду',
 	grade_by_project_doc: 'Проверка критериев по ProjectDoc',
 };
@@ -41,6 +42,7 @@ export const stepProcessLabels: Record<PipelineStepEnum, string> = {
 	critic: 'Критика ProjectDoc',
 	resolve_gaps: 'Создание правок ProjectDoc по критике',
 	improve_doc: 'Улучшение ProjectDoc',
+	validate_project_doc: 'Валидация ProjectDoc студентом',
 	grade_by_codebase: 'Проверка критериев по коду',
 	grade_by_project_doc: 'Проверка критериев по ProjectDoc',
 };

@@ -207,6 +207,7 @@ export type PipelineStepEnum =
 	| 'critic'
 	| 'resolve_gaps'
 	| 'improve_doc'
+	| 'validate_project_doc'
 	| 'grade_by_codebase'
 	| 'grade_by_project_doc';
 
@@ -376,4 +377,10 @@ export interface WindRosePointDTO {
 	tag: string;
 	value: number;
 	count: number;
+}
+
+export interface SolutionScoreDTO {
+	score: number;
+	total_criteria: number;
+	passed_criteria: number;
 }

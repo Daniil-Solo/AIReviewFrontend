@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -33,6 +33,7 @@ import {
 	IconCheck,
 	IconX,
 	IconPlus,
+	IconSparkles,
 } from '@tabler/icons-react';
 import {
 	getSolutionInfo,
@@ -42,12 +43,13 @@ import {
 	getSolutionCriteriaChecks,
 	createSolutionCriteriaCheck,
 	submitFinalReview,
+	getSolutionScore,
 } from '../../api/endpoints/solutions';
 import type {
 	SolutionShortResponseDTO,
 	PipelineStepEnum,
 	GradingCriterionDTO,
-	SolutionCriteriaCheckResponseDTO,
+	SolutionScoreDTO,
 } from '../../types';
 import {
 	statusLabels,
@@ -72,30 +74,191 @@ interface TeacherSolutionPageProps {
 	isTeacher: boolean;
 }
 
+interface ManualCheckModalProps {
+	opened: boolean;
+	taskCriterionId: number | null;
+	onClose: () => void;
+	onSubmit: (taskCriterionId: number, isPassed: boolean, comment?: string) => void;
+	isPending: boolean;
+}
+
+function ManualCheckModal({
+	opened,
+	taskCriterionId,
+	onClose,
+	onSubmit,
+	isPending,
+}: ManualCheckModalProps) {
+	const [isPassed, setIsPassed] = useState(true);
+	const [comment, setComment] = useState('');
+
+	const handleSubmit = () => {
+		if (taskCriterionId) {
+			onSubmit(taskCriterionId, isPassed, comment || undefined);
+			setIsPassed(true);
+			setComment('');
+		}
+	};
+
+	const handleClose = () => {
+		setIsPassed(true);
+		setComment('');
+		onClose();
+	};
+
+	return (
+		<Modal opened={opened} onClose={handleClose} title="Ручная проверка">
+			<Stack gap="md">
+				<Checkbox
+					label="Пройден"
+					checked={isPassed}
+					onChange={(e) => setIsPassed(e.currentTarget.checked)}
+				/>
+				<Textarea
+					label="Комментарий"
+					placeholder="Комментарий (необязательно)"
+					value={comment}
+					onChange={(e) => setComment(e.currentTarget.value)}
+					minRows={3}
+				/>
+				<Group justify="flex-end">
+					<Button variant="subtle" onClick={handleClose}>
+						Отмена
+					</Button>
+					<Button onClick={handleSubmit} loading={isPending}>
+						Добавить
+					</Button>
+				</Group>
+			</Stack>
+		</Modal>
+	);
+}
+
+interface CriteriaCardProps {
+	gradingCriterion: GradingCriterionDTO;
+	isTeacher: boolean;
+	onAddCheck: (taskCriterionId: number) => void;
+	isMutationPending: boolean;
+}
+
+const CriteriaCard = memo(
+	({ gradingCriterion, isTeacher, onAddCheck, isMutationPending }: CriteriaCardProps) => {
+		const [isOpen, setIsOpen] = useState(false);
+		const taskCriterionId = gradingCriterion.task_criterion_id;
+
+		const toggleOpen = useCallback(() => setIsOpen((prev) => !prev), []);
+
+		return (
+			<Card withBorder padding="sm">
+				<Stack gap="xs" p="xs" onClick={toggleOpen} style={{ cursor: 'pointer' }}>
+					<Group>
+						<Text style={{ flex: 1 }} c="black">
+							{gradingCriterion.criterion.description}
+						</Text>
+						{isOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+					</Group>
+					<Group gap="xs">
+						<Badge size="sm" variant="outline" color={getCriterionColor(gradingCriterion)}>
+							{getCriterionCurrentStatus(gradingCriterion)}
+						</Badge>
+						<Badge size="sm" variant="outline" color="gray">
+							Проверок: {gradingCriterion.checks.length}
+						</Badge>
+						<Badge size="sm" variant="outline" color="gray">
+							Вес: {gradingCriterion.weight}
+						</Badge>
+					</Group>
+				</Stack>
+
+				<Collapse expanded={isOpen}>
+					<Stack px="xs">
+						<Box>
+							<MarkdownRenderer content={gradingCriterion.criterion.prompt} />
+						</Box>
+						<Stack gap="sm">
+							{gradingCriterion.checks.length > 0 ? (
+								<Stack gap="xs">
+									{gradingCriterion.checks.map((check, idx) => (
+										<Card key={check.id} withBorder padding="xs">
+											<Stack gap="xs">
+												<Text size="sm" c="dimmed">
+													Проверка № {idx + 1} ({getCriterionStageLabel(check.stage)})
+												</Text>
+												<Text size="sm">{check.comment}</Text>
+												<Group gap="xs">
+													<Badge color="gray" variant="outline" size="sm">
+														{checkStatusLabels[check.status]}
+													</Badge>
+													{check.is_passed !== null &&
+														(check.is_passed ? (
+															<Badge
+																color="green"
+																variant="outline"
+																leftSection={<IconCheck size={12} />}
+															>
+																Критерий выполнен
+															</Badge>
+														) : (
+															<Badge
+																color="red"
+																variant="outline"
+																leftSection={<IconX size={12} />}
+															>
+																Критерий не выполнен
+															</Badge>
+														))}
+												</Group>
+												<Text size="xs" c="dimmed">
+													{formatRelativeTime(check.created_at)}
+												</Text>
+											</Stack>
+										</Card>
+									))}
+								</Stack>
+							) : (
+								<Text size="sm" c="dimmed">
+									Проверок пока нет
+								</Text>
+							)}
+							{isTeacher && (
+								<Group>
+									<Button
+										size="xs"
+										variant="light"
+										leftSection={<IconPlus size={14} />}
+										onClick={(e) => {
+											e.stopPropagation();
+											onAddCheck(taskCriterionId);
+										}}
+										disabled={isMutationPending}
+									>
+										Добавить проверку
+									</Button>
+								</Group>
+							)}
+						</Stack>
+					</Stack>
+				</Collapse>
+			</Card>
+		);
+	}
+);
+
 interface CriteriaChecksPanelProps {
 	solutionId: number;
 	isTeacher: boolean;
 }
 
-function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps) {
+export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps) {
 	const [addCheckModal, setAddCheckModal] = useState<number | null>(null);
-	const [isPassed, setIsPassed] = useState(true);
-	const [comment, setComment] = useState('');
-	const [openCriteria, setOpenCriteria] = useState<Set<number>>(new Set());
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 
-	const toggleCriterion = (criterionId: number) => {
-		const newOpen = new Set(openCriteria);
-		if (newOpen.has(criterionId)) {
-			newOpen.delete(criterionId);
-		} else {
-			newOpen.add(criterionId);
-		}
-		setOpenCriteria(newOpen);
-	};
-
-	const { data: criteriaData, isLoading } = useQuery({
+	const {
+		data: criteriaData,
+		isLoading,
+		error,
+	} = useQuery({
 		queryKey: ['solutionCriteriaChecks', solutionId],
 		queryFn: () => getSolutionCriteriaChecks(solutionId),
 	});
@@ -111,26 +274,35 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['solutionCriteriaChecks', solutionId] });
 			setAddCheckModal(null);
-			setIsPassed(true);
-			setComment('');
 		},
 	});
 
-	const handleAddCheck = (taskCriterionId: number) => {
-		createCheckMutation.mutate({
-			task_criterion_id: taskCriterionId,
-			is_passed: isPassed,
-			comment: comment || undefined,
-		});
-	};
+	const handleAddCheckRequest = useCallback((taskCriterionId: number) => {
+		setAddCheckModal(taskCriterionId);
+	}, []);
 
-	if (isLoading) {
-		return <Loader size="sm" />;
-	}
+	const handleSubmitCheck = useCallback(
+		(taskCriterionId: number, isPassed: boolean, comment?: string) => {
+			createCheckMutation.mutate({
+				task_criterion_id: taskCriterionId,
+				is_passed: isPassed,
+				comment,
+			});
+		},
+		[createCheckMutation]
+	);
 
-	if (!criteriaData?.criteria.length) {
+	// Фильтрация критериев по выбранному тегу
+	const filteredCriteria = useMemo(() => {
+		if (!criteriaData?.criteria) return [];
+		if (!selectedTag) return criteriaData.criteria;
+		return criteriaData.criteria.filter((gc) => gc.criterion.tags.includes(selectedTag));
+	}, [criteriaData, selectedTag]);
+
+	if (isLoading) return <Loader size="sm" />;
+	if (error) return <Alert color="red">Ошибка загрузки критериев</Alert>;
+	if (!criteriaData?.criteria.length)
 		return <Alert color="gray">Нет критериев для этого задания</Alert>;
-	}
 
 	return (
 		<Stack gap="md">
@@ -160,141 +332,26 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 					))}
 				</Group>
 			)}
+
 			<Stack gap="sm">
-				{(selectedTag
-					? criteriaData.criteria.filter((gc) => gc.criterion.tags.includes(selectedTag))
-					: criteriaData.criteria
-				).map((gradingCriterion: GradingCriterionDTO) => {
-					const criterionId = gradingCriterion.criterion.id;
-					const isOpen = openCriteria.has(criterionId);
-					return (
-						<Card key={criterionId} withBorder padding="sm">
-							<Stack
-								gap={'xs'}
-								p="xs"
-								onClick={() => toggleCriterion(criterionId)}
-								style={{ cursor: 'pointer' }}
-							>
-								<Group justify="space-between">
-									<Text c="black">{gradingCriterion.criterion.description}</Text>
-									{isOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-								</Group>
-								<Group gap="xs">
-									<Badge size="sm" variant="outline" color={getCriterionColor(gradingCriterion)}>
-										{getCriterionCurrentStatus(gradingCriterion)}
-									</Badge>
-									<Badge size="sm" variant="outline" color={'gray'}>
-										Проверок: {gradingCriterion.checks.length}
-									</Badge>
-									<Badge size="sm" variant="outline" color={'gray'}>
-										Вес: {gradingCriterion.weight}
-									</Badge>
-								</Group>
-							</Stack>
-							<Collapse expanded={isOpen}>
-								<Stack px="xs">
-									<Box>
-										<MarkdownRenderer content={gradingCriterion.criterion.prompt} />
-									</Box>
-									<Stack gap="sm">
-										{gradingCriterion.checks.length > 0 ? (
-											<Stack gap="xs">
-												{gradingCriterion.checks.map(
-													(check: SolutionCriteriaCheckResponseDTO, checkNumber: number) => (
-														<Card key={check.id} withBorder padding="xs">
-															<Stack gap="xs">
-																<Text size="sm" c="dimmed">
-																	Проверка № {checkNumber + 1} (
-																	{getCriterionStageLabel(check.stage)})
-																</Text>
-																<Text size="sm">{check.comment}</Text>
-																<Group gap="xs">
-																	<Badge color={'gray'} variant="outline" size="sm">
-																		{checkStatusLabels[check.status]}
-																	</Badge>
-																	{check.is_passed !== null &&
-																		(check.is_passed ? (
-																			<Badge
-																				color="green"
-																				variant="outline"
-																				leftSection={<IconCheck size={12} />}
-																			>
-																				Критерий выполнен
-																			</Badge>
-																		) : (
-																			<Badge
-																				color="red"
-																				variant="outline"
-																				leftSection={<IconX size={12} />}
-																			>
-																				Критерий не выполнен
-																			</Badge>
-																		))}
-																</Group>
-																<Text size="xs" c="dimmed">
-																	{formatRelativeTime(check.created_at)}
-																</Text>
-															</Stack>
-														</Card>
-													)
-												)}
-											</Stack>
-										) : (
-											<Text size="sm" c="dimmed">
-												Проверок пока нет
-											</Text>
-										)}
-										{isTeacher && (
-											<Group>
-												<Button
-													size="xs"
-													variant="light"
-													leftSection={<IconPlus size={14} />}
-													onClick={() => setAddCheckModal(gradingCriterion.task_criterion_id)}
-												>
-													Добавить проверку
-												</Button>
-											</Group>
-										)}
-									</Stack>
-								</Stack>
-							</Collapse>
-						</Card>
-					);
-				})}
+				{filteredCriteria.map((gradingCriterion) => (
+					<CriteriaCard
+						key={gradingCriterion.criterion.id}
+						gradingCriterion={gradingCriterion}
+						isTeacher={isTeacher}
+						onAddCheck={handleAddCheckRequest}
+						isMutationPending={createCheckMutation.isPending}
+					/>
+				))}
 			</Stack>
 
-			<Modal
+			<ManualCheckModal
 				opened={addCheckModal !== null}
+				taskCriterionId={addCheckModal}
 				onClose={() => setAddCheckModal(null)}
-				title="Ручная проверка"
-			>
-				<Stack gap="md">
-					<Checkbox
-						label="Пройден"
-						checked={isPassed}
-						onChange={(e) => setIsPassed(e.currentTarget.checked)}
-					/>
-					<Textarea
-						label="Комментарий"
-						placeholder="Комментарий (необязательно)"
-						value={comment}
-						onChange={(e) => setComment(e.currentTarget.value)}
-						minRows={3}
-					/>
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={() => setAddCheckModal(null)}>
-							Отмена
-						</Button>
-						<Button
-							onClick={() => addCheckModal && handleAddCheck(addCheckModal)}
-							loading={createCheckMutation.isPending}
-						>
-							Добавить
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+				onSubmit={handleSubmitCheck}
+				isPending={createCheckMutation.isPending}
+			/>
 		</Stack>
 	);
 }
@@ -310,6 +367,7 @@ export function TeacherSolutionPage({
 	const [humanFeedback, setHumanFeedback] = useState(solution.human_feedback ?? '');
 	const [aiFeedback, setAiFeedback] = useState(solution.ai_feedback ?? '');
 	const [finalReviewEdit, setFinalReviewEdit] = useState(solution.human_grade === null);
+	const [scoreInfo, setScoreInfo] = useState<SolutionScoreDTO | null>(null);
 	const queryClient = useQueryClient();
 
 	const { data: pipelineInfo, isLoading: isLoadingInfo } = useQuery({
@@ -320,6 +378,14 @@ export function TeacherSolutionPage({
 	const { data: windRoseData } = useQuery({
 		queryKey: ['solutionWindRose', solution.id],
 		queryFn: () => getSolutionWindRose(solution.id),
+	});
+
+	const { mutate: fetchScore, isPending: isLoadingScore } = useMutation({
+		mutationFn: () => getSolutionScore(solution.id),
+		onSuccess: (data) => {
+			setHumanGrade(data.score);
+			setScoreInfo(data);
+		},
 	});
 
 	const restartMutation = useMutation({
@@ -555,7 +621,7 @@ export function TeacherSolutionPage({
 						{!isLoadingInfo && pipelineInfo?.pipeline_tasks && (
 							<Card withBorder>
 								<Stack gap="sm">
-									<Text fw={500}>График выполнения</Text>
+									<Text fw={500}>Прогресс выполнения</Text>
 									<MermaidGantt
 										key={pipelineInfo.solution_id}
 										tasks={pipelineInfo.pipeline_tasks}
@@ -604,19 +670,33 @@ export function TeacherSolutionPage({
 				<Tabs.Panel value="final-review" pt="md">
 					{solution.status === 'HUMAN_REVIEW' || finalReviewEdit ? (
 						<Stack gap="md">
-							<Text size="sm" c="dimmed">
-								Оцените решение и оставьте обратную связь для студента
-							</Text>
+							<Group align="flex-end" gap="md">
+								<NumberInput
+									label="Оценка"
+									placeholder="Введите оценку (0-100)"
+									value={humanGrade}
+									onChange={setHumanGrade}
+									min={0}
+									max={100}
+									required
+									style={{ flex: 1 }}
+								/>
+								<Button
+									variant="light"
+									onClick={() => fetchScore()}
+									loading={isLoadingScore}
+									leftSection={<IconSparkles size={16} />}
+								>
+									Рассчитать
+								</Button>
+							</Group>
 
-							<NumberInput
-								label="Оценка"
-								placeholder="Введите оценку (0-100)"
-								value={humanGrade}
-								onChange={setHumanGrade}
-								min={0}
-								max={100}
-								required
-							/>
+							{scoreInfo && (
+								<Text size="sm" c="dimmed">
+									Вычислена на основе {scoreInfo.total_criteria} критериев, из которых пройдено{' '}
+									{scoreInfo.passed_criteria}
+								</Text>
+							)}
 
 							<Textarea
 								label="Обратная связь"

@@ -231,15 +231,15 @@ function TaskCriteriaTab({
 		<Stack gap="md">
 			{canEdit && (
 				<Group>
+					<Button onClick={handleOpen} variant="light">
+						Добавить существующий
+					</Button>
 					<Button
 						component={Link}
 						to={`/workspaces/${workspaceId}/tasks/${taskId}/criteria/new`}
 						variant="light"
 					>
-						Создать новый критерий
-					</Button>
-					<Button leftSection={<IconPlus size={16} />} onClick={handleOpen} variant="light">
-						Добавить существующий критерий
+						Создать новый
 					</Button>
 				</Group>
 			)}
@@ -491,22 +491,23 @@ function CriterionCard({
 								<Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
 									Удалить
 								</Menu.Item>
-								<Menu.Item color="blue" leftSection={<IconArrowBigRight size={14} />}>
-									<Anchor
-										href={
-											tc.criterion.workspace_id !== null
-												? `/workspaces/${globalWorkspaceId}/criteria/${tc.criterion.id}`
-												: tc.criterion.task_id !== null
-													? `/workspaces/${globalWorkspaceId}/tasks/${globalTaskId}/criteria/${tc.criterion.id}`
-													: `/criteria/${tc.criterion.id}`
-										}
-										fz={14}
-										target="_blank"
-										underline="hover"
-									>
+
+								<Anchor
+									href={
+										tc.criterion.workspace_id !== null
+											? `/workspaces/${globalWorkspaceId}/criteria/${tc.criterion.id}`
+											: tc.criterion.task_id !== null
+												? `/workspaces/${globalWorkspaceId}/tasks/${globalTaskId}/criteria/${tc.criterion.id}`
+												: `/criteria/${tc.criterion.id}`
+									}
+									fz={14}
+									target="_blank"
+									underline="hover"
+								>
+									<Menu.Item color="blue" leftSection={<IconArrowBigRight size={14} />}>
 										Перейти
-									</Anchor>
-								</Menu.Item>
+									</Menu.Item>
+								</Anchor>
 							</Menu.Dropdown>
 						</Menu>
 					)}
@@ -941,10 +942,10 @@ export function TaskDetailPage() {
 					{isOwnerOrTeacher && (
 						<>
 							<Tabs.Tab value="settings">Настройки</Tabs.Tab>
+							<Tabs.Tab value="criteria">Оценивание</Tabs.Tab>
 							<Tabs.Tab value="solutions">Все решения</Tabs.Tab>
 						</>
 					)}
-					{isOwnerOrTeacher && <Tabs.Tab value="criteria">Оценивания</Tabs.Tab>}
 					<Tabs.Tab value="my-solutions">Мои решения</Tabs.Tab>
 				</Tabs.List>
 

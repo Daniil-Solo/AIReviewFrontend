@@ -5,6 +5,7 @@ import type {
 	SolutionFormatEnum,
 	CriteriaGradingReviewResponseDTO,
 	WindRosePointDTO,
+	SolutionScoreDTO,
 } from '../../types';
 
 interface CreateCriteriaCheckDTO {
@@ -130,5 +131,10 @@ export const approveSolution = async (
 		formData,
 		{ headers: { 'Content-Type': 'multipart/form-data' } }
 	);
+	return response.data;
+};
+
+export const getSolutionScore = async (solutionId: number): Promise<SolutionScoreDTO> => {
+	const response = await api.get<SolutionScoreDTO>(`/api/v1/solutions/${solutionId}/score`);
 	return response.data;
 };
