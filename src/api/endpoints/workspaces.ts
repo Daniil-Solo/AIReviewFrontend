@@ -73,6 +73,27 @@ export const updateMember = async (
 	return response.data;
 };
 
+export const deleteMember = async (
+	workspaceId: number,
+	memberId: number
+): Promise<{ message: string }> => {
+	const response = await api.delete<{ message: string }>(
+		`/api/v1/workspaces/${workspaceId}/members/${memberId}`
+	);
+	return response.data;
+};
+
+export const transferOwnership = async (
+	workspaceId: number,
+	memberId: number
+): Promise<WorkspaceResponseDTO> => {
+	const response = await api.patch<WorkspaceResponseDTO>(
+		`/api/v1/workspaces/${workspaceId}/owner`,
+		{ member_id: memberId }
+	);
+	return response.data;
+};
+
 export const leaveWorkspace = async (workspaceId: number): Promise<{ message: string }> => {
 	const response = await api.post<{ message: string }>(`/api/v1/workspaces/${workspaceId}/leave`);
 	return response.data;

@@ -24,8 +24,15 @@
 // Path: {workspace_id: number, rule_id: number}
 // Response: SuccessOperationDTO
 
+// DELETE /api/v1/workspaces/{workspace_id}/members/{member_id}
+// Path: {workspace_id: number, member_id: number}
+// Response: SuccessOperationDTO
+
 // GET /api/internal/health
 // Response: any
+
+// GET /api/v1/app/settings
+// Response: AppSettingsResponseDTO
 
 // GET /api/v1/criteria
 // Query: { tags?: (string[] | null) | null, search?: (string | null) | null }
@@ -147,6 +154,11 @@
 // Path: {workspace_id: number}
 // Response: TaskResponseDTO[]
 
+// PATCH /api/v1/solutions/{solution_id}/label
+// Path: {solution_id: number}
+// Body: SolutionLabelUpdateDTO
+// Response: SolutionShortResponseDTO
+
 // PATCH /api/v1/tasks/{task_id}/criteria/{task_criterion_id}
 // Path: {task_criterion_id: number}
 // Body: TaskCriteriaUpdateWeightDTO
@@ -164,6 +176,10 @@
 
 // POST /api/v1/auth/login
 // Body: UserLoginDTO
+// Response: TokenDTO
+
+// POST /api/v1/auth/register
+// Body: EmailRegistrationRequestDTO
 // Response: TokenDTO
 
 // POST /api/v1/auth/register/confirm
@@ -188,6 +204,11 @@
 
 // POST /api/v1/solutions
 // Body: FormData { task_id: number, solution_format: string, github_repo_link?: (string | null), github_repo_branch?: (string | null), file?: (string | null) }
+// Response: SolutionShortResponseDTO
+
+// POST /api/v1/solutions/{solution_id}/approval
+// Path: {solution_id: number}
+// Body: FormData { file: string }
 // Response: SolutionShortResponseDTO
 
 // POST /api/v1/solutions/{solution_id}/cancel
@@ -289,8 +310,16 @@ interface AdminTopUpDTO {
   amount: number;
 }
 
+interface AppSettingsResponseDTO {
+  email_confirmation_enabled: boolean;
+}
+
 interface BalanceResponseDTO {
   balance: number;
+}
+
+interface Body_approve_project_doc_endpoint_api_v1_solutions__solution_id__approval_post {
+  file: string;
 }
 
 interface Body_create_endpoint_api_v1_solutions_post {
@@ -465,6 +494,10 @@ interface SolutionFinalReviewDTO {
   ai_feedback?: (string | null);
 }
 
+interface SolutionLabelUpdateDTO {
+  label: string;
+}
+
 interface SolutionResponseDTO {
   id: number;
   task_id: number;
@@ -477,6 +510,7 @@ interface SolutionResponseDTO {
   human_grade: (number | null);
   human_feedback: (string | null);
   ai_feedback: (string | null);
+  label?: string;
   created_by: number;
   created_at: string;
 }
@@ -492,6 +526,7 @@ interface SolutionShortResponseDTO {
   human_grade: (number | null);
   human_feedback: (string | null);
   ai_feedback: (string | null);
+  label?: string;
   created_at: string;
   created_by: number;
   author?: (ShortUserDTO | null);

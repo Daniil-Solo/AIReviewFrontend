@@ -19,7 +19,10 @@ import {
 	SimpleGrid,
 	FileInput,
 	Code,
+	ActionIcon,
+	Tooltip,
 } from '@mantine/core';
+import { useModals } from '@mantine/modals';
 import {
 	IconAlertCircle,
 	IconEdit,
@@ -27,7 +30,6 @@ import {
 	IconUsers,
 	IconInfoCircle,
 	IconDotsVertical,
-	IconUserEdit,
 	IconLink,
 	IconBook,
 	IconFileDescription,
@@ -35,12 +37,15 @@ import {
 	IconChartBar,
 	IconBrain,
 	IconUpload,
+	IconCrown,
 } from '@tabler/icons-react';
 import {
 	getWorkspace,
 	getWorkspaceMembers,
 	deleteWorkspace,
 	updateMember,
+	deleteMember,
+	transferOwnership,
 	leaveWorkspace,
 	getProfileWorkspaces,
 	getWorkspaceCriteria,
@@ -85,6 +90,7 @@ export function WorkspaceDetailPage() {
 
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [roleModalOpen, setRoleModalOpen] = useState(false);
+	const modals = useModals();
 	const [selectedMember, setSelectedMember] = useState<{
 		id: number;
 		userId: number;
@@ -124,6 +130,29 @@ export function WorkspaceDetailPage() {
 		onError: (err: unknown) => {
 			const e = err as { response?: { data?: { message?: string } } };
 			setError(e.response?.data?.message || 'Ошибка архивации');
+		},
+	});
+
+	const deleteMemberMutation = useMutation({
+		mutationFn: (memberId: number) => deleteMember(workspaceId, memberId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['workspaceMembers', workspaceId] });
+		},
+		onError: (err: unknown) => {
+			const e = err as { response?: { data?: { message?: string } } };
+			setError(e.response?.data?.message || 'Не удалось удалить участника');
+		},
+	});
+
+	const transferOwnershipMutation = useMutation({
+		mutationFn: (memberId: number) => transferOwnership(workspaceId, memberId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
+			queryClient.invalidateQueries({ queryKey: ['workspaceMembers', workspaceId] });
+		},
+		onError: (err: unknown) => {
+			const e = err as { response?: { data?: { message?: string } } };
+			setError(e.response?.data?.message || 'Не удалось передать права владения');
 		},
 	});
 
@@ -306,26 +335,77 @@ export function WorkspaceDetailPage() {
 										</Badge>
 									</Table.Td>
 									<Table.Td>
-										{canChangeMemberRoles && member.user_id !== currentUserId && (
-											<Button
-												size="xs"
-												variant="light"
-												leftSection={<IconUserEdit size={14} />}
-												onClick={() => {
-													setSelectedMember({
-														id: member.id,
-														userId: member.user_id,
-														fullname: member.fullname,
-														email: member.email,
-														role: member.role,
-													});
-													setNewRole('TEACHER');
-													setRoleModalOpen(true);
-												}}
-											>
-												Изменить
-											</Button>
-										)}
+										<Group gap="xs">
+											{canChangeMemberRoles && member.user_id !== currentUserId && (
+												<>
+													<Tooltip label="Изменить роль">
+														<ActionIcon
+															variant="subtle"
+															onClick={() => {
+																setSelectedMember({
+																	id: member.id,
+																	userId: member.user_id,
+																	fullname: member.fullname,
+																	email: member.email,
+																	role: member.role,
+																});
+																setNewRole('TEACHER');
+																setRoleModalOpen(true);
+															}}
+														>
+															<IconEdit size={16} />
+														</ActionIcon>
+													</Tooltip>
+													<Tooltip label="Удалить участника">
+														<ActionIcon
+															variant="subtle"
+															color="red"
+															onClick={() => {
+																modals.openConfirmModal({
+																	title: 'Удалить участника?',
+																	children: (
+																		<Text>
+																			Вы уверены, что хотите удалить участника {member.fullname} (
+																			{member.email})?
+																		</Text>
+																	),
+																	labels: { cancel: 'Отмена', confirm: 'Удалить' },
+																	confirmProps: { color: 'red' },
+																	onConfirm: () => deleteMemberMutation.mutate(member.id),
+																});
+															}}
+														>
+															<IconTrash size={16} />
+														</ActionIcon>
+													</Tooltip>
+												</>
+											)}
+											{currentRole === 'OWNER' && member.user_id !== currentUserId && (
+												<Tooltip label="Передать права владельца">
+													<ActionIcon
+														variant="subtle"
+														color="yellow"
+														onClick={() => {
+															modals.openConfirmModal({
+																title: 'Передать права владельца?',
+																children: (
+																	<Text>
+																		Вы уверены, что хотите передать права владения пространством
+																		пользователю {member.fullname} ({member.email})? Вы потеряете
+																		права владельца и станете преподавателем.
+																	</Text>
+																),
+																labels: { cancel: 'Отмена', confirm: 'Передать' },
+																confirmProps: { color: 'yellow' },
+																onConfirm: () => transferOwnershipMutation.mutate(member.id),
+															});
+														}}
+													>
+														<IconCrown size={16} />
+													</ActionIcon>
+												</Tooltip>
+											)}
+										</Group>
 									</Table.Td>
 								</Table.Tr>
 							))}
