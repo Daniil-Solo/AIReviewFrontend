@@ -67,7 +67,12 @@ import { getMySolutions } from '../../api/endpoints/solutions';
 import { useProfileStore } from '../../store/profile';
 import type { TaskResponseDTO, TaskCriteriaResponseDTO } from '../../types';
 import { stageLabels as criterionStageLabels } from '../../features/criteria/constants';
-import { statusLabels, formatLabels, stepProcessLabels } from '../../features/solutions/constants';
+import {
+	statusLabels,
+	formatLabels,
+	stepProcessLabels,
+	calculateProgress,
+} from '../../features/solutions/constants';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 
 const stageIcons: Record<string, React.ReactNode> = {
@@ -578,7 +583,7 @@ function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId
 					</Table.Thead>
 					<Table.Tbody>
 						{solutions?.map((solution) => {
-							const progress = (solution.steps.length / 8) * 100;
+							const progress = calculateProgress(solution.status);
 							const showProgress =
 								solution.status === 'PROJECT_GENERATION' ||
 								solution.status === 'VALIDATION_WAITING' ||
@@ -675,7 +680,7 @@ function MySolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: 
 						</Table.Thead>
 						<Table.Tbody>
 							{solutions?.map((solution) => {
-								const progress = (solution.steps.length / 8) * 100;
+								const progress = calculateProgress(solution.status);
 								const showProgress =
 									solution.status === 'PROJECT_GENERATION' ||
 									solution.status === 'VALIDATION_WAITING' ||

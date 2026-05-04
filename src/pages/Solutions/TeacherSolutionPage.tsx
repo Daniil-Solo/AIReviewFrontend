@@ -57,6 +57,7 @@ import {
 	getCriterionStageLabel,
 	getCriterionCurrentStatus,
 	getCriterionColor,
+	calculateProgress,
 } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
@@ -362,7 +363,7 @@ export function TeacherSolutionPage({
 		setOpenSteps(newOpen);
 	};
 
-	const progress = (solution.steps.length / 8) * 100;
+	const progress = calculateProgress(solution.status);
 	const canCancel = isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
 
 	return (

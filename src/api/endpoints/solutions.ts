@@ -117,3 +117,18 @@ export const getSolutionWindRose = async (solutionId: number): Promise<WindRoseP
 	const response = await api.get<WindRosePointDTO[]>(`/api/v1/solutions/${solutionId}/wind-rose`);
 	return response.data;
 };
+
+export const approveSolution = async (
+	solutionId: number,
+	content: string
+): Promise<SolutionShortResponseDTO> => {
+	const formData = new FormData();
+	const blob = new Blob([content], { type: 'text/markdown' });
+	formData.append('file', blob, 'project_doc.md');
+	const response = await api.post<SolutionShortResponseDTO>(
+		`/api/v1/solutions/${solutionId}/approval`,
+		formData,
+		{ headers: { 'Content-Type': 'multipart/form-data' } }
+	);
+	return response.data;
+};

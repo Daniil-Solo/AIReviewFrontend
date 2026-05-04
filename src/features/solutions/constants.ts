@@ -84,3 +84,17 @@ export const getCriterionColor = (criterion: GradingCriterionDTO): string => {
 	}
 	return lastCheck.is_passed ? 'green' : 'red';
 };
+
+export const calculateProgress = (status: SolutionStatusEnum): number => {
+	const progressMap: Record<SolutionStatusEnum, number> = {
+		CREATED: 0,
+		PROJECT_GENERATION: 0,
+		VALIDATION_WAITING: 25,
+		CRITERIA_GRADING: 50,
+		HUMAN_REVIEW: 75,
+		REVIEWED: 100,
+		CANCELLED: 0,
+		ERROR: 0,
+	};
+	return progressMap[status] ?? 0;
+};
