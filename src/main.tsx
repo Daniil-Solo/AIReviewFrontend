@@ -5,6 +5,7 @@ import { localStorageColorSchemeManager } from '@mantine/core';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@mantine/core/styles.css';
+import '@mantine/charts/styles.css';
 import './main.css';
 import { router } from './router';
 import { StrictMode } from 'react';
@@ -12,8 +13,10 @@ import { StrictMode } from 'react';
 const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
-			staleTime: 1000 * 60 * 5,
+			staleTime: 0,
 			retry: 1,
+			refetchOnMount: true,
+			refetchOnWindowFocus: true,
 		},
 	},
 });

@@ -4,7 +4,7 @@
 // Path: {criterion_id: number}
 // Response: SuccessOperationDTO
 
-// DELETE /api/v1/custom-models/custom-models/{model_id}
+// DELETE /api/v1/custom-models/{model_id}
 // Path: {model_id: number}
 // Response: SuccessOperationDTO
 
@@ -38,7 +38,7 @@
 // Path: {criterion_id: number}
 // Response: CriterionResponseDTO
 
-// GET /api/v1/custom-models/custom-models/{model_id}
+// GET /api/v1/custom-models/{model_id}
 // Path: {model_id: number}
 // Response: CustomModelWithAPIKeyDTO
 
@@ -64,6 +64,10 @@
 // GET /api/v1/solutions/{solution_id}/info
 // Path: {solution_id: number}
 // Response: PipelineInfoDTO
+
+// GET /api/v1/solutions/{solution_id}/wind-rose
+// Path: {solution_id: number}
+// Response: WindRosePointDTO[]
 
 // GET /api/v1/tasks/{task_id}
 // Path: {task_id: number}
@@ -258,7 +262,7 @@
 // Body: CriterionUpdateDTO
 // Response: CriterionResponseDTO
 
-// PUT /api/v1/custom-models/custom-models/{model_id}
+// PUT /api/v1/custom-models/{model_id}
 // Path: {model_id: number}
 // Body: CustomModelRequestUpdateDTO
 // Response: CustomModelDTO
@@ -619,6 +623,12 @@ interface ValidationError {
   type: string;
   input?: null;
   ctx?: object;
+}
+
+interface WindRosePointDTO {
+  tag: string;
+  value: number;
+  count: number;
 }
 
 interface WorkspaceCreateDTO {

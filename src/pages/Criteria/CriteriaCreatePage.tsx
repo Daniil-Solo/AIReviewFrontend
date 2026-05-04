@@ -36,6 +36,7 @@ export function CriteriaCreatePage() {
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null>('');
 	const [descriptionError, setDescriptionError] = useState('');
+	const [promptError, setPromptError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
 	useEffect(() => {
@@ -85,11 +86,16 @@ export function CriteriaCreatePage() {
 			setDescriptionError('Описание не должно превышать 1000 символов');
 			return;
 		}
+		if (!prompt.trim()) {
+			setPromptError('Промпт обязателен');
+			return;
+		}
 
 		setDescriptionError('');
+		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
-			prompt: prompt.trim() || undefined,
+			prompt: prompt.trim(),
 			tags: tags.length > 0 ? tags : undefined,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 		});
@@ -107,38 +113,14 @@ export function CriteriaCreatePage() {
 
 			<form onSubmit={handleSubmit}>
 				<Stack gap="md">
-					<Textarea
-						label="Описание"
-						placeholder="Описание критерия оценки"
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
-						error={descriptionError}
-						onFocus={() => setDescriptionError('')}
-						required
-						autosize
-						minRows={4}
-						maxRows={10}
-						maxLength={1000}
+					<Select
+						label="Этап проверки"
+						placeholder="Выберите этап (необязательно)"
+						value={selectedStage}
+						onChange={(val) => setSelectedStage(val)}
+						data={stageOptions}
+						allowDeselect
 					/>
-
-					<Textarea
-						label="Промпт для LLM"
-						placeholder="Промпт для автоматической проверки (необязательно)"
-						value={prompt}
-						onChange={(e) => setPrompt(e.target.value)}
-						autosize
-						minRows={3}
-						maxRows={8}
-					/>
-
-					{prompt && (
-						<Box>
-							<Text size="sm" c="dimmed" mb="xs">
-								Предпросмотр
-							</Text>
-							<MarkdownRenderer content={prompt} />
-						</Box>
-					)}
 
 					<MultiSelect
 						label="Теги"
@@ -166,14 +148,41 @@ export function CriteriaCreatePage() {
 						</Button>
 					</Group>
 
-					<Select
-						label="Этап проверки"
-						placeholder="Выберите этап (необязательно)"
-						value={selectedStage}
-						onChange={(val) => setSelectedStage(val)}
-						data={stageOptions}
-						allowDeselect
+					<Textarea
+						label="Описание"
+						placeholder="Описание критерия оценки"
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+						error={descriptionError}
+						onFocus={() => setDescriptionError('')}
+						required
+						autosize
+						minRows={4}
+						maxRows={10}
+						maxLength={1000}
 					/>
+
+					<Textarea
+						label="Промпт для LLM"
+						placeholder="Промпт для автоматической проверки"
+						value={prompt}
+						onChange={(e) => setPrompt(e.target.value)}
+						error={promptError}
+						onFocus={() => setPromptError('')}
+						required
+						autosize
+						minRows={3}
+						maxRows={8}
+					/>
+
+					{prompt && (
+						<Box>
+							<Text size="sm" c="dimmed" mb="xs">
+								Предпросмотр
+							</Text>
+							<MarkdownRenderer content={prompt} />
+						</Box>
+					)}
 
 					<Button type="submit" loading={mutation.isPending}>
 						Создать

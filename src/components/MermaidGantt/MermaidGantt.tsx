@@ -13,8 +13,6 @@ export function MermaidGantt({ tasks }: MermaidGanttProps) {
 	const [svg, setSvg] = useState('');
 	const [loading, setLoading] = useState(true);
 
-	console.log('MermaidGantt');
-
 	useEffect(() => {
 		const finishedTasks = tasks.filter((t) => t.status === 'completed' || t.status === 'failed');
 
@@ -35,8 +33,6 @@ export function MermaidGantt({ tasks }: MermaidGanttProps) {
     axisFormat %d-%m %H:%M
 
 ${taskLines}`;
-
-		console.log(mermaidCode);
 
 		const renderDiagram = async () => {
 			try {

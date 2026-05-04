@@ -189,23 +189,16 @@ export const updateCustomModel = async (
 	modelId: number,
 	data: CustomModelRequestUpdateDTO
 ): Promise<CustomModelDTO> => {
-	const response = await api.put<CustomModelDTO>(
-		`/api/v1/custom-models/custom-models/${modelId}`,
-		data
-	);
+	const response = await api.put<CustomModelDTO>(`/api/v1/custom-models/${modelId}`, data);
 	return response.data;
 };
 
 export const deleteCustomModel = async (modelId: number): Promise<{ message: string }> => {
-	const response = await api.delete<{ message: string }>(
-		`/api/v1/custom-models/custom-models/${modelId}`
-	);
+	const response = await api.delete<{ message: string }>(`/api/v1/custom-models/${modelId}`);
 	return response.data;
 };
 
 export const getCustomModelById = async (modelId: number): Promise<CustomModelWithAPIKeyDTO> => {
-	const response = await api.get<CustomModelWithAPIKeyDTO>(
-		`/api/v1/custom-models/custom-models/${modelId}`
-	);
+	const response = await api.get<CustomModelWithAPIKeyDTO>(`/api/v1/custom-models/${modelId}`);
 	return response.data;
 };

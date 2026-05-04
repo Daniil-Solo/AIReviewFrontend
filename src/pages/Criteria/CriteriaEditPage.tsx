@@ -41,6 +41,7 @@ export function CriteriaEditPage() {
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null | undefined>(null);
 	const [descriptionError, setDescriptionError] = useState('');
+	const [promptError, setPromptError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
 	const { data: availableTags = [] } = useQuery({
@@ -80,8 +81,8 @@ export function CriteriaEditPage() {
 	const mutation = useMutation({
 		mutationFn: (data: {
 			description: string;
-			prompt?: string;
-			tags?: string[];
+			prompt: string;
+			tags: string[];
 			stage?: CriterionStage;
 		}) => updateCriterion(id, data),
 		onSuccess: () => {
@@ -110,12 +111,17 @@ export function CriteriaEditPage() {
 			setDescriptionError('Описание не должно превышать 1000 символов');
 			return;
 		}
+		if (!prompt.trim()) {
+			setPromptError('Промпт обязателен');
+			return;
+		}
 
 		setDescriptionError('');
+		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
-			prompt: prompt.trim() || undefined,
-			tags: tags.length > 0 ? tags : undefined,
+			prompt: prompt.trim(),
+			tags: tags.length > 0 ? tags : [],
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 		});
 	};
@@ -207,9 +213,12 @@ export function CriteriaEditPage() {
 
 					<Textarea
 						label="Промпт для LLM"
-						placeholder="Промпт для автоматической проверки (необязательно)"
+						placeholder="Промпт для автоматической проверки"
 						value={prompt}
 						onChange={(e) => setPrompt(e.target.value)}
+						error={promptError}
+						onFocus={() => setPromptError('')}
+						required
 						autosize
 						minRows={3}
 						maxRows={8}

@@ -370,3 +370,9 @@ export interface TaskStepsModelDTO {
 export interface TaskStepsModelRequestCreateDTO {
 	steps: Record<string, number | null>;
 }
+
+export interface WindRosePointDTO {
+	tag: string;
+	value: number;
+	count: number;
+}

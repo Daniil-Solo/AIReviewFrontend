@@ -39,6 +39,7 @@ export function TaskCriterionCreatePage() {
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null>(null);
 	const [descriptionError, setDescriptionError] = useState('');
+	const [promptError, setPromptError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
 	const { data: availableTags = [] } = useQuery({
@@ -81,11 +82,16 @@ export function TaskCriterionCreatePage() {
 			setDescriptionError('Описание не должно превышать 1000 символов');
 			return;
 		}
+		if (!prompt.trim()) {
+			setPromptError('Промпт обязателен');
+			return;
+		}
 
 		setDescriptionError('');
+		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
-			prompt: prompt.trim() || undefined,
+			prompt: prompt.trim(),
 			tags: tags.length > 0 ? tags : undefined,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 			task_id: tId,
@@ -158,6 +164,9 @@ export function TaskCriterionCreatePage() {
 						placeholder="Промпт для автоматической проверки"
 						value={prompt}
 						onChange={(e) => setPrompt(e.target.value)}
+						error={promptError}
+						onFocus={() => setPromptError('')}
+						required
 						autosize
 						minRows={3}
 						maxRows={8}

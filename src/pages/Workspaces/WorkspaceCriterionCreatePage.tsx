@@ -11,9 +11,12 @@ import {
 	Group,
 	MultiSelect,
 	TextInput,
+	Box,
+	Text,
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { createCriterion, getAvailableTags } from '../../api/endpoints/criteria';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import type { CriterionStage, CriterionCreateDTO, ErrorResponseDTO } from '../../types';
 
 const stageOptions = [
@@ -30,10 +33,12 @@ export function WorkspaceCriterionCreatePage() {
 	const wsId = Number(workspaceId);
 
 	const [description, setDescription] = useState('');
+	const [prompt, setPrompt] = useState('');
 	const [tags, setTags] = useState<string[]>([]);
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null>(null);
 	const [descriptionError, setDescriptionError] = useState('');
+	const [promptError, setPromptError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
 	const { data: availableTags = [] } = useQuery({
@@ -76,10 +81,16 @@ export function WorkspaceCriterionCreatePage() {
 			setDescriptionError('Описание не должно превышать 1000 символов');
 			return;
 		}
+		if (!prompt.trim()) {
+			setPromptError('Промпт обязателен');
+			return;
+		}
 
 		setDescriptionError('');
+		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
+			prompt: prompt.trim(),
 			tags: tags.length > 0 ? tags : undefined,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 			workspace_id: wsId,
@@ -146,6 +157,29 @@ export function WorkspaceCriterionCreatePage() {
 						maxRows={10}
 						maxLength={1000}
 					/>
+
+					<Textarea
+						label="Промпт для LLM"
+						placeholder="Промпт для автоматической проверки"
+						value={prompt}
+						onChange={(e) => setPrompt(e.target.value)}
+						error={promptError}
+						onFocus={() => setPromptError('')}
+						required
+						autosize
+						minRows={3}
+						maxRows={8}
+					/>
+
+					{prompt && (
+						<Box>
+							<Text size="sm" c="dimmed" mb="xs">
+								Предпросмотр
+							</Text>
+							<MarkdownRenderer content={prompt} />
+						</Box>
+					)}
+
 					<Group>
 						<Button type="submit" loading={mutation.isPending}>
 							Создать

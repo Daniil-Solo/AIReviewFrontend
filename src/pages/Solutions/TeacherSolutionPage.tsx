@@ -61,6 +61,8 @@ import {
 import { formatRelativeTime } from '../../lib/date';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import { MermaidGantt } from '../../components/MermaidGantt/MermaidGantt';
+import { RadarChart } from '@mantine/charts';
+import { getSolutionWindRose } from '../../api/endpoints/solutions';
 
 interface TeacherSolutionPageProps {
 	solution: SolutionShortResponseDTO;
@@ -138,7 +140,7 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 								style={{ cursor: 'pointer' }}
 							>
 								<Group justify="space-between">
-									<Text c="black">Критерий № {gradingCriterion.criterion.id}</Text>
+									<Text c="black">{gradingCriterion.criterion.description}</Text>
 									{isOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
 								</Group>
 								<Group gap="xs">
@@ -156,7 +158,7 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 							<Collapse expanded={isOpen}>
 								<Stack px="xs">
 									<Box>
-										<MarkdownRenderer content={gradingCriterion.criterion.description} />
+										<MarkdownRenderer content={gradingCriterion.criterion.prompt} />
 									</Box>
 									<Stack gap="sm">
 										{gradingCriterion.checks.length > 0 ? (
@@ -277,6 +279,11 @@ export function TeacherSolutionPage({
 	const { data: pipelineInfo, isLoading: isLoadingInfo } = useQuery({
 		queryKey: ['solutionInfo', solution.id],
 		queryFn: () => getSolutionInfo(solution.id),
+	});
+
+	const { data: windRoseData } = useQuery({
+		queryKey: ['solutionWindRose', solution.id],
+		queryFn: () => getSolutionWindRose(solution.id),
 	});
 
 	const restartMutation = useMutation({
@@ -483,8 +490,32 @@ export function TeacherSolutionPage({
 									</Stack>
 								</Card>
 							)}
-						</SimpleGrid>
 
+							{solution.status === 'REVIEWED' && windRoseData && windRoseData.length > 0 && (
+								<Card withBorder>
+									<Stack gap="sm">
+										<Text fw={500}>Оценка компетенций</Text>
+										<RadarChart
+											h={300}
+											data={windRoseData.map((point) => ({
+												subject: point.tag,
+												value: point.value,
+												fullMark: 1,
+											}))}
+											dataKey="subject"
+											withPolarRadiusAxis
+											polarRadiusAxisProps={{
+												domain: [0, 120],
+												ticks: [20, 40, 60, 80, 100],
+											}}
+											series={[{ name: 'value', color: 'blue.6' }]}
+											withTooltip
+											withDots
+										/>
+									</Stack>
+								</Card>
+							)}
+						</SimpleGrid>
 						{!isLoadingInfo && pipelineInfo?.pipeline_tasks && (
 							<Card withBorder>
 								<Stack gap="sm">

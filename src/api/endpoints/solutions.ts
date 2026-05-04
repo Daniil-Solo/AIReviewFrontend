@@ -4,6 +4,7 @@ import type {
 	PipelineInfoDTO,
 	SolutionFormatEnum,
 	CriteriaGradingReviewResponseDTO,
+	WindRosePointDTO,
 } from '../../types';
 
 interface CreateCriteriaCheckDTO {
@@ -109,5 +110,10 @@ export const submitFinalReview = async (
 		`/api/v1/solutions/${solutionId}/final-review`,
 		data
 	);
+	return response.data;
+};
+
+export const getSolutionWindRose = async (solutionId: number): Promise<WindRosePointDTO[]> => {
+	const response = await api.get<WindRosePointDTO[]>(`/api/v1/solutions/${solutionId}/wind-rose`);
 	return response.data;
 };
