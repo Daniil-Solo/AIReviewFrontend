@@ -23,7 +23,8 @@ export interface SuccessOperationDTO {
 }
 
 export interface JWTPayload {
-	sub: number;
+	id: number;
+	sub: string;
 	email: string;
 	fullname: string;
 	is_admin: boolean;
@@ -193,9 +194,9 @@ export type SolutionStatusEnum =
 	| 'CREATED'
 	| 'CANCELLED'
 	| 'ERROR'
-	| 'AI_REVIEW'
-	| 'WAITING_EXAM'
-	| 'EXAMINATION'
+	| 'PROJECT_GENERATION'
+	| 'VALIDATION_WAITING'
+	| 'CRITERIA_GRADING'
 	| 'HUMAN_REVIEW'
 	| 'REVIEWED';
 

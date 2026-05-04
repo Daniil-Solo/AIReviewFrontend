@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -124,6 +124,7 @@ function TaskCriteriaTab({
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const [debouncedSelectedTags] = useDebouncedValue(selectedTags, 300);
 	const [selectedCriterionIds, setSelectedCriterionIds] = useState<number[]>([]);
+	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
 	const queryClient = useQueryClient();
 	const modals = useModals();
@@ -139,6 +140,11 @@ function TaskCriteriaTab({
 		queryKey: ['taskCriteria', taskId],
 		queryFn: () => getTaskCriteria(taskId),
 	});
+
+	const uniqueTags = useMemo(() => {
+		const tags = taskCriteria?.flatMap((tc) => tc.criterion.tags) || [];
+		return [...new Set(tags)].sort();
+	}, [taskCriteria]);
 
 	const { data: tags = [] } = useQuery({
 		queryKey: ['criteriaTags'],
@@ -235,7 +241,36 @@ function TaskCriteriaTab({
 
 			{taskCriteria && taskCriteria.length > 0 ? (
 				<Stack gap="sm">
-					{taskCriteria.map((tc) => (
+					{uniqueTags.length > 0 && (
+						<Group gap="xs">
+							<Tooltip label="Нажмите для фильтрации">
+								<Badge
+									variant={selectedTag === null ? 'filled' : 'outline'}
+									size="sm"
+									style={{ cursor: 'pointer' }}
+									onClick={() => setSelectedTag(null)}
+								>
+									All
+								</Badge>
+							</Tooltip>
+							{uniqueTags.map((tag) => (
+								<Tooltip key={tag} label="Нажмите для фильтрации">
+									<Badge
+										variant={selectedTag === tag ? 'filled' : 'outline'}
+										size="sm"
+										style={{ cursor: 'pointer' }}
+										onClick={() => setSelectedTag(tag)}
+									>
+										{tag}
+									</Badge>
+								</Tooltip>
+							))}
+						</Group>
+					)}
+					{(selectedTag
+						? taskCriteria.filter((tc) => tc.criterion.tags.includes(selectedTag))
+						: taskCriteria
+					).map((tc) => (
 						<CriterionCard
 							key={tc.id}
 							globalWorkspaceId={workspaceId}
@@ -544,7 +579,11 @@ function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId
 					<Table.Tbody>
 						{solutions?.map((solution) => {
 							const progress = (solution.steps.length / 8) * 100;
-							const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
+							const showProgress =
+								solution.status === 'PROJECT_GENERATION' ||
+								solution.status === 'VALIDATION_WAITING' ||
+								solution.status === 'CRITERIA_GRADING' ||
+								solution.status === 'ERROR';
 							return (
 								<Table.Tr key={solution.id}>
 									<Table.Td>{solution.id}</Table.Td>
@@ -637,7 +676,11 @@ function MySolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId: 
 						<Table.Tbody>
 							{solutions?.map((solution) => {
 								const progress = (solution.steps.length / 8) * 100;
-								const showProgress = solution.status === 'AI_REVIEW' || solution.status === 'ERROR';
+								const showProgress =
+									solution.status === 'PROJECT_GENERATION' ||
+									solution.status === 'VALIDATION_WAITING' ||
+									solution.status === 'CRITERIA_GRADING' ||
+									solution.status === 'ERROR';
 								return (
 									<Table.Tr key={solution.id}>
 										<Table.Td>{solution.id}</Table.Td>
@@ -890,36 +933,46 @@ export function TaskDetailPage() {
 			<Tabs defaultValue="main">
 				<Tabs.List>
 					<Tabs.Tab value="main">Основное</Tabs.Tab>
-					<Tabs.Tab value="settings">Настройки</Tabs.Tab>
+					{isOwnerOrTeacher && (
+						<>
+							<Tabs.Tab value="settings">Настройки</Tabs.Tab>
+							<Tabs.Tab value="solutions">Все решения</Tabs.Tab>
+						</>
+					)}
+					{isOwnerOrTeacher && <Tabs.Tab value="criteria">Оценивания</Tabs.Tab>}
 					<Tabs.Tab value="my-solutions">Мои решения</Tabs.Tab>
-					<Tabs.Tab value="criteria">Оценивание</Tabs.Tab>
-					<Tabs.Tab value="solutions">Все решения</Tabs.Tab>
 				</Tabs.List>
 
 				<Tabs.Panel value="main" pt="md">
 					<TaskMainTab task={task} />
 				</Tabs.Panel>
 
-				<Tabs.Panel value="settings" pt="md">
-					<Stack gap="lg">
-						<Text fw={500} size="lg">
-							Модели
-						</Text>
-						<TaskModelsTab taskId={tId} workspaceId={wsId} canEdit={!!isOwnerOrTeacher} />
-					</Stack>
-				</Tabs.Panel>
+				{isOwnerOrTeacher && (
+					<Tabs.Panel value="settings" pt="md">
+						<Stack gap="lg">
+							<Text fw={500} size="lg">
+								Модели
+							</Text>
+							<TaskModelsTab taskId={tId} workspaceId={wsId} canEdit={!!isOwnerOrTeacher} />
+						</Stack>
+					</Tabs.Panel>
+				)}
 
 				<Tabs.Panel value="my-solutions" pt="md">
 					<MySolutionsTab taskId={tId} workspaceId={wsId} />
 				</Tabs.Panel>
 
-				<Tabs.Panel value="criteria" pt="md">
-					<TaskCriteriaTab taskId={tId} workspaceId={wsId} canEdit={!!isOwnerOrTeacher} />
-				</Tabs.Panel>
+				{isOwnerOrTeacher && (
+					<Tabs.Panel value="solutions" pt="md">
+						<TaskSolutionsTab taskId={tId} workspaceId={wsId} />
+					</Tabs.Panel>
+				)}
 
-				<Tabs.Panel value="solutions" pt="md">
-					<TaskSolutionsTab taskId={tId} workspaceId={wsId} />
-				</Tabs.Panel>
+				{isOwnerOrTeacher && (
+					<Tabs.Panel value="criteria" pt="md">
+						<TaskCriteriaTab taskId={tId} workspaceId={wsId} canEdit={!!isOwnerOrTeacher} />
+					</Tabs.Panel>
+				)}
 			</Tabs>
 		</Stack>
 	);

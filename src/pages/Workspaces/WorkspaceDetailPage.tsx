@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -103,6 +103,7 @@ export function WorkspaceDetailPage() {
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [importError, setImportError] = useState('');
+	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
 	const { data: workspace, isLoading: wsLoading } = useQuery({
 		queryKey: ['workspace', workspaceId],
@@ -118,6 +119,11 @@ export function WorkspaceDetailPage() {
 		queryKey: ['workspaceCriteria', workspaceId],
 		queryFn: () => getWorkspaceCriteria(workspaceId),
 	});
+
+	const uniqueTags = useMemo(() => {
+		const tags = criteria.flatMap((c) => c.tags);
+		return [...new Set(tags)].sort();
+	}, [criteria]);
 
 	const deleteMutation = useMutation({
 		mutationFn: () => deleteWorkspace(workspaceId),
@@ -257,26 +263,30 @@ export function WorkspaceDetailPage() {
 					<Tabs.Tab value="main" leftSection={<IconInfoCircle size={16} />}>
 						Основное
 					</Tabs.Tab>
-					<Tabs.Tab value="tasks" leftSection={<IconBook size={16} />}>
-						Задачи
-					</Tabs.Tab>
-					<Tabs.Tab value="grades" leftSection={<IconChartBar size={16} />}>
-						Успеваемость
-					</Tabs.Tab>
-					<Tabs.Tab value="criteria" leftSection={<IconFileDescription size={16} />}>
-						Критерии
-					</Tabs.Tab>
-					<Tabs.Tab value="members" leftSection={<IconUsers size={16} />}>
-						Участники
-					</Tabs.Tab>
-					{canManageInvites && (
-						<Tabs.Tab value="invites" leftSection={<IconLink size={16} />}>
-							Приглашения
-						</Tabs.Tab>
-					)}
 					{canEdit && (
 						<Tabs.Tab value="models" leftSection={<IconBrain size={16} />}>
 							Модели
+						</Tabs.Tab>
+					)}
+					<Tabs.Tab value="tasks" leftSection={<IconBook size={16} />}>
+						Задачи
+					</Tabs.Tab>
+					{(currentRole === 'OWNER' || currentRole === 'TEACHER') && (
+						<Tabs.Tab value="criteria" leftSection={<IconFileDescription size={16} />}>
+							Критерии
+						</Tabs.Tab>
+					)}
+					<Tabs.Tab value="members" leftSection={<IconUsers size={16} />}>
+						Участники
+					</Tabs.Tab>
+					{(currentRole === 'OWNER' || currentRole === 'TEACHER') && (
+						<Tabs.Tab value="grades" leftSection={<IconChartBar size={16} />}>
+							Успеваемость
+						</Tabs.Tab>
+					)}
+					{canManageInvites && (
+						<Tabs.Tab value="invites" leftSection={<IconLink size={16} />}>
+							Приглашения
 						</Tabs.Tab>
 					)}
 				</Tabs.List>
@@ -448,15 +458,46 @@ export function WorkspaceDetailPage() {
 					) : criteria.length === 0 ? (
 						<Text c="dimmed">Критерии не найдены</Text>
 					) : (
-						<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-							{criteria.map((criterion) => (
-								<CriterionCard
-									key={criterion.id}
-									criterion={criterion}
-									onClick={() => navigate(`/workspaces/${workspaceId}/criteria/${criterion.id}`)}
-								/>
-							))}
-						</SimpleGrid>
+						<>
+							{uniqueTags.length > 0 && (
+								<Group gap="xs" mb="md">
+									<Tooltip label="Нажмите для фильтрации">
+										<Badge
+											variant={selectedTag === null ? 'filled' : 'outline'}
+											size="sm"
+											style={{ cursor: 'pointer' }}
+											onClick={() => setSelectedTag(null)}
+										>
+											All
+										</Badge>
+									</Tooltip>
+									{uniqueTags.map((tag) => (
+										<Tooltip key={tag} label="Нажмите для фильтрации">
+											<Badge
+												variant={selectedTag === tag ? 'filled' : 'outline'}
+												size="sm"
+												style={{ cursor: 'pointer' }}
+												onClick={() => setSelectedTag(tag)}
+											>
+												{tag}
+											</Badge>
+										</Tooltip>
+									))}
+								</Group>
+							)}
+							<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+								{(selectedTag
+									? criteria.filter((c) => c.tags.includes(selectedTag))
+									: criteria
+								).map((criterion) => (
+									<CriterionCard
+										key={criterion.id}
+										criterion={criterion}
+										onClick={() => navigate(`/workspaces/${workspaceId}/criteria/${criterion.id}`)}
+									/>
+								))}
+							</SimpleGrid>
+						</>
 					)}
 				</Tabs.Panel>
 

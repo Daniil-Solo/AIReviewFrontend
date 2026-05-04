@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -81,6 +81,7 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 	const [isPassed, setIsPassed] = useState(true);
 	const [comment, setComment] = useState('');
 	const [openCriteria, setOpenCriteria] = useState<Set<number>>(new Set());
+	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 
 	const toggleCriterion = (criterionId: number) => {
@@ -97,6 +98,11 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 		queryKey: ['solutionCriteriaChecks', solutionId],
 		queryFn: () => getSolutionCriteriaChecks(solutionId),
 	});
+
+	const uniqueTags = useMemo(() => {
+		const tags = criteriaData?.criteria.flatMap((gc) => gc.criterion.tags) || [];
+		return [...new Set(tags)].sort();
+	}, [criteriaData]);
 
 	const createCheckMutation = useMutation({
 		mutationFn: (data: { task_criterion_id: number; is_passed: boolean; comment?: string }) =>
@@ -127,8 +133,37 @@ function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps
 
 	return (
 		<Stack gap="md">
+			{uniqueTags.length > 0 && (
+				<Group gap="xs">
+					<Tooltip label="Нажмите для фильтрации">
+						<Badge
+							variant={selectedTag === null ? 'filled' : 'outline'}
+							size="sm"
+							style={{ cursor: 'pointer' }}
+							onClick={() => setSelectedTag(null)}
+						>
+							All
+						</Badge>
+					</Tooltip>
+					{uniqueTags.map((tag) => (
+						<Tooltip key={tag} label="Нажмите для фильтрации">
+							<Badge
+								variant={selectedTag === tag ? 'filled' : 'outline'}
+								size="sm"
+								style={{ cursor: 'pointer' }}
+								onClick={() => setSelectedTag(tag)}
+							>
+								{tag}
+							</Badge>
+						</Tooltip>
+					))}
+				</Group>
+			)}
 			<Stack gap="sm">
-				{criteriaData.criteria.map((gradingCriterion: GradingCriterionDTO) => {
+				{(selectedTag
+					? criteriaData.criteria.filter((gc) => gc.criterion.tags.includes(selectedTag))
+					: criteriaData.criteria
+				).map((gradingCriterion: GradingCriterionDTO) => {
 					const criterionId = gradingCriterion.criterion.id;
 					const isOpen = openCriteria.has(criterionId);
 					return (

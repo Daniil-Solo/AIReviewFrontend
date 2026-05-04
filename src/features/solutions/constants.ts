@@ -11,9 +11,9 @@ export const statusLabels: Record<SolutionStatusEnum, string> = {
 	CREATED: 'Создано',
 	CANCELLED: 'Отменено',
 	ERROR: 'Ошибка',
-	AI_REVIEW: 'На AI-проверке',
-	WAITING_EXAM: 'Ожидает экзамен',
-	EXAMINATION: 'Экзамен',
+	PROJECT_GENERATION: 'Генерация ProjectDoc',
+	VALIDATION_WAITING: 'Ожидает валидации ProjectDoc',
+	CRITERIA_GRADING: 'На проверке по критериям',
 	HUMAN_REVIEW: 'Ожидает вердикта преподавателя',
 	REVIEWED: 'Проверено',
 };

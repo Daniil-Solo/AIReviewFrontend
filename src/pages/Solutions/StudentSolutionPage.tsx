@@ -9,7 +9,6 @@ import { cancelSolution } from '../../api/endpoints/solutions';
 
 interface StudentSolutionPageProps {
 	solution: SolutionShortResponseDTO;
-	isOwner: boolean;
 	isAuthor: boolean;
 	workspaceId: number;
 	taskId: number;
@@ -18,7 +17,6 @@ interface StudentSolutionPageProps {
 
 export function StudentSolutionPage({
 	solution,
-	isOwner,
 	isAuthor,
 	workspaceId,
 	taskId,
@@ -54,7 +52,7 @@ export function StudentSolutionPage({
 				</Group>
 			</Group>
 
-			{!isOwner && (
+			{!isAuthor && (
 				<Alert color="red" icon={<IconAlertCircle size={16} />}>
 					Решение не принадлежит данному студенту
 				</Alert>
