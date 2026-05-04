@@ -81,7 +81,9 @@ export const getCriterionCurrentStatus = (criterion: GradingCriterionDTO): strin
 export const getCriterionColor = (criterion: GradingCriterionDTO): string => {
 	if (criterion.checks.length === 0) return 'yellow';
 	const lastCheck = criterion.checks[criterion.checks.length - 1];
-	if (lastCheck.is_passed === null) {
+	if (lastCheck.status === 'NOT_APPLICABLE') {
+		return 'gray';
+	} else if (lastCheck.is_passed === null) {
 		return 'yellow';
 	}
 	return lastCheck.is_passed ? 'green' : 'red';

@@ -252,6 +252,7 @@ interface CriteriaChecksPanelProps {
 export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPanelProps) {
 	const [addCheckModal, setAddCheckModal] = useState<number | null>(null);
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
+	const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 
 	const {
@@ -266,6 +267,13 @@ export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPan
 	const uniqueTags = useMemo(() => {
 		const tags = criteriaData?.criteria.flatMap((gc) => gc.criterion.tags) || [];
 		return [...new Set(tags)].sort();
+	}, [criteriaData]);
+
+	const uniqueStatuses = useMemo(() => {
+		const statuses = criteriaData?.criteria
+			.map((gc) => getCriterionCurrentStatus(gc))
+			.filter((status): status is string => status !== null);
+		return [...new Set(statuses)];
 	}, [criteriaData]);
 
 	const createCheckMutation = useMutation({
@@ -292,12 +300,14 @@ export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPan
 		[createCheckMutation]
 	);
 
-	// Фильтрация критериев по выбранному тегу
 	const filteredCriteria = useMemo(() => {
 		if (!criteriaData?.criteria) return [];
-		if (!selectedTag) return criteriaData.criteria;
-		return criteriaData.criteria.filter((gc) => gc.criterion.tags.includes(selectedTag));
-	}, [criteriaData, selectedTag]);
+		return criteriaData.criteria.filter((gc) => {
+			const matchesTag = !selectedTag || gc.criterion.tags.includes(selectedTag);
+			const matchesStatus = !selectedStatus || getCriterionCurrentStatus(gc) === selectedStatus;
+			return matchesTag && matchesStatus;
+		});
+	}, [criteriaData, selectedTag, selectedStatus]);
 
 	if (isLoading) return <Loader size="sm" />;
 	if (error) return <Alert color="red">Ошибка загрузки критериев</Alert>;
@@ -315,7 +325,7 @@ export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPan
 							style={{ cursor: 'pointer' }}
 							onClick={() => setSelectedTag(null)}
 						>
-							All
+							Все
 						</Badge>
 					</Tooltip>
 					{uniqueTags.map((tag) => (
@@ -327,6 +337,33 @@ export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPan
 								onClick={() => setSelectedTag(tag)}
 							>
 								{tag}
+							</Badge>
+						</Tooltip>
+					))}
+				</Group>
+			)}
+
+			{uniqueStatuses.length > 0 && (
+				<Group gap="xs">
+					<Tooltip label="Нажмите для фильтрации">
+						<Badge
+							variant={selectedStatus === null ? 'filled' : 'outline'}
+							size="sm"
+							style={{ cursor: 'pointer' }}
+							onClick={() => setSelectedStatus(null)}
+						>
+							Все
+						</Badge>
+					</Tooltip>
+					{uniqueStatuses.map((status) => (
+						<Tooltip key={status} label="Нажмите для фильтрации">
+							<Badge
+								variant={selectedStatus === status ? 'filled' : 'outline'}
+								size="sm"
+								style={{ cursor: 'pointer' }}
+								onClick={() => setSelectedStatus(status)}
+							>
+								{status}
 							</Badge>
 						</Tooltip>
 					))}
