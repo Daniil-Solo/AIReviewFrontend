@@ -362,13 +362,74 @@ export function TeacherSolutionPage({
 	taskId,
 	isTeacher,
 }: TeacherSolutionPageProps) {
-	const [openSteps, setOpenSteps] = useState<Set<PipelineStepEnum>>(new Set());
-	const [humanGrade, setHumanGrade] = useState<number | string>(solution.human_grade ?? '');
-	const [humanFeedback, setHumanFeedback] = useState(solution.human_feedback ?? '');
-	const [aiFeedback, setAiFeedback] = useState(solution.ai_feedback ?? '');
-	const [finalReviewEdit, setFinalReviewEdit] = useState(solution.human_grade === null);
-	const [scoreInfo, setScoreInfo] = useState<SolutionScoreDTO | null>(null);
+	const [activeTab, setActiveTab] = useState<string | null>('main');
+	const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set(['main']));
+
+	const handleTabChange = (value: string | null) => {
+		if (value && !visitedTabs.has(value)) {
+			setVisitedTabs(new Set(visitedTabs).add(value));
+		}
+		setActiveTab(value);
+	};
+
+	return (
+		<Stack gap="lg">
+			<Group justify="space-between">
+				<Button
+					component={Link}
+					to={`/workspaces/${workspaceId}/tasks/${taskId}`}
+					variant="subtle"
+					leftSection={<IconArrowLeft size={16} />}
+					size="sm"
+				>
+					К задаче
+				</Button>
+			</Group>
+
+			<Title order={3}>Решение #{solution.id}</Title>
+
+			<Tabs value={activeTab} onChange={handleTabChange}>
+				<Tabs.List>
+					<Tabs.Tab value="main">Основное</Tabs.Tab>
+					<Tabs.Tab value="artefacts">Артефакты решения</Tabs.Tab>
+					<Tabs.Tab value="criteria">Проверка по критериям</Tabs.Tab>
+					<Tabs.Tab value="final-review">Финальный вердикт</Tabs.Tab>
+				</Tabs.List>
+
+				<Tabs.Panel value="main" pt="md">
+					{visitedTabs.has('main') && <SolutionMainTab solution={solution} isTeacher={isTeacher} />}
+				</Tabs.Panel>
+
+				<Tabs.Panel value="artefacts" pt="md">
+					{visitedTabs.has('artefacts') && <SolutionArtefactsTab solutionId={solution.id} />}
+				</Tabs.Panel>
+
+				<Tabs.Panel value="criteria" pt="md">
+					{visitedTabs.has('criteria') && (
+						<SolutionCriteriaTab solutionId={solution.id} isTeacher={isTeacher} />
+					)}
+				</Tabs.Panel>
+
+				<Tabs.Panel value="final-review" pt="md">
+					{visitedTabs.has('final-review') && (
+						<SolutionFinalReviewTab solution={solution} isTeacher={isTeacher} />
+					)}
+				</Tabs.Panel>
+			</Tabs>
+		</Stack>
+	);
+}
+
+export function SolutionMainTab({
+	solution,
+	isTeacher,
+}: {
+	solution: SolutionShortResponseDTO;
+	isTeacher: boolean;
+}) {
 	const queryClient = useQueryClient();
+	const progress = calculateProgress(solution.status);
+	const canCancel = isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
 
 	const { data: pipelineInfo, isLoading: isLoadingInfo } = useQuery({
 		queryKey: ['solutionInfo', solution.id],
@@ -378,14 +439,6 @@ export function TeacherSolutionPage({
 	const { data: windRoseData } = useQuery({
 		queryKey: ['solutionWindRose', solution.id],
 		queryFn: () => getSolutionWindRose(solution.id),
-	});
-
-	const { mutate: fetchScore, isPending: isLoadingScore } = useMutation({
-		mutationFn: () => getSolutionScore(solution.id),
-		onSuccess: (data) => {
-			setHumanGrade(data.score);
-			setScoreInfo(data);
-		},
 	});
 
 	const restartMutation = useMutation({
@@ -406,6 +459,241 @@ export function TeacherSolutionPage({
 		},
 	});
 
+	return (
+		<Stack gap="md">
+			<SimpleGrid cols={{ base: 1, sm: 2 }}>
+				<Card withBorder>
+					<Stack gap="sm">
+						<Group gap="xs">
+							<IconProgress size={18} color="gray" />
+							<Text fw={500} size="sm">
+								Основное
+							</Text>
+						</Group>
+						<Group gap="lg">
+							<Stack gap={0}>
+								<Text size="xs" c="dimmed">
+									Статус
+								</Text>
+								<Text size="sm">{statusLabels[solution.status]}</Text>
+							</Stack>
+							<Stack gap={0}>
+								<Text size="xs" c="dimmed">
+									Прогресс
+								</Text>
+								<Text size="sm">{Math.round(progress)}%</Text>
+							</Stack>
+						</Group>
+					</Stack>
+				</Card>
+
+				<Card withBorder>
+					<Stack gap="sm">
+						<Group gap="xs">
+							<IconFileZip size={18} color="gray" />
+							<Text fw={500} size="sm">
+								Попытка
+							</Text>
+						</Group>
+						<Group gap="lg">
+							<Stack gap={0}>
+								<Text size="xs" c="dimmed">
+									Автор
+								</Text>
+								<Tooltip label={solution.author?.fullname}>
+									<Text size="sm" style={{ cursor: 'default' }}>
+										{solution.author?.email ?? 'Unknown'}
+									</Text>
+								</Tooltip>
+							</Stack>
+							<Stack gap={0}>
+								<Text size="xs" c="dimmed">
+									Создано
+								</Text>
+								<Text size="sm">{formatRelativeTime(solution.created_at)}</Text>
+							</Stack>
+							<Stack gap={0}>
+								<Text size="xs" c="dimmed">
+									Формат
+								</Text>
+								<Text size="sm">{formatLabels[solution.format]}</Text>
+							</Stack>
+							{solution.format === 'GITHUB' && solution.github_repo_link && (
+								<Stack gap={0}>
+									<Text size="xs" c="dimmed">
+										Ссылка
+									</Text>
+									<Text component="a" href={solution.github_repo_link} target="_blank" size="sm">
+										Открыть
+									</Text>
+								</Stack>
+							)}
+						</Group>
+					</Stack>
+				</Card>
+			</SimpleGrid>
+
+			<SimpleGrid cols={{ base: 1, sm: 2 }}>
+				{solution.human_grade !== null && (
+					<Card withBorder>
+						<Stack gap="sm">
+							<Group gap="xs">
+								<IconStar size={18} color="gray" />
+								<Text fw={500} size="sm">
+									Результаты
+								</Text>
+							</Group>
+							<Stack gap={0}>
+								<Text size="xs" c="dimmed">
+									Оценка
+								</Text>
+								<Text size="sm">{solution.human_grade}</Text>
+							</Stack>
+						</Stack>
+					</Card>
+				)}
+
+				{(isTeacher || canCancel) && (
+					<Card withBorder>
+						<Stack gap="sm">
+							<Group gap="xs">
+								<IconPlayerPlay size={18} color="gray" />
+								<Text fw={500} size="sm">
+									Управление
+								</Text>
+							</Group>
+							<Group gap="sm">
+								{isTeacher && (
+									<Button
+										variant="light"
+										onClick={() => restartMutation.mutate()}
+										loading={restartMutation.isPending}
+									>
+										Перезапустить
+									</Button>
+								)}
+								{canCancel && (
+									<Button
+										variant="light"
+										color="red"
+										onClick={() => cancelMutation.mutate()}
+										loading={cancelMutation.isPending}
+									>
+										Отменить
+									</Button>
+								)}
+							</Group>
+						</Stack>
+					</Card>
+				)}
+
+				{solution.status === 'REVIEWED' && windRoseData && windRoseData.length > 0 && (
+					<Card withBorder>
+						<Stack gap="sm">
+							<Text fw={500}>Оценка компетенций</Text>
+							<RadarChart
+								h={300}
+								data={windRoseData.map((point) => ({
+									subject: point.tag,
+									value: point.value,
+									fullMark: 1,
+								}))}
+								dataKey="subject"
+								withPolarRadiusAxis
+								polarRadiusAxisProps={{ domain: [0, 120], ticks: [20, 40, 60, 80, 100] }}
+								series={[{ name: 'value', color: 'blue.6' }]}
+								withTooltip
+								withDots
+							/>
+						</Stack>
+					</Card>
+				)}
+			</SimpleGrid>
+
+			{!isLoadingInfo && pipelineInfo?.pipeline_tasks && (
+				<Card withBorder>
+					<Stack gap="sm">
+						<Text fw={500}>Прогресс выполнения</Text>
+						<MermaidGantt key={pipelineInfo.solution_id} tasks={pipelineInfo.pipeline_tasks} />
+					</Stack>
+				</Card>
+			)}
+		</Stack>
+	);
+}
+
+export function SolutionArtefactsTab({ solutionId }: { solutionId: number }) {
+	const [openSteps, setOpenSteps] = useState<Set<string>>(new Set());
+	const { data: pipelineInfo, isLoading } = useQuery({
+		queryKey: ['solutionInfo', solutionId],
+		queryFn: () => getSolutionInfo(solutionId),
+	});
+
+	const toggleStep = (step: string) => {
+		setOpenSteps((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(step)) newSet.delete(step);
+			else newSet.add(step);
+			return newSet;
+		});
+	};
+
+	if (isLoading) return <Loader size="sm" />;
+
+	return (
+		<Stack gap="sm" style={{ position: 'relative' }}>
+			{pipelineInfo?.solution_steps.map((step) => (
+				<ArtefactCollapse
+					key={step}
+					step={step}
+					solutionId={solutionId}
+					isOpen={openSteps.has(step)}
+					onToggle={() => toggleStep(step)}
+				/>
+			))}
+			<Button
+				variant="filled"
+				size="sm"
+				style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
+				onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+			>
+				<IconArrowUp size={16} />
+			</Button>
+		</Stack>
+	);
+}
+
+export function SolutionCriteriaTab({
+	solutionId,
+	isTeacher,
+}: {
+	solutionId: number;
+	isTeacher: boolean;
+}) {
+	return <CriteriaChecksPanel solutionId={solutionId} isTeacher={isTeacher} />;
+}
+
+export function SolutionFinalReviewTab({
+	solution,
+}: {
+	solution: SolutionShortResponseDTO;
+	isTeacher: boolean;
+}) {
+	const [humanGrade, setHumanGrade] = useState<number | string>(solution.human_grade ?? '');
+	const [humanFeedback, setHumanFeedback] = useState(solution.human_feedback ?? '');
+	const [aiFeedback, setAiFeedback] = useState(solution.ai_feedback ?? '');
+	const [finalReviewEdit, setFinalReviewEdit] = useState(solution.human_grade === null);
+	const [scoreInfo, setScoreInfo] = useState<null | SolutionScoreDTO>(null);
+	const queryClient = useQueryClient();
+
+	const fetchScoreMutation = useMutation({
+		mutationFn: () => getSolutionScore(solution.id),
+		onSuccess: (data: SolutionScoreDTO) => {
+			setHumanGrade(data.score);
+			setScoreInfo(data);
+		},
+	});
+
 	const finalReviewMutation = useMutation({
 		mutationFn: () =>
 			submitFinalReview(solution.id, {
@@ -419,370 +707,116 @@ export function TeacherSolutionPage({
 		},
 	});
 
-	const toggleStep = (step: PipelineStepEnum) => {
-		const newOpen = new Set(openSteps);
-		if (newOpen.has(step)) {
-			newOpen.delete(step);
-		} else {
-			newOpen.add(step);
-		}
-		setOpenSteps(newOpen);
-	};
-
-	const progress = calculateProgress(solution.status);
-	const canCancel = isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
-
-	return (
-		<Stack gap="lg">
-			<Group justify="space-between">
-				<Group gap="sm">
+	if (solution.status === 'HUMAN_REVIEW' || finalReviewEdit) {
+		return (
+			<Stack gap="md">
+				<Group align="flex-end" gap="md">
+					<NumberInput
+						label="Оценка"
+						placeholder="Введите оценку (0-100)"
+						value={humanGrade}
+						onChange={setHumanGrade}
+						min={0}
+						max={100}
+						required
+						style={{ flex: 1 }}
+					/>
 					<Button
-						component={Link}
-						to={`/workspaces/${workspaceId}/tasks/${taskId}`}
-						variant="subtle"
-						leftSection={<IconArrowLeft size={16} />}
-						size="sm"
+						variant="light"
+						onClick={() => fetchScoreMutation.mutate()}
+						loading={fetchScoreMutation.isPending}
+						leftSection={<IconSparkles size={16} />}
 					>
-						К задаче
+						Рассчитать
 					</Button>
 				</Group>
-			</Group>
 
-			<Title order={3}>Решение #{solution.id}</Title>
+				{scoreInfo && (
+					<Text size="sm" c="dimmed">
+						Вычислена на основе {scoreInfo.total_criteria} критериев, из которых пройдено{' '}
+						{scoreInfo.passed_criteria}
+					</Text>
+				)}
 
-			<Tabs defaultValue="main">
-				<Tabs.List>
-					<Tabs.Tab value="main">Основное</Tabs.Tab>
-					<Tabs.Tab value="artefacts">Артефакты решения</Tabs.Tab>
-					<Tabs.Tab value="criteria">Проверка по критериям</Tabs.Tab>
-					<Tabs.Tab value="final-review">Финальный вердикт</Tabs.Tab>
-				</Tabs.List>
+				<Textarea
+					label="Обратная связь"
+					placeholder="Комментарий для студента (необязательно)"
+					value={humanFeedback}
+					onChange={(e) => setHumanFeedback(e.currentTarget.value)}
+					autosize
+					minRows={3}
+					maxRows={12}
+				/>
 
-				<Tabs.Panel value="main" pt="md">
-					<Stack gap="md">
-						<SimpleGrid cols={{ base: 1, sm: 2 }}>
-							<Card withBorder>
-								<Stack gap="sm">
-									<Group gap="xs">
-										<IconProgress size={18} color="gray" />
-										<Text fw={500} size="sm">
-											Основное
-										</Text>
-									</Group>
-									<Group gap="lg">
-										<Stack gap={0}>
-											<Text size="xs" c="dimmed">
-												Статус
-											</Text>
-											<Text size="sm">{statusLabels[solution.status]}</Text>
-										</Stack>
-										<Stack gap={0}>
-											<Text size="xs" c="dimmed">
-												Прогресс
-											</Text>
-											<Text size="sm">{Math.round(progress)}%</Text>
-										</Stack>
-									</Group>
-								</Stack>
-							</Card>
+				<Textarea
+					label="AI отзыв"
+					placeholder="AI-комментарий (необязательно)"
+					value={aiFeedback}
+					onChange={(e) => setAiFeedback(e.currentTarget.value)}
+					autosize
+					minRows={3}
+					maxRows={12}
+				/>
 
-							<Card withBorder>
-								<Stack gap="sm">
-									<Group gap="xs">
-										<IconFileZip size={18} color="gray" />
-										<Text fw={500} size="sm">
-											Попытка
-										</Text>
-									</Group>
-									<Group gap="lg">
-										<Stack gap={0}>
-											<Text size="xs" c="dimmed">
-												Автор
-											</Text>
-											<Tooltip label={solution.author?.fullname}>
-												<Text size="sm" style={{ cursor: 'default' }}>
-													{solution.author?.email ?? 'Unknown'}
-												</Text>
-											</Tooltip>
-										</Stack>
-										<Stack gap={0}>
-											<Text size="xs" c="dimmed">
-												Создано
-											</Text>
-											<Text size="sm">{formatRelativeTime(solution.created_at)}</Text>
-										</Stack>
-										<Stack gap={0}>
-											<Text size="xs" c="dimmed">
-												Формат
-											</Text>
-											<Text size="sm">{formatLabels[solution.format]}</Text>
-										</Stack>
-										{solution.format === 'GITHUB' && solution.github_repo_link && (
-											<Stack gap={0}>
-												<Text size="xs" c="dimmed">
-													Ссылка
-												</Text>
-												<Text
-													component="a"
-													href={solution.github_repo_link}
-													target="_blank"
-													rel="noopener noreferrer"
-													size="sm"
-													style={{ color: '#228be6', textDecoration: 'none' }}
-												>
-													Открыть
-												</Text>
-											</Stack>
-										)}
-									</Group>
-								</Stack>
-							</Card>
-						</SimpleGrid>
-
-						<SimpleGrid cols={{ base: 1, sm: 2 }}>
-							{solution.human_grade !== null && (
-								<Card withBorder>
-									<Stack gap="sm">
-										<Group gap="xs">
-											<IconStar size={18} color="gray" />
-											<Text fw={500} size="sm">
-												Результаты
-											</Text>
-										</Group>
-										<Stack gap={0}>
-											<Text size="xs" c="dimmed">
-												Оценка
-											</Text>
-											<Text size="sm">{solution.human_grade}</Text>
-										</Stack>
-									</Stack>
-								</Card>
-							)}
-
-							{(isTeacher || canCancel) && (
-								<Card withBorder>
-									<Stack gap="sm">
-										<Group gap="xs">
-											<IconPlayerPlay size={18} color="gray" />
-											<Text fw={500} size="sm">
-												Управление
-											</Text>
-										</Group>
-										<Group gap="sm">
-											{isTeacher && (
-												<Button
-													variant="light"
-													onClick={() => restartMutation.mutate()}
-													loading={restartMutation.isPending}
-												>
-													Перезапустить
-												</Button>
-											)}
-											{canCancel && (
-												<Button
-													variant="light"
-													color="red"
-													onClick={() => cancelMutation.mutate()}
-													loading={cancelMutation.isPending}
-												>
-													Отменить
-												</Button>
-											)}
-										</Group>
-									</Stack>
-								</Card>
-							)}
-
-							{solution.status === 'REVIEWED' && windRoseData && windRoseData.length > 0 && (
-								<Card withBorder>
-									<Stack gap="sm">
-										<Text fw={500}>Оценка компетенций</Text>
-										<RadarChart
-											h={300}
-											data={windRoseData.map((point) => ({
-												subject: point.tag,
-												value: point.value,
-												fullMark: 1,
-											}))}
-											dataKey="subject"
-											withPolarRadiusAxis
-											polarRadiusAxisProps={{
-												domain: [0, 120],
-												ticks: [20, 40, 60, 80, 100],
-											}}
-											series={[{ name: 'value', color: 'blue.6' }]}
-											withTooltip
-											withDots
-										/>
-									</Stack>
-								</Card>
-							)}
-						</SimpleGrid>
-						{!isLoadingInfo && pipelineInfo?.pipeline_tasks && (
-							<Card withBorder>
-								<Stack gap="sm">
-									<Text fw={500}>Прогресс выполнения</Text>
-									<MermaidGantt
-										key={pipelineInfo.solution_id}
-										tasks={pipelineInfo.pipeline_tasks}
-									/>
-								</Stack>
-							</Card>
-						)}
-					</Stack>
-				</Tabs.Panel>
-
-				<Tabs.Panel value="artefacts" pt="md" style={{ position: 'relative' }}>
-					{isLoadingInfo ? (
-						<Loader size="sm" />
-					) : (
-						<Stack gap="sm">
-							{pipelineInfo?.solution_steps.map((step) => (
-								<ArtefactCollapse
-									key={step}
-									step={step}
-									solutionId={solution.id}
-									isOpen={openSteps.has(step)}
-									onToggle={() => toggleStep(step)}
-								/>
-							))}
-						</Stack>
-					)}
+				<Group>
 					<Button
-						variant="filled"
-						size="sm"
-						style={{
-							position: 'fixed',
-							bottom: 20,
-							right: 20,
-							zIndex: 1000,
-						}}
-						onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+						onClick={() => finalReviewMutation.mutate()}
+						loading={finalReviewMutation.isPending}
+						disabled={!humanGrade}
 					>
-						<IconArrowUp size={16} />
+						Сохранить вердикт
 					</Button>
-				</Tabs.Panel>
+				</Group>
+			</Stack>
+		);
+	}
 
-				<Tabs.Panel value="criteria" pt="md">
-					<CriteriaChecksPanel solutionId={solution.id} isTeacher={isTeacher} />
-				</Tabs.Panel>
-
-				<Tabs.Panel value="final-review" pt="md">
-					{solution.status === 'HUMAN_REVIEW' || finalReviewEdit ? (
-						<Stack gap="md">
-							<Group align="flex-end" gap="md">
-								<NumberInput
-									label="Оценка"
-									placeholder="Введите оценку (0-100)"
-									value={humanGrade}
-									onChange={setHumanGrade}
-									min={0}
-									max={100}
-									required
-									style={{ flex: 1 }}
-								/>
-								<Button
-									variant="light"
-									onClick={() => fetchScore()}
-									loading={isLoadingScore}
-									leftSection={<IconSparkles size={16} />}
-								>
-									Рассчитать
-								</Button>
-							</Group>
-
-							{scoreInfo && (
-								<Text size="sm" c="dimmed">
-									Вычислена на основе {scoreInfo.total_criteria} критериев, из которых пройдено{' '}
-									{scoreInfo.passed_criteria}
-								</Text>
-							)}
-
-							<Textarea
-								label="Обратная связь"
-								placeholder="Комментарий для студента (необязательно)"
-								value={humanFeedback}
-								onChange={(e) => setHumanFeedback(e.currentTarget.value)}
-								autosize
-								minRows={3}
-								maxRows={12}
-							/>
-
-							<Textarea
-								label="AI отзыв"
-								placeholder="AI-комментарий (необязательно)"
-								value={aiFeedback}
-								onChange={(e) => setAiFeedback(e.currentTarget.value)}
-								autosize
-								minRows={3}
-								maxRows={12}
-							/>
-
-							<Group>
-								<Button
-									onClick={() => finalReviewMutation.mutate()}
-									loading={finalReviewMutation.isPending}
-									disabled={!humanGrade}
-								>
-									Сохранить вердикт
-								</Button>
-							</Group>
+	if (solution.status === 'REVIEWED') {
+		return (
+			<Stack gap="md">
+				{solution.human_grade !== null && (
+					<Card withBorder>
+						<Stack gap="xs">
+							<Text fw={500} size="sm">
+								Оценка
+							</Text>
+							<Text size="xl" fw={700}>
+								{solution.human_grade}
+							</Text>
 						</Stack>
-					) : solution.status === 'REVIEWED' ? (
-						<Stack gap="md">
-							{solution.human_grade !== null && (
-								<Card withBorder>
-									<Stack gap="xs">
-										<Group gap="xs">
-											<Text fw={500} size="sm">
-												Оценка
-											</Text>
-										</Group>
-										<Text size="xl" fw={700}>
-											{solution.human_grade}
-										</Text>
-									</Stack>
-								</Card>
-							)}
-
-							{solution.human_feedback && (
-								<Card withBorder>
-									<Stack gap="xs">
-										<Text fw={500} size="sm">
-											Обратная связь
-										</Text>
-										<div>
-											<MarkdownRenderer content={solution.human_feedback} />
-										</div>
-									</Stack>
-								</Card>
-							)}
-
-							{solution.ai_feedback && (
-								<Card withBorder>
-									<Stack gap="xs">
-										<Text fw={500} size="sm">
-											AI отзыв
-										</Text>
-										<div>
-											<MarkdownRenderer content={solution.ai_feedback} />
-										</div>
-									</Stack>
-								</Card>
-							)}
-
-							<Group>
-								<Button onClick={() => setFinalReviewEdit(true)}>Изменить</Button>
-							</Group>
+					</Card>
+				)}
+				{solution.human_feedback && (
+					<Card withBorder>
+						<Stack gap="xs">
+							<Text fw={500} size="sm">
+								Обратная связь
+							</Text>
+							<MarkdownRenderer content={solution.human_feedback} />
 						</Stack>
-					) : (
-						<Alert color="gray">
-							Форма будет доступна, когда решение перейдёт в статус «Ожидает вердикта преподавателя»
-						</Alert>
-					)}
-				</Tabs.Panel>
-			</Tabs>
-		</Stack>
+					</Card>
+				)}
+				{solution.ai_feedback && (
+					<Card withBorder>
+						<Stack gap="xs">
+							<Text fw={500} size="sm">
+								AI отзыв
+							</Text>
+							<MarkdownRenderer content={solution.ai_feedback} />
+						</Stack>
+					</Card>
+				)}
+				<Group>
+					<Button onClick={() => setFinalReviewEdit(true)}>Изменить</Button>
+				</Group>
+			</Stack>
+		);
+	}
+
+	return (
+		<Alert color="gray">
+			Форма будет доступна, когда решение перейдёт в статус «Ожидает вердикта преподавателя»
+		</Alert>
 	);
 }
 

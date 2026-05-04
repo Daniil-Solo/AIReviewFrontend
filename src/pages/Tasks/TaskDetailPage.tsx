@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -26,6 +26,7 @@ import {
 	NumberInput,
 	Select,
 	Anchor,
+	ScrollArea,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
@@ -74,6 +75,7 @@ import {
 	calculateProgress,
 } from '../../features/solutions/constants';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
+import React from 'react';
 
 const stageIcons: Record<string, React.ReactNode> = {
 	PROJECT_DOC: <IconFileDescription size={16} color="gray" />,
@@ -114,7 +116,238 @@ function TaskMainTab({ task }: { task: TaskResponseDTO }) {
 	);
 }
 
-function TaskCriteriaTab({
+interface CriterionRowProps {
+	criterion: any; // лучше заменить на реальный тип
+	isSelected: boolean;
+	onToggle: (id: number) => void;
+	workspaceId: number;
+	taskId: number;
+}
+
+const CriterionRow = React.memo(function CriterionRow({
+	criterion,
+	isSelected,
+	onToggle,
+	workspaceId,
+	taskId,
+}: CriterionRowProps) {
+	const handleToggle = () => onToggle(criterion.id);
+
+	return (
+		<Table.Tr>
+			<Table.Td>
+				<Checkbox checked={isSelected} onChange={handleToggle} />
+			</Table.Td>
+			<Table.Td>
+				<Text size="sm" lineClamp={1}>
+					{criterion.description}
+				</Text>
+			</Table.Td>
+			<Table.Td>
+				<Group gap="xs">
+					<Tooltip
+						label={
+							criterion.workspace_id !== null
+								? 'Критерий доступен только в этом пространстве'
+								: criterion.task_id !== null
+									? 'Критерий доступен только для этой задачи'
+									: 'Критерий доступен всем'
+						}
+					>
+						{criterion.workspace_id !== null ? (
+							<IconStack2 size={16} color="gray" />
+						) : criterion.task_id !== null ? (
+							<IconHelpOctagon size={16} color="gray" />
+						) : (
+							<IconWorld size={16} color="gray" />
+						)}
+					</Tooltip>
+					<Tooltip label={criterionStageLabels[criterion.stage ?? 'null']}>
+						{stageIcons[criterion.stage ?? 'null']}
+					</Tooltip>
+					<Tooltip label="Перейти к критерию">
+						<ActionIcon
+							variant="subtle"
+							component="a"
+							href={
+								criterion.workspace_id !== null
+									? `/workspaces/${workspaceId}/criteria/${criterion.id}`
+									: criterion.task_id !== null
+										? `/workspaces/${workspaceId}/tasks/${taskId}/criteria/${criterion.id}`
+										: `/criteria/${criterion.id}`
+							}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<IconExternalLink size={16} />
+						</ActionIcon>
+					</Tooltip>
+				</Group>
+			</Table.Td>
+		</Table.Tr>
+	);
+});
+
+interface AddCriteriaModalProps {
+	taskId: number;
+	workspaceId: number;
+	opened: boolean;
+	onClose: () => void;
+	taskCriteria: TaskCriteriaResponseDTO[];
+}
+
+export const AddCriteriaModal = React.memo(function AddCriteriaModal({
+	taskId,
+	workspaceId,
+	opened,
+	onClose,
+	taskCriteria,
+}: AddCriteriaModalProps) {
+	const queryClient = useQueryClient();
+	const [search, setSearch] = useState('');
+	const [debouncedSearch] = useDebouncedValue(search, 500);
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [debouncedSelectedTags] = useDebouncedValue(selectedTags, 300);
+	const [selectedCriterionIds, setSelectedCriterionIds] = useState<number[]>([]);
+
+	useEffect(() => {
+		if (opened) {
+			setSearch('');
+			setSelectedTags([]);
+			setSelectedCriterionIds([]);
+		}
+	}, [opened]);
+
+	const handleClose = () => {
+		onClose();
+	};
+
+	// Запрос тегов — только когда модалка открыта
+	const { data: tags = [] } = useQuery({
+		queryKey: ['criteriaTags'],
+		queryFn: getAvailableTags,
+		enabled: opened,
+		staleTime: 5 * 60 * 1000, // опционально: кешируем на 5 минут
+	});
+
+	// Запрос списка критериев — только когда модалка открыта
+	const { data: allCriteria = [], isLoading: criteriaListLoading } = useQuery({
+		queryKey: ['availableTaskCriteria', taskId, debouncedSearch, debouncedSelectedTags],
+		queryFn: () =>
+			getAvailableTaskCriteria(taskId, {
+				search: debouncedSearch || undefined,
+				tags: debouncedSelectedTags.length > 0 ? debouncedSelectedTags : undefined,
+			}),
+		enabled: opened,
+	});
+
+	const addBatchMutation = useMutation({
+		mutationFn: (criterionIds: number[]) =>
+			addTaskCriteriaBatch(taskId, { criterion_ids: criterionIds }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
+			queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
+			handleClose();
+		},
+	});
+
+	const toggleCriterion = useCallback((id: number) => {
+		setSelectedCriterionIds((prev) =>
+			prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+		);
+	}, []);
+
+	const handleAdd = () => {
+		if (selectedCriterionIds.length > 0) {
+			addBatchMutation.mutate(selectedCriterionIds);
+		}
+	};
+
+	const criteriaIds = useMemo(
+		() => taskCriteria.map((criterion) => criterion.criterion_id),
+		[taskCriteria]
+	);
+
+	return (
+		<Modal
+			opened={opened}
+			onClose={handleClose}
+			title="Выбор критериев"
+			centered
+			size="lg"
+			mih="100%"
+		>
+			<Stack gap="md">
+				<Group grow>
+					<TextInput
+						placeholder="Поиск по описанию..."
+						leftSection={<IconSearch size={16} />}
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						rightSection={
+							search && (
+								<ActionIcon variant="transparent" onClick={() => setSearch('')}>
+									<IconX size={16} color="gray" />
+								</ActionIcon>
+							)
+						}
+					/>
+					<MultiSelect
+						data={tags}
+						value={selectedTags}
+						onChange={setSelectedTags}
+						placeholder="Фильтр по тегам"
+						searchable
+						clearable
+					/>
+				</Group>
+
+				<ScrollArea h={450}>
+					{criteriaListLoading ? (
+						<Loader size="sm" />
+					) : allCriteria.length === 0 ? (
+						<Text c="dimmed" ta="center" py="lg">
+							Критерии не найдены
+						</Text>
+					) : (
+						<Table striped highlightOnHover>
+							<Table.Thead>
+								<Table.Tr>
+									<Table.Th w={40}></Table.Th>
+									<Table.Th></Table.Th>
+									<Table.Th w={100}></Table.Th>
+								</Table.Tr>
+							</Table.Thead>
+							<Table.Tbody>
+								{allCriteria
+									.filter((criterion) => !criteriaIds.includes(criterion.id))
+									.map((criterion) => (
+										<CriterionRow
+											key={criterion.id}
+											criterion={criterion}
+											isSelected={selectedCriterionIds.includes(criterion.id)}
+											onToggle={toggleCriterion}
+											workspaceId={workspaceId}
+											taskId={taskId}
+										/>
+									))}
+							</Table.Tbody>
+						</Table>
+					)}
+				</ScrollArea>
+				<Button
+					onClick={handleAdd}
+					disabled={selectedCriterionIds.length === 0}
+					loading={addBatchMutation.isPending}
+				>
+					Добавить ({selectedCriterionIds.length})
+				</Button>
+			</Stack>
+		</Modal>
+	);
+});
+
+export function TaskCriteriaTab({
 	taskId,
 	workspaceId,
 	canEdit,
@@ -124,22 +357,9 @@ function TaskCriteriaTab({
 	canEdit: boolean;
 }) {
 	const [opened, { open, close }] = useDisclosure(false);
-	const [search, setSearch] = useState('');
-	const [debouncedSearch] = useDebouncedValue(search, 500);
-	const [selectedTags, setSelectedTags] = useState<string[]>([]);
-	const [debouncedSelectedTags] = useDebouncedValue(selectedTags, 300);
-	const [selectedCriterionIds, setSelectedCriterionIds] = useState<number[]>([]);
 	const [selectedTag, setSelectedTag] = useState<string | null>(null);
-
 	const queryClient = useQueryClient();
 	const modals = useModals();
-
-	const handleOpen = () => {
-		setSearch('');
-		setSelectedTags([]);
-		setSelectedCriterionIds([]);
-		open();
-	};
 
 	const { data: taskCriteria, isLoading: criteriaLoading } = useQuery({
 		queryKey: ['taskCriteria', taskId],
@@ -151,37 +371,10 @@ function TaskCriteriaTab({
 		return [...new Set(tags)].sort();
 	}, [taskCriteria]);
 
-	const { data: tags = [] } = useQuery({
-		queryKey: ['criteriaTags'],
-		queryFn: getAvailableTags,
-	});
-
-	const { data: allCriteria = [], isLoading: criteriaListLoading } = useQuery({
-		queryKey: ['availableTaskCriteria', taskId, debouncedSearch, debouncedSelectedTags],
-		queryFn: () =>
-			getAvailableTaskCriteria(taskId, {
-				search: debouncedSearch || undefined,
-				tags: debouncedSelectedTags.length > 0 ? debouncedSelectedTags : undefined,
-			}),
-	});
-
-	const addBatchMutation = useMutation({
-		mutationFn: (criterionIds: number[]) =>
-			addTaskCriteriaBatch(taskId, { criterion_ids: criterionIds }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
-			queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
-			close();
-			setSelectedCriterionIds([]);
-		},
-	});
-
 	const updateMutation = useMutation({
-		mutationFn: ({ id, weight: w }: { id: number; weight: number }) =>
-			updateTaskCriterionWeight(taskId, id, { weight: w }),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] });
-		},
+		mutationFn: ({ id, weight }: { id: number; weight: number }) =>
+			updateTaskCriterionWeight(taskId, id, { weight }),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['taskCriteria', taskId] }),
 	});
 
 	const deleteMutation = useMutation({
@@ -191,25 +384,6 @@ function TaskCriteriaTab({
 			queryClient.invalidateQueries({ queryKey: ['availableTaskCriteria', taskId] });
 		},
 	});
-
-	const handleAdd = () => {
-		if (selectedCriterionIds.length > 0) {
-			addBatchMutation.mutate(selectedCriterionIds);
-		}
-	};
-
-	const handleClose = () => {
-		close();
-		setSearch('');
-		setSelectedTags([]);
-		setSelectedCriterionIds([]);
-	};
-
-	const toggleCriterion = (id: number) => {
-		setSelectedCriterionIds((prev) =>
-			prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-		);
-	};
 
 	const confirmDelete = (id: number, description: string) => {
 		modals.openConfirmModal({
@@ -223,15 +397,13 @@ function TaskCriteriaTab({
 		});
 	};
 
-	if (criteriaLoading) {
-		return <Loader size="sm" />;
-	}
+	if (criteriaLoading) return <Loader size="sm" />;
 
 	return (
 		<Stack gap="md">
 			{canEdit && (
 				<Group>
-					<Button onClick={handleOpen} variant="light">
+					<Button onClick={open} variant="light">
 						Добавить существующий
 					</Button>
 					<Button
@@ -290,120 +462,13 @@ function TaskCriteriaTab({
 			) : (
 				<Text c="dimmed">Критерии не привязаны к этой задаче</Text>
 			)}
-
-			<Modal opened={opened} onClose={handleClose} title="Выбор критериев" centered size="lg">
-				<Stack gap="md">
-					<Group grow>
-						<TextInput
-							placeholder="Поиск по описанию..."
-							leftSection={<IconSearch size={16} />}
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-							rightSection={
-								search && (
-									<ActionIcon variant="transparent" onClick={() => setSearch('')}>
-										<IconX size={16} color="gray" />
-									</ActionIcon>
-								)
-							}
-						/>
-						<MultiSelect
-							data={tags}
-							value={selectedTags}
-							onChange={setSelectedTags}
-							placeholder="Фильтр по тегам"
-							searchable
-							clearable
-						/>
-					</Group>
-
-					{criteriaListLoading ? (
-						<Loader size="sm" />
-					) : allCriteria.length === 0 ? (
-						<Text c="dimmed" ta="center" py="lg">
-							Критерии не найдены
-						</Text>
-					) : (
-						<Table striped highlightOnHover>
-							<Table.Thead>
-								<Table.Tr>
-									<Table.Th w={40}></Table.Th>
-									<Table.Th></Table.Th>
-									<Table.Th w={100}></Table.Th>
-								</Table.Tr>
-							</Table.Thead>
-							<Table.Tbody>
-								{allCriteria.map((criterion) => (
-									<Table.Tr key={criterion.id}>
-										<Table.Td>
-											<Checkbox
-												checked={selectedCriterionIds.includes(criterion.id)}
-												onChange={() => toggleCriterion(criterion.id)}
-											/>
-										</Table.Td>
-										<Table.Td>
-											<Text size="sm" lineClamp={1}>
-												{criterion.description}
-											</Text>
-										</Table.Td>
-										<Table.Td>
-											<Group gap="xs">
-												<Tooltip
-													label={
-														criterion.workspace_id !== null
-															? 'Критерий доступен только в этом пространстве'
-															: criterion.task_id !== null
-																? 'Критерий доступен только для этой задачи'
-																: 'Критерий доступен всем'
-													}
-												>
-													{criterion.workspace_id !== null ? (
-														<IconStack2 size={16} color="gray" />
-													) : criterion.task_id !== null ? (
-														<IconHelpOctagon size={16} color="gray" />
-													) : (
-														<IconWorld size={16} color="gray" />
-													)}
-												</Tooltip>
-												<Tooltip
-													label={criterionStageLabels[criterion.stage ?? 'null'] || 'Все стадии'}
-												>
-													{stageIcons[criterion.stage ?? 'null']}
-												</Tooltip>
-												<Tooltip label="Перейти к критерию">
-													<ActionIcon
-														variant="subtle"
-														component="a"
-														href={
-															criterion.workspace_id !== null
-																? `/workspaces/${workspaceId}/criteria/${criterion.id}`
-																: criterion.task_id !== null
-																	? `/workspaces/${workspaceId}/tasks/${taskId}/criteria/${criterion.id}`
-																	: `/criteria/${criterion.id}`
-														}
-														target="_blank"
-														rel="noopener noreferrer"
-													>
-														<IconExternalLink size={16} />
-													</ActionIcon>
-												</Tooltip>
-											</Group>
-										</Table.Td>
-									</Table.Tr>
-								))}
-							</Table.Tbody>
-						</Table>
-					)}
-
-					<Button
-						onClick={handleAdd}
-						disabled={selectedCriterionIds.length === 0}
-						loading={addBatchMutation.isPending}
-					>
-						Добавить ({selectedCriterionIds.length})
-					</Button>
-				</Stack>
-			</Modal>
+			<AddCriteriaModal
+				taskId={taskId}
+				workspaceId={workspaceId}
+				taskCriteria={taskCriteria}
+				opened={opened}
+				onClose={close}
+			/>
 		</Stack>
 	);
 }
@@ -502,7 +567,6 @@ function CriterionCard({
 									}
 									fz={14}
 									target="_blank"
-									underline="hover"
 								>
 									<Menu.Item color="blue" leftSection={<IconArrowBigRight size={14} />}>
 										Перейти
