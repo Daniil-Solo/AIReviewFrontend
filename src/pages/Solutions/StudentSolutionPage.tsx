@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useClipboard } from '@mantine/hooks';
 import {
 	Stack,
 	Title,
@@ -22,6 +23,8 @@ import {
 	IconPlayerPlay,
 	IconEdit,
 	IconCheck,
+	IconCopy,
+	IconDownload,
 } from '@tabler/icons-react';
 import type { SolutionShortResponseDTO } from '../../types';
 import { statusLabels, formatLabels, calculateProgress } from '../../features/solutions/constants';
@@ -32,6 +35,7 @@ import {
 	approveSolution,
 } from '../../api/endpoints/solutions';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
+import { SolutionWindRoseChart } from '../../components/SolutionWindRoseChart/SolutionWindRoseChart';
 import { useDebounce } from '../../lib/debounce';
 
 interface StudentSolutionPageProps {
@@ -169,6 +173,66 @@ function ProjectDocValidationTab({
 	);
 }
 
+function ProjectDocTab({ solutionId }: { solutionId: number }) {
+	const clipboard = useClipboard({ timeout: 2000 });
+
+	const {
+		data: content,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ['solutionArtefact', solutionId, 'validate_project_doc'],
+		queryFn: () => getSolutionArtefact(solutionId, 'validate_project_doc'),
+	});
+
+	const handleDownload = () => {
+		if (!content) return;
+		const blob = new Blob([content], { type: 'text/markdown' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'README.md';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	};
+
+	if (isLoading) {
+		return <Loader size="sm" />;
+	}
+
+	if (error) {
+		return <Alert color="red">Не удалось загрузить документацию проекта</Alert>;
+	}
+
+	return (
+		<Stack gap="md">
+			<Group justify="space-between">
+				<Text size="sm" c="dimmed">
+					Можете использовать этот ProjectDoc в качестве README в своём проекте
+				</Text>
+				<Group gap="xs">
+					<Button
+						variant="light"
+						leftSection={clipboard.copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+						onClick={() => clipboard.copy(content || '')}
+					>
+						{clipboard.copied ? 'Скопировано' : 'Скопировать'}
+					</Button>
+					<Button variant="light" leftSection={<IconDownload size={16} />} onClick={handleDownload}>
+						Скачать
+					</Button>
+				</Group>
+			</Group>
+
+			<Card withBorder>
+				<MarkdownRenderer content={content || ''} />
+			</Card>
+		</Stack>
+	);
+}
+
 export function StudentSolutionPage({
 	solution,
 	isAuthor,
@@ -219,9 +283,13 @@ export function StudentSolutionPage({
 			<Tabs value={activeTab} onChange={setActiveTab}>
 				<Tabs.List>
 					<Tabs.Tab value="main">Основное</Tabs.Tab>
+					{(solution.status === 'HUMAN_REVIEW' || solution.status === 'REVIEWED') && (
+						<Tabs.Tab value="project-doc">ProjectDoc</Tabs.Tab>
+					)}
 					{solution.status === 'VALIDATION_WAITING' && (
 						<Tabs.Tab value="validation">Валидация ProjectDoc</Tabs.Tab>
 					)}
+					{solution.status === 'REVIEWED' && <Tabs.Tab value="review">Ревью</Tabs.Tab>}
 				</Tabs.List>
 
 				<Tabs.Panel value="main" pt="md">
@@ -293,33 +361,42 @@ export function StudentSolutionPage({
 									</Group>
 								</Stack>
 							</Card>
-						</SimpleGrid>
 
-						{canCancel && (
-							<Card withBorder>
-								<Stack gap="sm">
-									<Group gap="xs">
-										<IconPlayerPlay size={18} color="gray" />
-										<Text fw={500} size="sm">
-											Управление
-										</Text>
-									</Group>
-									<Group gap="xs">
-										<Button
-											leftSection={<IconX size={16} />}
-											variant="light"
-											color="red"
-											onClick={() => cancelMutation.mutate()}
-											loading={cancelMutation.isPending}
-										>
-											Отменить
-										</Button>
-									</Group>
-								</Stack>
-							</Card>
-						)}
+							{canCancel && (
+								<Card withBorder>
+									<Stack gap="sm">
+										<Group gap="xs">
+											<IconPlayerPlay size={18} color="gray" />
+											<Text fw={500} size="sm">
+												Управление
+											</Text>
+										</Group>
+										<Group gap="xs">
+											<Button
+												leftSection={<IconX size={16} />}
+												variant="light"
+												color="red"
+												onClick={() => cancelMutation.mutate()}
+												loading={cancelMutation.isPending}
+											>
+												Отменить
+											</Button>
+										</Group>
+									</Stack>
+								</Card>
+							)}
+							{solution.status === 'REVIEWED' && (
+								<SolutionWindRoseChart solutionId={solution.id} status={solution.status} />
+							)}
+						</SimpleGrid>
 					</Stack>
 				</Tabs.Panel>
+
+				{(solution.status === 'HUMAN_REVIEW' || solution.status === 'REVIEWED') && (
+					<Tabs.Panel value="project-doc" pt="md">
+						<ProjectDocTab solutionId={solution.id} />
+					</Tabs.Panel>
+				)}
 
 				{solution.status === 'VALIDATION_WAITING' && (
 					<Tabs.Panel value="validation" pt="md">
@@ -327,6 +404,30 @@ export function StudentSolutionPage({
 							solutionId={solution.id}
 							onSuccess={() => setActiveTab('main')}
 						/>
+					</Tabs.Panel>
+				)}
+				{solution.status === 'REVIEWED' && solution.human_feedback && (
+					<Tabs.Panel value="review" pt="md">
+						<Stack gap="xs">
+							<Card withBorder>
+								<Stack gap="xs">
+									<Text fw={500} size="sm">
+										Оценка
+									</Text>
+									<Text size="xl" fw={700}>
+										{solution.human_grade}
+									</Text>
+								</Stack>
+							</Card>
+							<Card withBorder>
+								<Text fw={500} size="sm">
+									Обратная связь
+								</Text>
+								<div>
+									<MarkdownRenderer content={solution.human_feedback} />
+								</div>
+							</Card>
+						</Stack>
 					</Tabs.Panel>
 				)}
 			</Tabs>

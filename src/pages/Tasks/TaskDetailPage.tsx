@@ -33,7 +33,6 @@ import { useModals } from '@mantine/modals';
 import { formatRelativeTime } from '../../lib/date';
 import {
 	IconTrash,
-	IconPlus,
 	IconDotsVertical,
 	IconSearch,
 	IconWorld,
@@ -465,7 +464,7 @@ export function TaskCriteriaTab({
 			<AddCriteriaModal
 				taskId={taskId}
 				workspaceId={workspaceId}
-				taskCriteria={taskCriteria}
+				taskCriteria={taskCriteria as TaskCriteriaResponseDTO[]}
 				opened={opened}
 				onClose={close}
 			/>

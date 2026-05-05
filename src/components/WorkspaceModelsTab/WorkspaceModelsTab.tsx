@@ -27,7 +27,6 @@ import type {
 	CustomModelDTO,
 	CustomModelRequestCreateDTO,
 	CustomModelRequestUpdateDTO,
-	CustomModelWithAPIKeyDTO,
 } from '../../types';
 
 interface ModelModalProps {

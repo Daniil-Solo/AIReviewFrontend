@@ -210,6 +210,10 @@
 // Body: FormData { task_id: number, solution_format: string, github_repo_link?: (string | null), github_repo_branch?: (string | null), file?: (string | null) }
 // Response: SolutionShortResponseDTO
 
+// POST /api/v1/solutions/{solution_id}/ai-feedback
+// Path: {solution_id: number}
+// Response: any
+
 // POST /api/v1/solutions/{solution_id}/approval
 // Path: {solution_id: number}
 // Body: FormData { file: string }
@@ -495,7 +499,6 @@ interface SolutionCriteriaCheckResponseDTO {
 interface SolutionFinalReviewDTO {
   human_grade: number;
   human_feedback: string;
-  ai_feedback?: (string | null);
 }
 
 interface SolutionLabelUpdateDTO {

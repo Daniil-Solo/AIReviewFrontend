@@ -44,6 +44,7 @@ import {
 	createSolutionCriteriaCheck,
 	submitFinalReview,
 	getSolutionScore,
+	generateAiFeedback,
 } from '../../api/endpoints/solutions';
 import type {
 	SolutionShortResponseDTO,
@@ -64,8 +65,7 @@ import {
 import { formatRelativeTime } from '../../lib/date';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import { MermaidGantt } from '../../components/MermaidGantt/MermaidGantt';
-import { RadarChart } from '@mantine/charts';
-import { getSolutionWindRose } from '../../api/endpoints/solutions';
+import { SolutionWindRoseChart } from '../../components/SolutionWindRoseChart/SolutionWindRoseChart';
 
 interface TeacherSolutionPageProps {
 	solution: SolutionShortResponseDTO;
@@ -473,11 +473,6 @@ export function SolutionMainTab({
 		queryFn: () => getSolutionInfo(solution.id),
 	});
 
-	const { data: windRoseData } = useQuery({
-		queryKey: ['solutionWindRose', solution.id],
-		queryFn: () => getSolutionWindRose(solution.id),
-	});
-
 	const restartMutation = useMutation({
 		mutationFn: () => restartSolution(solution.id),
 		onSuccess: () => {
@@ -624,26 +619,8 @@ export function SolutionMainTab({
 					</Card>
 				)}
 
-				{solution.status === 'REVIEWED' && windRoseData && windRoseData.length > 0 && (
-					<Card withBorder>
-						<Stack gap="sm">
-							<Text fw={500}>Оценка компетенций</Text>
-							<RadarChart
-								h={300}
-								data={windRoseData.map((point) => ({
-									subject: point.tag,
-									value: point.value,
-									fullMark: 1,
-								}))}
-								dataKey="subject"
-								withPolarRadiusAxis
-								polarRadiusAxisProps={{ domain: [0, 120], ticks: [20, 40, 60, 80, 100] }}
-								series={[{ name: 'value', color: 'blue.6' }]}
-								withTooltip
-								withDots
-							/>
-						</Stack>
-					</Card>
+				{solution.status === 'REVIEWED' && (
+					<SolutionWindRoseChart solutionId={solution.id} status={solution.status} />
 				)}
 			</SimpleGrid>
 
@@ -718,8 +695,7 @@ export function SolutionFinalReviewTab({
 }) {
 	const [humanGrade, setHumanGrade] = useState<number | string>(solution.human_grade ?? '');
 	const [humanFeedback, setHumanFeedback] = useState(solution.human_feedback ?? '');
-	const [aiFeedback, setAiFeedback] = useState(solution.ai_feedback ?? '');
-	const [finalReviewEdit, setFinalReviewEdit] = useState(solution.human_grade === null);
+	const [finalReviewEdit, setFinalReviewEdit] = useState(false);
 	const [scoreInfo, setScoreInfo] = useState<null | SolutionScoreDTO>(null);
 	const queryClient = useQueryClient();
 
@@ -735,12 +711,17 @@ export function SolutionFinalReviewTab({
 		mutationFn: () =>
 			submitFinalReview(solution.id, {
 				human_grade: Number(humanGrade),
-				human_feedback: humanFeedback || undefined,
-				ai_feedback: aiFeedback || undefined,
+				human_feedback: humanFeedback,
 			}),
 		onSuccess: () => {
-			setFinalReviewEdit(false);
 			queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
+		},
+	});
+
+	const generateFeedbackMutation = useMutation({
+		mutationFn: () => generateAiFeedback(solution.id),
+		onSuccess: (data: string) => {
+			setHumanFeedback(data);
 		},
 	});
 
@@ -775,27 +756,42 @@ export function SolutionFinalReviewTab({
 					</Text>
 				)}
 
-				<Textarea
-					label="Обратная связь"
-					placeholder="Комментарий для студента (необязательно)"
-					value={humanFeedback}
-					onChange={(e) => setHumanFeedback(e.currentTarget.value)}
-					autosize
-					minRows={3}
-					maxRows={12}
-				/>
+				<SimpleGrid cols={{ base: 1, xs: 1, sm: 2, md: 2 }} spacing="md">
+					<Stack gap={'xs'}>
+						<Textarea
+							label="Обратная связь"
+							placeholder="Комментарий для студента (необязательно)"
+							value={humanFeedback}
+							onChange={(e) => setHumanFeedback(e.currentTarget.value)}
+							autosize
+							minRows={6}
+							maxRows={12}
+						/>
+						<Group>
+							<Button
+								variant="light"
+								onClick={() => generateFeedbackMutation.mutate()}
+								loading={generateFeedbackMutation.isPending}
+								leftSection={<IconSparkles size={16} />}
+							>
+								Сгенерировать
+							</Button>
+						</Group>
+					</Stack>
+					<Box mt={'22px'}>
+						{humanFeedback ? (
+							<div>
+								<MarkdownRenderer content={humanFeedback} />
+							</div>
+						) : (
+							<Text size="sm" c="dimmed">
+								Предпросмотр обратной связи появится здесь
+							</Text>
+						)}
+					</Box>
+				</SimpleGrid>
 
-				<Textarea
-					label="AI отзыв"
-					placeholder="AI-комментарий (необязательно)"
-					value={aiFeedback}
-					onChange={(e) => setAiFeedback(e.currentTarget.value)}
-					autosize
-					minRows={3}
-					maxRows={12}
-				/>
-
-				<Group>
+				<Group mt="lg">
 					<Button
 						onClick={() => finalReviewMutation.mutate()}
 						loading={finalReviewMutation.isPending}
@@ -803,6 +799,11 @@ export function SolutionFinalReviewTab({
 					>
 						Сохранить вердикт
 					</Button>
+					{finalReviewEdit && (
+						<Button variant="outline" color="gray" onClick={() => setFinalReviewEdit(false)}>
+							Отмена
+						</Button>
+					)}
 				</Group>
 			</Stack>
 		);
@@ -825,21 +826,13 @@ export function SolutionFinalReviewTab({
 				)}
 				{solution.human_feedback && (
 					<Card withBorder>
-						<Stack gap="xs">
+						<Stack gap="0">
 							<Text fw={500} size="sm">
 								Обратная связь
 							</Text>
-							<MarkdownRenderer content={solution.human_feedback} />
-						</Stack>
-					</Card>
-				)}
-				{solution.ai_feedback && (
-					<Card withBorder>
-						<Stack gap="xs">
-							<Text fw={500} size="sm">
-								AI отзыв
-							</Text>
-							<MarkdownRenderer content={solution.ai_feedback} />
+							<div>
+								<MarkdownRenderer content={solution.human_feedback} />
+							</div>
 						</Stack>
 					</Card>
 				)}

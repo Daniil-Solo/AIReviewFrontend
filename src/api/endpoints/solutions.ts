@@ -21,7 +21,6 @@ interface SuccessOperationDTO {
 interface SolutionFinalReviewDTO {
 	human_grade: number;
 	human_feedback?: string;
-	ai_feedback?: string;
 }
 
 export const getMySolutions = async (taskId?: number): Promise<SolutionShortResponseDTO[]> => {
@@ -136,5 +135,10 @@ export const approveSolution = async (
 
 export const getSolutionScore = async (solutionId: number): Promise<SolutionScoreDTO> => {
 	const response = await api.get<SolutionScoreDTO>(`/api/v1/solutions/${solutionId}/score`);
+	return response.data;
+};
+
+export const generateAiFeedback = async (solutionId: number): Promise<string> => {
+	const response = await api.post<string>(`/api/v1/solutions/${solutionId}/ai-feedback`);
 	return response.data;
 };

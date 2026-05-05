@@ -115,8 +115,8 @@ export function WorkspaceCriterionEditPage() {
 		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
-			prompt: prompt.trim() || undefined,
-			tags: tags.length > 0 ? tags : undefined,
+			prompt: prompt.trim(),
+			tags: tags,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 			workspace_id: wsId,
 		});
