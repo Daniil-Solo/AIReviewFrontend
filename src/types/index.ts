@@ -386,3 +386,7 @@ export interface SolutionScoreDTO {
 	total_criteria: number;
 	passed_criteria: number;
 }
+
+export interface AppSettingsResponseDTO {
+	email_confirmation_enabled: boolean;
+}

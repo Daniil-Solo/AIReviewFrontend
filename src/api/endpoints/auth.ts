@@ -23,3 +23,8 @@ export const registerConfirm = async (data: EmailConfirmationRequestDTO): Promis
 	const response = await api.post<TokenDTO>('/api/v1/auth/register/confirm', data);
 	return response.data;
 };
+
+export const register = async (data: EmailRegistrationRequestDTO): Promise<TokenDTO> => {
+	const response = await api.post<TokenDTO>('/api/v1/auth/register', data);
+	return response.data;
+};

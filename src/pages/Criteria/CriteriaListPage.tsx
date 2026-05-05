@@ -140,10 +140,7 @@ export function CriteriaListPage() {
 				size="lg"
 			>
 				<Stack gap="md">
-					<Text size="sm">
-						Загрузите файл в формате JSON со списком критериев. Критерии будут добавлены как
-						глобальные (workspace_id=null, task_id=null).
-					</Text>
+					<Text size="sm">Загрузите файл в формате JSON со списком критериев.</Text>
 
 					<Stack gap="xs">
 						<Text size="sm" fw={500}>
