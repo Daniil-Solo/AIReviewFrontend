@@ -120,7 +120,8 @@ export function EditWorkspacePage() {
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
 						minRows={4}
-						maxLength={5000}
+						maxRows={24}
+						autosize
 					/>
 					<Group gap="sm">
 						<Button type="submit" loading={mutation.isPending}>

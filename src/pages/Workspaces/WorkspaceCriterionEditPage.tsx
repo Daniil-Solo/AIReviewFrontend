@@ -13,9 +13,12 @@ import {
 	TextInput,
 	Loader,
 	Center,
+	Box,
+	Text,
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { getCriterion, updateCriterion, getAvailableTags } from '../../api/endpoints/criteria';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import type { CriterionStage, CriterionUpdateDTO, ErrorResponseDTO } from '../../types';
 
 const stageOptions = [
@@ -33,10 +36,12 @@ export function WorkspaceCriterionEditPage() {
 	const critId = Number(criterionId);
 
 	const [description, setDescription] = useState('');
+	const [prompt, setPrompt] = useState('');
 	const [tags, setTags] = useState<string[]>([]);
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null>(null);
 	const [descriptionError, setDescriptionError] = useState('');
+	const [promptError, setPromptError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
 	const { data: availableTags = [] } = useQuery({
@@ -67,6 +72,7 @@ export function WorkspaceCriterionEditPage() {
 	useEffect(() => {
 		if (criterion) {
 			setDescription(criterion.description);
+			setPrompt(criterion.prompt || '');
 			setTags(criterion.tags);
 			setSelectedStage(criterion.stage);
 		}
@@ -100,10 +106,17 @@ export function WorkspaceCriterionEditPage() {
 			return;
 		}
 
+		if (!prompt.trim()) {
+			setPromptError('Промпт обязателен');
+			return;
+		}
+
 		setDescriptionError('');
+		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
-			tags: tags.length > 0 ? tags : undefined,
+			prompt: prompt.trim(),
+			tags: tags,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 			workspace_id: wsId,
 		});
@@ -193,6 +206,29 @@ export function WorkspaceCriterionEditPage() {
 						maxRows={10}
 						maxLength={1000}
 					/>
+
+					<Textarea
+						label="Промпт для LLM"
+						placeholder="Промпт для автоматической проверки"
+						value={prompt}
+						onChange={(e) => setPrompt(e.target.value)}
+						error={promptError}
+						onFocus={() => setPromptError('')}
+						required
+						autosize
+						minRows={3}
+						maxRows={8}
+					/>
+
+					{prompt && (
+						<Box>
+							<Text size="sm" c="dimmed" mb="xs">
+								Предпросмотр
+							</Text>
+							<MarkdownRenderer content={prompt} />
+						</Box>
+					)}
+
 					<Group>
 						<Button type="submit" loading={mutation.isPending}>
 							Сохранить

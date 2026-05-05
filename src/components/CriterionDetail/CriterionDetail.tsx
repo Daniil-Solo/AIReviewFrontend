@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { Stack, Text, Badge, Group } from '@mantine/core';
+import { Stack, Text, Badge, Group, Box } from '@mantine/core';
 import { getCriterionAccessLabel, stageLabels } from '../../features/criteria/constants';
 import type { CriterionResponseDTO } from '../../types';
+import { MarkdownRenderer } from '../MarkdownRenderer/MarkdownRenderer';
 
 interface CriterionDetailProps {
 	criterion: CriterionResponseDTO;
@@ -52,6 +53,17 @@ export function CriterionDetail({ criterion, actions }: CriterionDetailProps) {
 					{criterion.description}
 				</Text>
 			</Stack>
+
+			{criterion.prompt && (
+				<Stack gap={0}>
+					<Text size="sm" c="dimmed">
+						Промпт для LLM
+					</Text>
+					<Box>
+						<MarkdownRenderer content={criterion.prompt} />
+					</Box>
+				</Stack>
+			)}
 		</Stack>
 	);
 }

@@ -40,3 +40,22 @@ export const deleteCriterion = async (criterionId: number): Promise<{ message: s
 	const response = await api.delete<{ message: string }>(`/api/v1/criteria/${criterionId}`);
 	return response.data;
 };
+
+export const importCriteria = async (
+	file: File,
+	workspaceId?: number | null,
+	taskId?: number | null
+): Promise<CriterionResponseDTO[]> => {
+	const formData = new FormData();
+	formData.append('file', file);
+	if (workspaceId !== undefined && workspaceId !== null) {
+		formData.append('workspace_id', String(workspaceId));
+	}
+	if (taskId !== undefined && taskId !== null) {
+		formData.append('task_id', String(taskId));
+	}
+	const response = await api.post<CriterionResponseDTO[]>('/api/v1/criteria/import', formData, {
+		headers: { 'Content-Type': 'multipart/form-data' },
+	});
+	return response.data;
+};

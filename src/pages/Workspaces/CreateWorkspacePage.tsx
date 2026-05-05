@@ -77,7 +77,8 @@ export function CreateWorkspacePage() {
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
 						minRows={4}
-						maxLength={5000}
+						maxRows={24}
+						autosize
 					/>
 					<Button type="submit" loading={mutation.isPending}>
 						Создать

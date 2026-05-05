@@ -10,6 +10,8 @@ import type {
 	SolutionShortResponseDTO,
 	SuccessOperationDTO,
 	CriterionResponseDTO,
+	TaskStepsModelDTO,
+	TaskStepsModelRequestCreateDTO,
 } from '../../types';
 import { paramsSerialize } from '../utils';
 
@@ -111,5 +113,18 @@ export const getAvailableTaskCriteria = async (
 			paramsSerializer: paramsSerialize,
 		}
 	);
+	return response.data;
+};
+
+export const getTaskStepsModels = async (taskId: number): Promise<TaskStepsModelDTO> => {
+	const response = await api.get<TaskStepsModelDTO>(`/api/v1/tasks/${taskId}/steps-models`);
+	return response.data;
+};
+
+export const setTaskStepsModels = async (
+	taskId: number,
+	data: TaskStepsModelRequestCreateDTO
+): Promise<TaskStepsModelDTO> => {
+	const response = await api.post<TaskStepsModelDTO>(`/api/v1/tasks/${taskId}/steps-models`, data);
 	return response.data;
 };

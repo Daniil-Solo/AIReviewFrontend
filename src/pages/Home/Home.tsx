@@ -83,31 +83,6 @@ export function Home() {
 					</Box>
 				</Paper>
 
-				<Paper p="lg" radius="md" shadow="xs" withBorder>
-					<Group gap="xs">
-						<ThemeIcon variant="outline" size="lg" radius="md" color="gray">
-							<IconLock size={24} />
-						</ThemeIcon>
-						<Text size="md" fw={600} c="dimmed">
-							Безопасность
-						</Text>
-					</Group>
-					<Box mt="xs">
-						<Text size="sm" fw={600} c="dimmed">
-							Роль в системе
-						</Text>
-						<Text size="sm" color="black">
-							{user?.is_admin ? 'Админ' : 'Пользователь'}
-						</Text>
-						<Text size="sm" fw={600} c="dimmed" mt="xs">
-							ID пользователя
-						</Text>
-						<Text size="sm" color="black" mt={4}>
-							{user?.sub}
-						</Text>
-					</Box>
-				</Paper>
-
 				<Paper
 					p="lg"
 					radius="md"
@@ -140,6 +115,31 @@ export function Home() {
 							)}
 						</Box>
 					)}
+				</Paper>
+
+				<Paper p="lg" radius="md" shadow="xs" withBorder>
+					<Group gap="xs">
+						<ThemeIcon variant="outline" size="lg" radius="md" color="gray">
+							<IconLock size={24} />
+						</ThemeIcon>
+						<Text size="md" fw={600} c="dimmed">
+							Безопасность
+						</Text>
+					</Group>
+					<Box mt="xs">
+						<Text size="sm" fw={600} c="dimmed">
+							Роль в системе
+						</Text>
+						<Text size="sm" color="black">
+							{user?.is_admin ? 'Админ' : 'Пользователь'}
+						</Text>
+						<Text size="sm" fw={600} c="dimmed" mt="xs">
+							ID пользователя
+						</Text>
+						<Text size="sm" color="black" mt={4}>
+							{user?.sub}
+						</Text>
+					</Box>
 				</Paper>
 			</SimpleGrid>
 

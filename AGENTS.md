@@ -7,6 +7,7 @@
 проводит ревью по критериям и выносит итоговый вердикт.
 
 ## Технологический стек
+
 React 19 + TypeScript 6 (strict mode, es2023)
 Vite 8 — сборка
 Mantine UI v9 — основная UI-библиотека
@@ -15,67 +16,112 @@ TanStack Query v5 — серверное состояние
 Zustand — клиентское состояние
 Axios — HTTP-клиент
 @tabler/icons-react — иконки
-CSS Modules (*.module.css) — стилизация
+CSS Modules (\*.module.css) — стилизация
 react-markdown + remark-gfm — рендер markdown
 jose — работа с JWT
 mermaid — диаграммы Ганта
 
 ## Структура проекта
+
 src/
-├── api/                    # инстанс axios, эндпоинты
-│   ├── endpoints/
-│   │   ├── auth.ts         # авторизация
-│   │   ├── criteria.ts    # критерии оценивания
-│   │   ├── solutions.ts    # решения студентов
-│   │   ├── tasks.ts       # задания
-│   │   ├── transactions.ts # транзакции баланса
-│   │   └── workspaces.ts  # рабочие пространства
-│   ├── api.ts             # base instance
-│   ├── index.ts          # exports
-│   └── utils.ts          # утилиты
-├── components/            # переиспользуемые UI-блоки
-│   ├── AuthLayout/       # лayoут авторизации
-│   ├── Header/          # хедер с навигацией
-│   ├── Logo/            # логотип
-│   ├── MainLayout/      # основной layout
-│   ├── MarkdownRenderer/ # рендер markdown + подсветка + mermaid
-│   ├── MermaidGantt/    # диаграммы Ганта
-│   ├── WorkspaceInvitesTab/ # приглашения в workspace
-│   └── WorkspaceTasksTab/   # задания workspace
-├── features/             # фичи
-│   ├── criteria/        # критерии (constants.ts)
-│   └── solutions/       # решения (constants.ts)
-├── lib/                # утилиты
-│   ├── date.ts         # форматирование дат
-│   └── jwt.ts          # работа с JWT
-├── pages/              # страницы
-│   ├── Criteria/       # CRUD критериев
-│   ├── Home/           # главная
-│   ├── Join/          # присоединение к workspace
-│   ├── Landing/       # промо-страница + компоненты
-│   ├── Login/        # вход
-│   ├── NotFound/      # 404
-│   ├── Register/     # регистрация
-│   ├── Solutions/    # решения (CRUD + student/teacher view)
-│   ├── Tasks/        # задания (CRUD)
-│   ├── Transactions/ # история транзакций
-│   └── Workspaces/   # рабочие пространства (CRUD)
-├── store/             # zustand stores
-│   ├── profile.ts    # профиль пользователя
-│   └── register.ts   # регистрация
-├── types/             # TypeScript типы API
-│   └── index.ts
-├── main.tsx          # точка входа
-├── main.css          # глобальные стили
-└── router.tsx        # маршрутизация
+├── api/ # инстанс axios, эндпоинты
+│ ├── endpoints/
+│ │ ├── auth.ts # авторизация
+│ │ ├── criteria.ts # критерии оценивания
+│ │ ├── solutions.ts # решения студентов
+│ │ ├── tasks.ts # задания
+│ │ ├── transactions.ts # транзакции баланса
+│ │ └── workspaces.ts # рабочие пространства
+│ ├── api.ts # base instance
+│ ├── index.ts # exports
+│ └── utils.ts # утилиты
+├── components/ # переиспользуемые UI-блоки
+│ ├── AuthLayout/ # лayoут авторизации
+│ ├── Header/ # хедер с навигацией
+│ ├── Logo/ # логотип
+│ ├── MainLayout/ # основной layout
+│ ├── MarkdownRenderer/ # рендер markdown + подсветка + mermaid
+│ ├── MermaidGantt/ # диаграммы Ганта
+│ ├── WorkspaceInvitesTab/ # приглашения в workspace
+│ └── WorkspaceTasksTab/ # задания workspace
+├── features/ # фичи
+│ ├── criteria/ # критерии (constants.ts)
+│ └── solutions/ # решения (constants.ts)
+├── lib/ # утилиты
+│ ├── date.ts # форматирование дат
+│ └── jwt.ts # работа с JWT
+├── pages/ # страницы
+│ ├── Criteria/ # CRUD критериев
+│ ├── Home/ # главная
+│ ├── Join/ # присоединение к workspace
+│ ├── Landing/ # промо-страница + компоненты
+│ ├── Login/ # вход
+│ ├── NotFound/ # 404
+│ ├── Register/ # регистрация
+│ ├── Solutions/ # решения (CRUD + student/teacher view)
+│ ├── Tasks/ # задания (CRUD)
+│ ├── Transactions/ # история транзакций
+│ └── Workspaces/ # рабочие пространства (CRUD)
+├── store/ # zustand stores
+│ ├── profile.ts # профиль пользователя
+│ └── register.ts # регистрация
+├── types/ # TypeScript типы API
+│ └── index.ts
+├── main.tsx # точка входа
+├── main.css # глобальные стили
+└── router.tsx # маршрутизация
 
 ## Дополнительные сведения
 
-`docs/api.md` - схема API существующих эндпоинтов
-`docs/about.md` - описание возможностей платформы
-`docs/roadmap.md` - план развития
+`docs/api.md` - схема API существующих эндпоинтов и схем
+
+## Конвенции кода
+
+### Компоненты
+
+- Именованный экспорт: `export function ComponentName`
+- Интерфейс пропсов определяется над компонентом
+- Один файл (.tsx), без разделения
+- Использовать нативные компоненты Mantine UI
+- Свойства Mantine для стилизации: shadow, padding, radius, withBorder
+
+### Стилизация
+
+- Приоритетно: пропсы Mantine (shadow, padding, radius, withBorder, variant)
+- Кастомные стили: CSS Modules (\*.module.css)
+- Цветовая схема: `useMantineColorScheme` / `useComputedColorScheme`
+
+### Состояние
+
+- Клиентское: Zustand (`src/store/*.ts`)
+- Серверное: TanStack Query (useQuery, useMutation)
+
+### API
+
+- axios инстанс: `src/api/api.ts`
+- Эндпоинты: отдельные файлы в `src/api/endpoints/`
+- Функции возвращают `response.data`
+
+### Обработка ошибок
+
+```tsx
+catch (err: any) {
+  const data = err.response?.data as ErrorResponseDTO;
+  if (data) {
+    setError(data.message);
+  }
+}
+```
+
+Ошибка должна отображаться в Alert-комопненте из Mantine.
+
+### Типы
+
+- DTO-суффикс для типов от API: `*DTO`
+- Интерфейсы в `src/types/index.ts`
 
 ## Важно
+
 - всегда используй нативные UI-компоненты из Mantine UI и другие фичи этой библиотеки
 - только в крайних случаях пиши свои кастомные компоненты
 - всегда используй иконки из @tabler/icons-react, не используй смайлики

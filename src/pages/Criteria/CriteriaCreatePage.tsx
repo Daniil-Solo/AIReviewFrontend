@@ -11,9 +11,12 @@ import {
 	MultiSelect,
 	TextInput,
 	Group,
+	Box,
+	Text,
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 import { createCriterion, getAvailableTags } from '../../api/endpoints/criteria';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import type { CriterionStage } from '../../types';
 import { getUserData } from '../../lib/jwt';
 
@@ -28,10 +31,12 @@ export function CriteriaCreatePage() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [description, setDescription] = useState('');
+	const [prompt, setPrompt] = useState('');
 	const [tags, setTags] = useState<string[]>([]);
 	const [newTag, setNewTag] = useState('');
 	const [selectedStage, setSelectedStage] = useState<string | null>('');
 	const [descriptionError, setDescriptionError] = useState('');
+	const [promptError, setPromptError] = useState('');
 	const [generalError, setGeneralError] = useState('');
 
 	useEffect(() => {
@@ -58,11 +63,11 @@ export function CriteriaCreatePage() {
 
 	const mutation = useMutation({
 		mutationFn: createCriterion,
-		onSuccess: () => {
+		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ['criteria'] });
 			queryClient.invalidateQueries({ queryKey: ['criteriaTags'] });
 			queryClient.invalidateQueries({ queryKey: ['availableTags'] });
-			navigate('/criteria');
+			navigate(`/criteria/${data.id}`);
 		},
 		onError: (err: unknown) => {
 			const e = err as { response?: { data?: { message?: string } } };
@@ -81,10 +86,16 @@ export function CriteriaCreatePage() {
 			setDescriptionError('Описание не должно превышать 1000 символов');
 			return;
 		}
+		if (!prompt.trim()) {
+			setPromptError('Промпт обязателен');
+			return;
+		}
 
 		setDescriptionError('');
+		setPromptError('');
 		mutation.mutate({
 			description: description.trim(),
+			prompt: prompt.trim(),
 			tags: tags.length > 0 ? tags : undefined,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
 		});
@@ -102,18 +113,13 @@ export function CriteriaCreatePage() {
 
 			<form onSubmit={handleSubmit}>
 				<Stack gap="md">
-					<Textarea
-						label="Описание"
-						placeholder="Описание критерия оценки"
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
-						error={descriptionError}
-						onFocus={() => setDescriptionError('')}
-						required
-						autosize
-						minRows={4}
-						maxRows={10}
-						maxLength={1000}
+					<Select
+						label="Этап проверки"
+						placeholder="Выберите этап (необязательно)"
+						value={selectedStage}
+						onChange={(val) => setSelectedStage(val)}
+						data={stageOptions}
+						allowDeselect
 					/>
 
 					<MultiSelect
@@ -142,14 +148,41 @@ export function CriteriaCreatePage() {
 						</Button>
 					</Group>
 
-					<Select
-						label="Этап проверки"
-						placeholder="Выберите этап (необязательно)"
-						value={selectedStage}
-						onChange={(val) => setSelectedStage(val)}
-						data={stageOptions}
-						allowDeselect
+					<Textarea
+						label="Описание"
+						placeholder="Описание критерия оценки"
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+						error={descriptionError}
+						onFocus={() => setDescriptionError('')}
+						required
+						autosize
+						minRows={4}
+						maxRows={10}
+						maxLength={1000}
 					/>
+
+					<Textarea
+						label="Промпт для LLM"
+						placeholder="Промпт для автоматической проверки"
+						value={prompt}
+						onChange={(e) => setPrompt(e.target.value)}
+						error={promptError}
+						onFocus={() => setPromptError('')}
+						required
+						autosize
+						minRows={3}
+						maxRows={8}
+					/>
+
+					{prompt && (
+						<Box>
+							<Text size="sm" c="dimmed" mb="xs">
+								Предпросмотр
+							</Text>
+							<MarkdownRenderer content={prompt} />
+						</Box>
+					)}
 
 					<Button type="submit" loading={mutation.isPending}>
 						Создать

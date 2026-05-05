@@ -49,13 +49,12 @@ export function SolutionDetailPage() {
 	}
 
 	const userData = getUserData();
-	const currentUserId = userData?.sub;
+	const currentUserId = userData?.id;
 	const isAuthor = solution.author.id === currentUserId;
 
 	return (
 		<StudentSolutionPage
 			solution={solution}
-			isOwner={isAuthor}
 			isAuthor={isAuthor}
 			workspaceId={wsId}
 			taskId={tId}

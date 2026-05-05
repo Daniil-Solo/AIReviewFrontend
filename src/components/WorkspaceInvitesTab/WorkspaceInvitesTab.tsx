@@ -27,6 +27,7 @@ import {
 	IconTrash,
 	IconCheck,
 	IconAlertCircle,
+	IconRefresh,
 } from '@tabler/icons-react';
 import {
 	getJoinRules,
@@ -36,6 +37,15 @@ import {
 	checkSlugAvailability,
 } from '../../api/endpoints/workspaces';
 import type { JoinRuleDTO, JoinRuleCreateDTO } from '../../types';
+
+function generateSlug(): string {
+	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
+	let result = '';
+	for (let i = 0; i < 6; i++) {
+		result += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+	return result;
+}
 
 interface InviteModalProps {
 	opened: boolean;
@@ -173,7 +183,16 @@ function InviteModal({ opened, onClose, workspaceId, editRule }: InviteModalProp
 						value={slug}
 						onChange={(e) => setSlug(e.target.value)}
 						error={slugError}
-						rightSection={slugLoading ? <Loader size={14} /> : null}
+						loading={slugLoading}
+						rightSection={
+							<Group gap={4}>
+								<ActionIcon size="sm" variant="subtle" onClick={() => setSlug(generateSlug())}>
+									<Tooltip label="Сгенерировать">
+										<IconRefresh size={14} />
+									</Tooltip>
+								</ActionIcon>
+							</Group>
+						}
 					/>
 				)}
 
@@ -418,4 +437,3 @@ export function WorkspaceInvitesTab({ workspaceId }: WorkspaceInvitesTabProps) {
 		</Stack>
 	);
 }
-

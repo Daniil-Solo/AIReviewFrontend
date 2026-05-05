@@ -26,11 +26,12 @@ const stageOptions = [
 	{ value: 'MANUAL', label: 'Ручная проверка' },
 ];
 
-export function WorkspaceCriterionCreatePage() {
+export function TaskCriterionCreatePage() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const { workspaceId } = useParams<{ workspaceId: string }>();
+	const { workspaceId, taskId } = useParams<{ workspaceId: string; taskId: string }>();
 	const wsId = Number(workspaceId);
+	const tId = Number(taskId);
 
 	const [description, setDescription] = useState('');
 	const [prompt, setPrompt] = useState('');
@@ -59,10 +60,10 @@ export function WorkspaceCriterionCreatePage() {
 	const mutation = useMutation({
 		mutationFn: (data: CriterionCreateDTO) => createCriterion(data),
 		onSuccess: (newCriterion) => {
-			queryClient.invalidateQueries({ queryKey: ['workspaceCriteria', wsId] });
+			queryClient.invalidateQueries({ queryKey: ['taskCriteria', tId] });
 			queryClient.invalidateQueries({ queryKey: ['criteriaTags'] });
 			queryClient.invalidateQueries({ queryKey: ['availableTags'] });
-			navigate(`/workspaces/${wsId}/criteria/${newCriterion.id}`);
+			navigate(`/workspaces/${wsId}/tasks/${tId}/criteria/${newCriterion.id}`);
 		},
 		onError: (err) => {
 			const data = (err as { response?: { data: ErrorResponseDTO } }).response?.data;
@@ -93,13 +94,13 @@ export function WorkspaceCriterionCreatePage() {
 			prompt: prompt.trim(),
 			tags: tags.length > 0 ? tags : undefined,
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
-			workspace_id: wsId,
+			task_id: tId,
 		});
 	};
 
 	return (
 		<Stack gap="lg" maw={600}>
-			<Title order={2}>Создать критерий</Title>
+			<Title order={2}>Создать критерий для задачи</Title>
 
 			{generalError && (
 				<Alert color="red" icon={<IconAlertCircle size={16} />}>
@@ -184,7 +185,7 @@ export function WorkspaceCriterionCreatePage() {
 						<Button type="submit" loading={mutation.isPending}>
 							Создать
 						</Button>
-						<Button variant="subtle" onClick={() => navigate(`/workspaces/${wsId}`)}>
+						<Button variant="subtle" onClick={() => navigate(`/workspaces/${wsId}/tasks/${tId}`)}>
 							Отмена
 						</Button>
 					</Group>

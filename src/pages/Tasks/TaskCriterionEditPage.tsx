@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -11,13 +11,15 @@ import {
 	Group,
 	MultiSelect,
 	TextInput,
+	Loader,
+	Center,
 	Box,
 	Text,
 } from '@mantine/core';
 import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
-import { createCriterion, getAvailableTags } from '../../api/endpoints/criteria';
+import { getCriterion, updateCriterion, getAvailableTags } from '../../api/endpoints/criteria';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
-import type { CriterionStage, CriterionCreateDTO, ErrorResponseDTO } from '../../types';
+import type { CriterionStage, CriterionUpdateDTO, ErrorResponseDTO } from '../../types';
 
 const stageOptions = [
 	{ value: '', label: 'Автопроверка' },
@@ -26,11 +28,17 @@ const stageOptions = [
 	{ value: 'MANUAL', label: 'Ручная проверка' },
 ];
 
-export function WorkspaceCriterionCreatePage() {
+export function TaskCriterionEditPage() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const { workspaceId } = useParams<{ workspaceId: string }>();
+	const { workspaceId, taskId, criterionId } = useParams<{
+		workspaceId: string;
+		taskId: string;
+		criterionId: string;
+	}>();
 	const wsId = Number(workspaceId);
+	const tId = Number(taskId);
+	const critId = Number(criterionId);
 
 	const [description, setDescription] = useState('');
 	const [prompt, setPrompt] = useState('');
@@ -56,17 +64,38 @@ export function WorkspaceCriterionCreatePage() {
 		}
 	};
 
+	const {
+		data: criterion,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ['criterion', critId],
+		queryFn: () => getCriterion(critId),
+		enabled: !!critId,
+	});
+
+	useEffect(() => {
+		if (criterion) {
+			setDescription(criterion.description);
+			setPrompt(criterion.prompt || '');
+			setTags(criterion.tags);
+			setSelectedStage(criterion.stage);
+		}
+	}, [criterion]);
+
 	const mutation = useMutation({
-		mutationFn: (data: CriterionCreateDTO) => createCriterion(data),
-		onSuccess: (newCriterion) => {
-			queryClient.invalidateQueries({ queryKey: ['workspaceCriteria', wsId] });
+		mutationFn: (data: CriterionUpdateDTO) => updateCriterion(critId, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['taskCriteria', tId] });
+			queryClient.invalidateQueries({ queryKey: ['criteria'] });
 			queryClient.invalidateQueries({ queryKey: ['criteriaTags'] });
 			queryClient.invalidateQueries({ queryKey: ['availableTags'] });
-			navigate(`/workspaces/${wsId}/criteria/${newCriterion.id}`);
+			queryClient.invalidateQueries({ queryKey: ['criterion', critId] });
+			navigate(`/workspaces/${wsId}/tasks/${tId}/criteria/${critId}`);
 		},
 		onError: (err) => {
 			const data = (err as { response?: { data: ErrorResponseDTO } }).response?.data;
-			setGeneralError(data?.message || 'Ошибка создания');
+			setGeneralError(data?.message || 'Ошибка обновления');
 		},
 	});
 
@@ -81,6 +110,7 @@ export function WorkspaceCriterionCreatePage() {
 			setDescriptionError('Описание не должно превышать 1000 символов');
 			return;
 		}
+
 		if (!prompt.trim()) {
 			setPromptError('Промпт обязателен');
 			return;
@@ -91,15 +121,39 @@ export function WorkspaceCriterionCreatePage() {
 		mutation.mutate({
 			description: description.trim(),
 			prompt: prompt.trim(),
-			tags: tags.length > 0 ? tags : undefined,
+			tags: tags.length > 0 ? tags : [],
 			stage: selectedStage === '' ? undefined : (selectedStage as CriterionStage),
-			workspace_id: wsId,
+			task_id: tId,
 		});
 	};
 
+	if (isLoading) {
+		return (
+			<Center h={400}>
+				<Loader size="lg" />
+			</Center>
+		);
+	}
+
+	if (error) {
+		const err = error as { response?: { status: number } };
+		if (err.response?.status === 403) {
+			return (
+				<Alert color="red" icon={<IconAlertCircle size={16} />}>
+					Доступ запрещён
+				</Alert>
+			);
+		}
+		return (
+			<Alert color="red" icon={<IconAlertCircle size={16} />}>
+				Критерий не найден
+			</Alert>
+		);
+	}
+
 	return (
 		<Stack gap="lg" maw={600}>
-			<Title order={2}>Создать критерий</Title>
+			<Title order={2}>Редактировать критерий</Title>
 
 			{generalError && (
 				<Alert color="red" icon={<IconAlertCircle size={16} />}>
@@ -182,9 +236,12 @@ export function WorkspaceCriterionCreatePage() {
 
 					<Group>
 						<Button type="submit" loading={mutation.isPending}>
-							Создать
+							Сохранить
 						</Button>
-						<Button variant="subtle" onClick={() => navigate(`/workspaces/${wsId}`)}>
+						<Button
+							variant="subtle"
+							onClick={() => navigate(`/workspaces/${wsId}/tasks/${tId}/criteria/${critId}`)}
+						>
 							Отмена
 						</Button>
 					</Group>

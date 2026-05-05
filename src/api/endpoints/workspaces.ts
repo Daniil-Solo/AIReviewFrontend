@@ -13,6 +13,10 @@ import type {
 	SlugAvailabilityResponseDTO,
 	CriterionResponseDTO,
 	StudentGradesDTO,
+	CustomModelDTO,
+	CustomModelRequestCreateDTO,
+	CustomModelRequestUpdateDTO,
+	CustomModelWithAPIKeyDTO,
 } from '../../types';
 import { paramsSerialize } from '../utils';
 
@@ -65,6 +69,27 @@ export const updateMember = async (
 	const response = await api.patch<WorkspaceMemberResponseDTO>(
 		`/api/v1/workspaces/${workspaceId}/members/${memberId}`,
 		data
+	);
+	return response.data;
+};
+
+export const deleteMember = async (
+	workspaceId: number,
+	memberId: number
+): Promise<{ message: string }> => {
+	const response = await api.delete<{ message: string }>(
+		`/api/v1/workspaces/${workspaceId}/members/${memberId}`
+	);
+	return response.data;
+};
+
+export const transferOwnership = async (
+	workspaceId: number,
+	memberId: number
+): Promise<WorkspaceResponseDTO> => {
+	const response = await api.patch<WorkspaceResponseDTO>(
+		`/api/v1/workspaces/${workspaceId}/owner`,
+		{ member_id: memberId }
 	);
 	return response.data;
 };
@@ -160,5 +185,41 @@ export const downloadWorkspaceGradesCsv = async (
 		paramsSerializer: paramsSerialize,
 		responseType: 'blob',
 	});
+	return response.data;
+};
+
+export const getCustomModels = async (workspaceId: number): Promise<CustomModelDTO[]> => {
+	const response = await api.get<CustomModelDTO[]>(
+		`/api/v1/workspaces/${workspaceId}/custom-models`
+	);
+	return response.data;
+};
+
+export const createCustomModel = async (
+	workspaceId: number,
+	data: CustomModelRequestCreateDTO
+): Promise<CustomModelDTO> => {
+	const response = await api.post<CustomModelDTO>(
+		`/api/v1/workspaces/${workspaceId}/custom-models`,
+		data
+	);
+	return response.data;
+};
+
+export const updateCustomModel = async (
+	modelId: number,
+	data: CustomModelRequestUpdateDTO
+): Promise<CustomModelDTO> => {
+	const response = await api.put<CustomModelDTO>(`/api/v1/custom-models/${modelId}`, data);
+	return response.data;
+};
+
+export const deleteCustomModel = async (modelId: number): Promise<{ message: string }> => {
+	const response = await api.delete<{ message: string }>(`/api/v1/custom-models/${modelId}`);
+	return response.data;
+};
+
+export const getCustomModelById = async (modelId: number): Promise<CustomModelWithAPIKeyDTO> => {
+	const response = await api.get<CustomModelWithAPIKeyDTO>(`/api/v1/custom-models/${modelId}`);
 	return response.data;
 };

@@ -10,10 +10,12 @@ import {
 	Box,
 	PinInput,
 } from '@mantine/core';
+import { useQueryClient } from '@tanstack/react-query';
 import { useInterval } from '@mantine/hooks';
 import type { FormEvent } from 'react';
-import { registerStart, registerConfirm } from '../../api/endpoints/auth';
+import { registerStart, registerConfirm, register } from '../../api/endpoints/auth';
 import { useRegisterStore } from '../../store/register';
+import { useAppSettingsStore } from '../../store/appSettings';
 
 const PASSWORD_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 const TIMER_DURATION = 60;
@@ -22,7 +24,9 @@ export function Register() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const redirect = searchParams.get('redirect');
+	const queryClient = useQueryClient();
 	const { step, fullname, email, password, setStep, setCredentials, reset } = useRegisterStore();
+	const emailConfirmationEnabled = useAppSettingsStore((state) => state.emailConfirmationEnabled);
 
 	const [formFullname, setFormFullname] = useState(fullname);
 	const [formEmail, setFormEmail] = useState(email);
@@ -85,19 +89,31 @@ export function Register() {
 
 		setLoading(true);
 		try {
-			await registerStart({
-				fullname: formFullname,
-				email: formEmail,
-				password: formPassword,
-			});
-			setCredentials({
-				fullname: formFullname,
-				email: formEmail,
-				password: formPassword,
-			});
-			setStep(2);
-			setTimer(TIMER_DURATION);
-			setResendReady(false);
+			if (emailConfirmationEnabled) {
+				await registerStart({
+					fullname: formFullname,
+					email: formEmail,
+					password: formPassword,
+				});
+				setCredentials({
+					fullname: formFullname,
+					email: formEmail,
+					password: formPassword,
+				});
+				setStep(2);
+				setTimer(TIMER_DURATION);
+				setResendReady(false);
+			} else {
+				const response = await register({
+					fullname: formFullname,
+					email: formEmail,
+					password: formPassword,
+				});
+				localStorage.setItem('token', response.access_token);
+				queryClient.invalidateQueries();
+				const target = redirect || '/home';
+				navigate(target, { replace: true });
+			}
 		} catch (error: unknown) {
 			const err = error as { response?: { data?: { message?: string } } };
 			const message = err.response?.data?.message || 'Ошибка регистрации';
@@ -143,6 +159,7 @@ export function Register() {
 				code,
 			});
 			localStorage.setItem('token', response.access_token);
+			queryClient.invalidateQueries();
 			const target = redirect || '/home';
 			navigate(target, { replace: true });
 		} catch (error: unknown) {

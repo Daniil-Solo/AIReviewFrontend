@@ -19,6 +19,7 @@ import {
 import { IconUpload, IconLink, IconSend, IconGitBranch } from '@tabler/icons-react';
 import { createSolution } from '../../api/endpoints/solutions';
 import { getTask } from '../../api/endpoints/tasks';
+import type { ErrorResponseDTO } from '../../types';
 
 export function SolutionCreatePage() {
 	const { workspaceId, taskId } = useParams<{
@@ -147,7 +148,9 @@ export function SolutionCreatePage() {
 
 						{createMutation.error && (
 							<Alert color="red">
-								{(createMutation.error as Error).message || 'Ошибка при отправке решения'}
+								{((createMutation.error as any).response?.data as ErrorResponseDTO)?.message ||
+									((createMutation.error as any).data as ErrorResponseDTO)?.message ||
+									'Ошибка при отправке решения'}
 							</Alert>
 						)}
 

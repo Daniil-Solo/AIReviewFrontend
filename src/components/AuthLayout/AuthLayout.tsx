@@ -17,11 +17,11 @@ export function AuthLayout() {
 	return (
 		<Box className={styles.wrapper}>
 			<Container size={440} className={styles.container}>
-				<Box className={styles.content}>
-					<Outlet />
-				</Box>
 				<Box className={styles.footer}>
 					<Logo />
+				</Box>
+				<Box className={styles.content}>
+					<Outlet />
 				</Box>
 			</Container>
 		</Box>

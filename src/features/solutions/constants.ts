@@ -11,9 +11,9 @@ export const statusLabels: Record<SolutionStatusEnum, string> = {
 	CREATED: 'Создано',
 	CANCELLED: 'Отменено',
 	ERROR: 'Ошибка',
-	AI_REVIEW: 'На AI-проверке',
-	WAITING_EXAM: 'Ожидает экзамен',
-	EXAMINATION: 'Экзамен',
+	PROJECT_GENERATION: 'Генерация ProjectDoc',
+	VALIDATION_WAITING: 'Ожидает валидации ProjectDoc',
+	CRITERIA_GRADING: 'На проверке по критериям',
 	HUMAN_REVIEW: 'Ожидает вердикта преподавателя',
 	REVIEWED: 'Проверено',
 };
@@ -30,8 +30,10 @@ export const stepLabels: Record<PipelineStepEnum, string> = {
 	critic: 'Критика документации',
 	resolve_gaps: 'Правки документации по замечаниям из критики',
 	improve_doc: 'Документация проекта (улучшенная версия)',
+	validate_project_doc: 'Документация проекта (провалидированная студентом)',
 	grade_by_codebase: 'Проверка критериев по коду',
 	grade_by_project_doc: 'Проверка критериев по ProjectDoc',
+	generate_feedback: 'Последняя сгенерированная обратная связь',
 };
 
 export const stepProcessLabels: Record<PipelineStepEnum, string> = {
@@ -41,8 +43,10 @@ export const stepProcessLabels: Record<PipelineStepEnum, string> = {
 	critic: 'Критика ProjectDoc',
 	resolve_gaps: 'Создание правок ProjectDoc по критике',
 	improve_doc: 'Улучшение ProjectDoc',
+	validate_project_doc: 'Валидация ProjectDoc студентом',
 	grade_by_codebase: 'Проверка критериев по коду',
 	grade_by_project_doc: 'Проверка критериев по ProjectDoc',
+	generate_feedback: 'Генерация обратной связи',
 };
 
 export const checkStatusLabels: Record<CriterionCheckStatusEnum, string> = {
@@ -79,8 +83,24 @@ export const getCriterionCurrentStatus = (criterion: GradingCriterionDTO): strin
 export const getCriterionColor = (criterion: GradingCriterionDTO): string => {
 	if (criterion.checks.length === 0) return 'yellow';
 	const lastCheck = criterion.checks[criterion.checks.length - 1];
-	if (lastCheck.is_passed === null) {
+	if (lastCheck.status === 'NOT_APPLICABLE') {
+		return 'gray';
+	} else if (lastCheck.is_passed === null) {
 		return 'yellow';
 	}
 	return lastCheck.is_passed ? 'green' : 'red';
+};
+
+export const calculateProgress = (status: SolutionStatusEnum): number => {
+	const progressMap: Record<SolutionStatusEnum, number> = {
+		CREATED: 0,
+		PROJECT_GENERATION: 0,
+		VALIDATION_WAITING: 25,
+		CRITERIA_GRADING: 50,
+		HUMAN_REVIEW: 75,
+		REVIEWED: 100,
+		CANCELLED: 0,
+		ERROR: 0,
+	};
+	return progressMap[status] ?? 0;
 };

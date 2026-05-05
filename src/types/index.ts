@@ -23,7 +23,8 @@ export interface SuccessOperationDTO {
 }
 
 export interface JWTPayload {
-	sub: number;
+	id: number;
+	sub: string;
 	email: string;
 	fullname: string;
 	is_admin: boolean;
@@ -114,6 +115,7 @@ export type CriterionStage = 'PROJECT_DOC' | 'CODEBASE' | 'MANUAL' | null;
 
 export interface CriterionCreateDTO {
 	description: string;
+	prompt?: string;
 	tags?: string[];
 	stage?: CriterionStage;
 	workspace_id?: number;
@@ -122,7 +124,8 @@ export interface CriterionCreateDTO {
 
 export interface CriterionUpdateDTO {
 	description?: string;
-	tags?: string[];
+	prompt: string;
+	tags: string[];
 	stage?: CriterionStage;
 	workspace_id?: number;
 	task_id?: number;
@@ -131,6 +134,7 @@ export interface CriterionUpdateDTO {
 export interface CriterionResponseDTO {
 	id: number;
 	description: string;
+	prompt: string;
 	tags: string[];
 	stage: CriterionStage;
 	is_public: boolean;
@@ -190,9 +194,9 @@ export type SolutionStatusEnum =
 	| 'CREATED'
 	| 'CANCELLED'
 	| 'ERROR'
-	| 'AI_REVIEW'
-	| 'WAITING_EXAM'
-	| 'EXAMINATION'
+	| 'PROJECT_GENERATION'
+	| 'VALIDATION_WAITING'
+	| 'CRITERIA_GRADING'
 	| 'HUMAN_REVIEW'
 	| 'REVIEWED';
 
@@ -203,8 +207,10 @@ export type PipelineStepEnum =
 	| 'critic'
 	| 'resolve_gaps'
 	| 'improve_doc'
+	| 'validate_project_doc'
 	| 'grade_by_codebase'
-	| 'grade_by_project_doc';
+	| 'grade_by_project_doc'
+	| 'generate_feedback';
 
 export type PipelineTaskStatusEnum = 'pending' | 'running' | 'completed' | 'failed';
 
@@ -226,6 +232,7 @@ export interface SolutionShortResponseDTO {
 	human_grade: number | null;
 	human_feedback: string | null;
 	ai_feedback: string | null;
+	label: string | null;
 	created_at: string;
 	created_by: number;
 	author: SolutionAuthorDTO;
@@ -320,4 +327,66 @@ export interface TaskGradeDTO {
 export interface StudentGradesDTO {
 	user: ShortUserDTO;
 	tasks: TaskGradeDTO[];
+}
+
+export interface CustomModelDTO {
+	id: number;
+	workspace_id: number;
+	name: string;
+	model: string;
+	base_url: string;
+	encrypted_api_key: string;
+	created_by: number;
+	created_at: string;
+}
+
+export interface CustomModelRequestCreateDTO {
+	name: string;
+	model: string;
+	base_url: string;
+	api_key: string;
+}
+
+export interface CustomModelRequestUpdateDTO {
+	name: string;
+	model: string;
+	base_url: string;
+	api_key: string;
+}
+
+export interface CustomModelWithAPIKeyDTO {
+	id: number;
+	workspace_id: number;
+	name: string;
+	model: string;
+	base_url: string;
+	api_key: string;
+	created_by: number;
+	created_at: string;
+}
+
+export interface TaskStepsModelDTO {
+	task_id: number;
+	steps: Record<string, number | null>;
+	created_at: string;
+}
+
+export interface TaskStepsModelRequestCreateDTO {
+	steps: Record<string, number | null>;
+}
+
+export interface WindRosePointDTO {
+	tag: string;
+	value: number;
+	count: number;
+}
+
+export interface SolutionScoreDTO {
+	score: number;
+	total_criteria: number;
+	passed_criteria: number;
+}
+
+export interface AppSettingsResponseDTO {
+	email_confirmation_enabled: boolean;
 }

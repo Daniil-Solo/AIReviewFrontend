@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -17,7 +17,12 @@ import {
 	Modal,
 	Menu,
 	SimpleGrid,
+	FileInput,
+	Code,
+	ActionIcon,
+	Tooltip,
 } from '@mantine/core';
+import { useModals } from '@mantine/modals';
 import {
 	IconAlertCircle,
 	IconEdit,
@@ -25,27 +30,33 @@ import {
 	IconUsers,
 	IconInfoCircle,
 	IconDotsVertical,
-	IconUserEdit,
 	IconLink,
 	IconBook,
 	IconFileDescription,
 	IconPlus,
 	IconChartBar,
+	IconBrain,
+	IconUpload,
+	IconCrown,
 } from '@tabler/icons-react';
 import {
 	getWorkspace,
 	getWorkspaceMembers,
 	deleteWorkspace,
 	updateMember,
+	deleteMember,
+	transferOwnership,
 	leaveWorkspace,
 	getProfileWorkspaces,
 	getWorkspaceCriteria,
 } from '../../api/endpoints/workspaces';
+import { importCriteria } from '../../api/endpoints/criteria';
 import { useProfileStore } from '../../store/profile';
 import { getUserData } from '../../lib/jwt';
 import { WorkspaceInvitesTab } from '../../components/WorkspaceInvitesTab/WorkspaceInvitesTab';
 import { WorkspaceTasksTab } from '../../components/WorkspaceTasksTab/WorkspaceTasksTab';
 import { WorkspaceGradesTab } from '../../components/WorkspaceGradesTab/WorkspaceGradesTab';
+import { WorkspaceModelsTab } from '../../components/WorkspaceModelsTab/WorkspaceModelsTab';
 import { CriterionCard } from '../../components/CriterionCard/CriterionCard';
 import type { WorkspaceMemberRole } from '../../types';
 
@@ -75,9 +86,11 @@ export function WorkspaceDetailPage() {
 	const canManageInvites = useProfileStore((state) => state.canManageInvites(workspaceId));
 	const getRole = useProfileStore((state) => state.getRole);
 	const currentRole = getRole(workspaceId) ?? 'STUDENT';
+	const profileStore = useProfileStore();
 
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [roleModalOpen, setRoleModalOpen] = useState(false);
+	const modals = useModals();
 	const [selectedMember, setSelectedMember] = useState<{
 		id: number;
 		userId: number;
@@ -87,6 +100,10 @@ export function WorkspaceDetailPage() {
 	} | null>(null);
 	const [newRole, setNewRole] = useState<string>('');
 	const [error, setError] = useState('');
+	const [importModalOpen, setImportModalOpen] = useState(false);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [importError, setImportError] = useState('');
+	const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
 	const { data: workspace, isLoading: wsLoading } = useQuery({
 		queryKey: ['workspace', workspaceId],
@@ -103,14 +120,45 @@ export function WorkspaceDetailPage() {
 		queryFn: () => getWorkspaceCriteria(workspaceId),
 	});
 
+	const uniqueTags = useMemo(() => {
+		const tags = criteria.flatMap((c) => c.tags);
+		return [...new Set(tags)].sort();
+	}, [criteria]);
+
 	const deleteMutation = useMutation({
 		mutationFn: () => deleteWorkspace(workspaceId),
 		onSuccess: () => {
+			profileStore.setWorkspaces(
+				profileStore.workspaces.filter((workspace) => workspace.workspaceId !== workspaceId)
+			);
 			navigate('/home');
 		},
 		onError: (err: unknown) => {
 			const e = err as { response?: { data?: { message?: string } } };
 			setError(e.response?.data?.message || 'Ошибка архивации');
+		},
+	});
+
+	const deleteMemberMutation = useMutation({
+		mutationFn: (memberId: number) => deleteMember(workspaceId, memberId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['workspaceMembers', workspaceId] });
+		},
+		onError: (err: unknown) => {
+			const e = err as { response?: { data?: { message?: string } } };
+			setError(e.response?.data?.message || 'Не удалось удалить участника');
+		},
+	});
+
+	const transferOwnershipMutation = useMutation({
+		mutationFn: (memberId: number) => transferOwnership(workspaceId, memberId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] });
+			queryClient.invalidateQueries({ queryKey: ['workspaceMembers', workspaceId] });
+		},
+		onError: (err: unknown) => {
+			const e = err as { response?: { data?: { message?: string } } };
+			setError(e.response?.data?.message || 'Не удалось передать права владения');
 		},
 	});
 
@@ -139,6 +187,22 @@ export function WorkspaceDetailPage() {
 			updateMember(workspaceId, memberId, { role }),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['workspaceMembers', workspaceId] });
+		},
+	});
+
+	const importMutation = useMutation({
+		mutationFn: (file: File) => importCriteria(file, workspaceId, null),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['workspaceCriteria', workspaceId] });
+			setImportModalOpen(false);
+			setSelectedFile(null);
+			setImportError('');
+		},
+		onError: (err: unknown) => {
+			const message =
+				(err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+				'Ошибка при импорте критериев';
+			setImportError(message);
 		},
 	});
 
@@ -199,18 +263,27 @@ export function WorkspaceDetailPage() {
 					<Tabs.Tab value="main" leftSection={<IconInfoCircle size={16} />}>
 						Основное
 					</Tabs.Tab>
+					{canEdit && (
+						<Tabs.Tab value="models" leftSection={<IconBrain size={16} />}>
+							Модели
+						</Tabs.Tab>
+					)}
 					<Tabs.Tab value="tasks" leftSection={<IconBook size={16} />}>
 						Задачи
 					</Tabs.Tab>
-					<Tabs.Tab value="grades" leftSection={<IconChartBar size={16} />}>
-						Успеваемость
-					</Tabs.Tab>
-					<Tabs.Tab value="criteria" leftSection={<IconFileDescription size={16} />}>
-						Критерии
-					</Tabs.Tab>
+					{(currentRole === 'OWNER' || currentRole === 'TEACHER') && (
+						<Tabs.Tab value="criteria" leftSection={<IconFileDescription size={16} />}>
+							Критерии
+						</Tabs.Tab>
+					)}
 					<Tabs.Tab value="members" leftSection={<IconUsers size={16} />}>
 						Участники
 					</Tabs.Tab>
+					{(currentRole === 'OWNER' || currentRole === 'TEACHER') && (
+						<Tabs.Tab value="grades" leftSection={<IconChartBar size={16} />}>
+							Успеваемость
+						</Tabs.Tab>
+					)}
 					{canManageInvites && (
 						<Tabs.Tab value="invites" leftSection={<IconLink size={16} />}>
 							Приглашения
@@ -220,10 +293,14 @@ export function WorkspaceDetailPage() {
 
 				<Tabs.Panel value="main" pt="md">
 					<Stack gap="md">
-						<Text size="sm" c="dimmed">
-							Описание
-						</Text>
-						<Text>{workspace.description || 'Описание не указано'}</Text>
+						<Stack gap={0}>
+							<Text size="sm" c="dimmed">
+								Описание
+							</Text>
+							<Text style={{ whiteSpace: 'pre-line' }}>
+								{workspace.description || 'Описание не указано'}
+							</Text>
+						</Stack>
 						<Text size="sm" c="dimmed">
 							Создано {new Date(workspace.created_at).toLocaleDateString('ru-RU')}
 						</Text>
@@ -268,26 +345,77 @@ export function WorkspaceDetailPage() {
 										</Badge>
 									</Table.Td>
 									<Table.Td>
-										{canChangeMemberRoles && member.user_id !== currentUserId && (
-											<Button
-												size="xs"
-												variant="light"
-												leftSection={<IconUserEdit size={14} />}
-												onClick={() => {
-													setSelectedMember({
-														id: member.id,
-														userId: member.user_id,
-														fullname: member.fullname,
-														email: member.email,
-														role: member.role,
-													});
-													setNewRole('TEACHER');
-													setRoleModalOpen(true);
-												}}
-											>
-												Изменить
-											</Button>
-										)}
+										<Group gap="xs">
+											{canChangeMemberRoles && member.user_id !== currentUserId && (
+												<>
+													<Tooltip label="Изменить роль">
+														<ActionIcon
+															variant="subtle"
+															onClick={() => {
+																setSelectedMember({
+																	id: member.id,
+																	userId: member.user_id,
+																	fullname: member.fullname,
+																	email: member.email,
+																	role: member.role,
+																});
+																setNewRole('TEACHER');
+																setRoleModalOpen(true);
+															}}
+														>
+															<IconEdit size={16} />
+														</ActionIcon>
+													</Tooltip>
+													<Tooltip label="Удалить участника">
+														<ActionIcon
+															variant="subtle"
+															color="red"
+															onClick={() => {
+																modals.openConfirmModal({
+																	title: 'Удалить участника?',
+																	children: (
+																		<Text>
+																			Вы уверены, что хотите удалить участника {member.fullname} (
+																			{member.email})?
+																		</Text>
+																	),
+																	labels: { cancel: 'Отмена', confirm: 'Удалить' },
+																	confirmProps: { color: 'red' },
+																	onConfirm: () => deleteMemberMutation.mutate(member.id),
+																});
+															}}
+														>
+															<IconTrash size={16} />
+														</ActionIcon>
+													</Tooltip>
+												</>
+											)}
+											{currentRole === 'OWNER' && member.user_id !== currentUserId && (
+												<Tooltip label="Передать права владельца">
+													<ActionIcon
+														variant="subtle"
+														color="yellow"
+														onClick={() => {
+															modals.openConfirmModal({
+																title: 'Передать права владельца?',
+																children: (
+																	<Text>
+																		Вы уверены, что хотите передать права владения пространством
+																		пользователю {member.fullname} ({member.email})? Вы потеряете
+																		права владельца и станете преподавателем.
+																	</Text>
+																),
+																labels: { cancel: 'Отмена', confirm: 'Передать' },
+																confirmProps: { color: 'yellow' },
+																onConfirm: () => transferOwnershipMutation.mutate(member.id),
+															});
+														}}
+													>
+														<IconCrown size={16} />
+													</ActionIcon>
+												</Tooltip>
+											)}
+										</Group>
 									</Table.Td>
 								</Table.Tr>
 							))}
@@ -305,12 +433,23 @@ export function WorkspaceDetailPage() {
 
 				<Tabs.Panel value="criteria" pt="md">
 					<Group justify="space-between" mb="md">
-						<Button
-							leftSection={<IconPlus size={16} />}
-							onClick={() => navigate(`/workspaces/${workspaceId}/criteria/new`)}
-						>
-							Создать критерий
-						</Button>
+						<Group>
+							<Button
+								leftSection={<IconPlus size={16} />}
+								onClick={() => navigate(`/workspaces/${workspaceId}/criteria/new`)}
+							>
+								Создать критерий
+							</Button>
+							{canEdit && (
+								<Button
+									variant="outline"
+									leftSection={<IconUpload size={16} />}
+									onClick={() => setImportModalOpen(true)}
+								>
+									Загрузить критерии
+								</Button>
+							)}
+						</Group>
 					</Group>
 					{criteriaLoading ? (
 						<Center h={200}>
@@ -319,15 +458,46 @@ export function WorkspaceDetailPage() {
 					) : criteria.length === 0 ? (
 						<Text c="dimmed">Критерии не найдены</Text>
 					) : (
-						<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-							{criteria.map((criterion) => (
-								<CriterionCard
-									key={criterion.id}
-									criterion={criterion}
-									onClick={() => navigate(`/workspaces/${workspaceId}/criteria/${criterion.id}`)}
-								/>
-							))}
-						</SimpleGrid>
+						<>
+							{uniqueTags.length > 0 && (
+								<Group gap="xs" mb="md">
+									<Tooltip label="Нажмите для фильтрации">
+										<Badge
+											variant={selectedTag === null ? 'filled' : 'outline'}
+											size="sm"
+											style={{ cursor: 'pointer' }}
+											onClick={() => setSelectedTag(null)}
+										>
+											All
+										</Badge>
+									</Tooltip>
+									{uniqueTags.map((tag) => (
+										<Tooltip key={tag} label="Нажмите для фильтрации">
+											<Badge
+												variant={selectedTag === tag ? 'filled' : 'outline'}
+												size="sm"
+												style={{ cursor: 'pointer' }}
+												onClick={() => setSelectedTag(tag)}
+											>
+												{tag}
+											</Badge>
+										</Tooltip>
+									))}
+								</Group>
+							)}
+							<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+								{(selectedTag
+									? criteria.filter((c) => c.tags.includes(selectedTag))
+									: criteria
+								).map((criterion) => (
+									<CriterionCard
+										key={criterion.id}
+										criterion={criterion}
+										onClick={() => navigate(`/workspaces/${workspaceId}/criteria/${criterion.id}`)}
+									/>
+								))}
+							</SimpleGrid>
+						</>
 					)}
 				</Tabs.Panel>
 
@@ -336,12 +506,18 @@ export function WorkspaceDetailPage() {
 						<WorkspaceInvitesTab workspaceId={workspaceId} />
 					</Tabs.Panel>
 				)}
+
+				{canEdit && (
+					<Tabs.Panel value="models" pt="md">
+						<WorkspaceModelsTab workspaceId={workspaceId} />
+					</Tabs.Panel>
+				)}
 			</Tabs>
 
 			<Modal
 				opened={deleteModalOpen}
 				onClose={() => setDeleteModalOpen(false)}
-				title="Архивировать пространство"
+				title="Архивация пространства"
 			>
 				<Text>Вы уверены, что хотите архивировать пространство "{workspace.name}"?</Text>
 				<Group justify="flex-end" mt="lg">
@@ -412,6 +588,76 @@ export function WorkspaceDetailPage() {
 						</Group>
 					</Stack>
 				)}
+			</Modal>
+
+			<Modal
+				opened={importModalOpen}
+				onClose={() => {
+					setImportModalOpen(false);
+					setSelectedFile(null);
+				}}
+				title="Импорт критериев"
+				size="lg"
+			>
+				<Stack gap="md">
+					<Text size="sm">Загрузите файл в формате JSON со списком критериев.</Text>
+
+					<Stack gap="xs">
+						<Text size="sm" fw={500}>
+							Формат JSON:
+						</Text>
+						<Code block>{`[
+  {
+    "description": "Описание критерия",
+    "prompt": "Промпт для проверки критерия (необязательно)",
+    "stage": "CODEBASE",
+    "tags": ["architecture", "backend"]
+  }
+]`}</Code>
+					</Stack>
+
+					<FileInput
+						label="Файл"
+						placeholder="Выберите файл"
+						accept="application/json"
+						value={selectedFile}
+						onChange={(file) => {
+							setSelectedFile(file);
+							setImportError('');
+						}}
+						clearable
+					/>
+
+					{importError && (
+						<Alert
+							color="red"
+							icon={<IconAlertCircle size={16} />}
+							withCloseButton
+							onClose={() => setImportError('')}
+						>
+							{importError}
+						</Alert>
+					)}
+
+					<Group justify="flex-end">
+						<Button
+							variant="subtle"
+							onClick={() => {
+								setImportModalOpen(false);
+								setSelectedFile(null);
+							}}
+						>
+							Отмена
+						</Button>
+						<Button
+							onClick={() => selectedFile && importMutation.mutate(selectedFile)}
+							loading={importMutation.isPending}
+							disabled={!selectedFile}
+						>
+							Загрузить
+						</Button>
+					</Group>
+				</Stack>
 			</Modal>
 		</Stack>
 	);
