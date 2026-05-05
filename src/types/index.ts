@@ -209,7 +209,8 @@ export type PipelineStepEnum =
 	| 'improve_doc'
 	| 'validate_project_doc'
 	| 'grade_by_codebase'
-	| 'grade_by_project_doc';
+	| 'grade_by_project_doc'
+	| 'generate_feedback';
 
 export type PipelineTaskStatusEnum = 'pending' | 'running' | 'completed' | 'failed';
 
@@ -231,6 +232,7 @@ export interface SolutionShortResponseDTO {
 	human_grade: number | null;
 	human_feedback: string | null;
 	ai_feedback: string | null;
+	label: string | null;
 	created_at: string;
 	created_by: number;
 	author: SolutionAuthorDTO;

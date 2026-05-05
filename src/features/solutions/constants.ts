@@ -33,6 +33,7 @@ export const stepLabels: Record<PipelineStepEnum, string> = {
 	validate_project_doc: 'Документация проекта (провалидированная студентом)',
 	grade_by_codebase: 'Проверка критериев по коду',
 	grade_by_project_doc: 'Проверка критериев по ProjectDoc',
+	generate_feedback: 'Последняя сгенерированная обратная связь',
 };
 
 export const stepProcessLabels: Record<PipelineStepEnum, string> = {
@@ -45,6 +46,7 @@ export const stepProcessLabels: Record<PipelineStepEnum, string> = {
 	validate_project_doc: 'Валидация ProjectDoc студентом',
 	grade_by_codebase: 'Проверка критериев по коду',
 	grade_by_project_doc: 'Проверка критериев по ProjectDoc',
+	generate_feedback: 'Генерация обратной связи',
 };
 
 export const checkStatusLabels: Record<CriterionCheckStatusEnum, string> = {

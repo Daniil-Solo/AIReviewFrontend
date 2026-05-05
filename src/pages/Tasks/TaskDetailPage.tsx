@@ -638,6 +638,8 @@ function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th>ID</Table.Th>
+							<Table.Th>Метка</Table.Th>
+							<Table.Th>Оценка</Table.Th>
 							<Table.Th>Формат</Table.Th>
 							<Table.Th>Статус</Table.Th>
 							<Table.Th>Автор</Table.Th>
@@ -656,6 +658,16 @@ function TaskSolutionsTab({ taskId, workspaceId }: { taskId: number; workspaceId
 							return (
 								<Table.Tr key={solution.id}>
 									<Table.Td>{solution.id}</Table.Td>
+									<Table.Td>
+										<Text size="sm">{solution.label || '-'}</Text>
+									</Table.Td>
+									<Table.Td>
+										{solution.human_grade !== null && (
+											<Text size="sm" fw={500}>
+												{solution.human_grade}
+											</Text>
+										)}
+									</Table.Td>
 									<Table.Td>
 										<Badge variant="outline" color="gray" size="sm">
 											{formatLabels[solution.format]}

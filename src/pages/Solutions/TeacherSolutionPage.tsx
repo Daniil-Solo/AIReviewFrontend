@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useClipboard } from '@mantine/hooks';
 import {
 	Stack,
 	Title,
@@ -20,6 +21,8 @@ import {
 	Collapse,
 	Box,
 	NumberInput,
+	TextInput,
+	Anchor,
 } from '@mantine/core';
 import {
 	IconArrowLeft,
@@ -34,6 +37,9 @@ import {
 	IconX,
 	IconPlus,
 	IconSparkles,
+	IconCopy,
+	IconDownload,
+	IconEdit,
 } from '@tabler/icons-react';
 import {
 	getSolutionInfo,
@@ -45,6 +51,8 @@ import {
 	submitFinalReview,
 	getSolutionScore,
 	generateAiFeedback,
+	updateSolutionLabel,
+	approveSolution,
 } from '../../api/endpoints/solutions';
 import type {
 	SolutionShortResponseDTO,
@@ -63,6 +71,7 @@ import {
 	calculateProgress,
 } from '../../features/solutions/constants';
 import { formatRelativeTime } from '../../lib/date';
+import { useDebounce } from '../../lib/debounce';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer/MarkdownRenderer';
 import { MermaidGantt } from '../../components/MermaidGantt/MermaidGantt';
 import { SolutionWindRoseChart } from '../../components/SolutionWindRoseChart/SolutionWindRoseChart';
@@ -134,6 +143,61 @@ function ManualCheckModal({
 	);
 }
 
+interface LabelEditModalProps {
+	opened: boolean;
+	currentLabel: string | null;
+	onClose: () => void;
+	onSubmit: (label: string) => void;
+	isPending: boolean;
+}
+
+function LabelEditModal({
+	opened,
+	currentLabel,
+	onClose,
+	onSubmit,
+	isPending,
+}: LabelEditModalProps) {
+	const [label, setLabel] = useState(currentLabel ?? '');
+
+	const handleSubmit = () => {
+		onSubmit(label);
+		onClose();
+	};
+
+	const handleClose = () => {
+		setLabel('');
+		onClose();
+	};
+
+	return (
+		<Modal
+			opened={opened}
+			onClose={handleClose}
+			title="Изменить метку"
+			key={opened ? 'open' : 'closed'}
+		>
+			<Stack gap="md">
+				<TextInput
+					label="Метка"
+					placeholder="Введите метку для решения"
+					value={label}
+					onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLabel(e.currentTarget.value)}
+					defaultValue={currentLabel ?? ''}
+				/>
+				<Group justify="flex-end">
+					<Button variant="subtle" onClick={handleClose}>
+						Отмена
+					</Button>
+					<Button onClick={handleSubmit} loading={isPending}>
+						Сохранить
+					</Button>
+				</Group>
+			</Stack>
+		</Modal>
+	);
+}
+
 interface CriteriaCardProps {
 	gradingCriterion: GradingCriterionDTO;
 	isTeacher: boolean;
@@ -184,7 +248,9 @@ const CriteriaCard = memo(
 												<Text size="sm" c="dimmed">
 													Проверка № {idx + 1} ({getCriterionStageLabel(check.stage)})
 												</Text>
-												<Text size="sm">{check.comment}</Text>
+												<div>
+													<MarkdownRenderer content={check.comment} />
+												</div>
 												<Group gap="xs">
 													<Badge color="gray" variant="outline" size="sm">
 														{checkStatusLabels[check.status]}
@@ -393,6 +459,133 @@ export function CriteriaChecksPanel({ solutionId, isTeacher }: CriteriaChecksPan
 	);
 }
 
+function ProjectDocValidationTab({
+	solutionId,
+	onSuccess,
+}: {
+	solutionId: number;
+	onSuccess: () => void;
+}) {
+	const [isEditing, setIsEditing] = useState(false);
+	const [content, setContent] = useState('');
+	const queryClient = useQueryClient();
+
+	const debouncedContent = useDebounce(content, 500);
+
+	const {
+		data: artefact,
+		isSuccess,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ['solutionArtefact', solutionId, 'create_project_doc'],
+		queryFn: () => getSolutionArtefact(solutionId, 'create_project_doc'),
+	});
+
+	useEffect(() => {
+		if (isSuccess && artefact) {
+			setContent(artefact);
+		}
+	}, [artefact, isSuccess]);
+
+	const approveMutation = useMutation({
+		mutationFn: (file: string) => approveSolution(solutionId, file),
+		onSuccess: () => {
+			setIsEditing(false);
+			queryClient.invalidateQueries({ queryKey: ['solution', solutionId] });
+			onSuccess();
+		},
+	});
+
+	const handleEdit = () => {
+		setIsEditing(true);
+	};
+
+	const handleSave = () => {
+		setIsEditing(false);
+	};
+
+	const handleConfirm = () => {
+		approveMutation.mutate(content);
+	};
+
+	if (isLoading) {
+		return <Loader size="sm" />;
+	}
+
+	if (error) {
+		return <Alert color="red">Не удалось загрузить документацию проекта</Alert>;
+	}
+
+	return (
+		<Stack gap="md">
+			<Alert color="blue" variant="light">
+				Пожалуйста, проверьте ProjectDoc, отредактируйте при необходимости и подтвердите её
+				валидность
+			</Alert>
+
+			<Group>
+				{isEditing ? (
+					<>
+						<Button variant="outline" onClick={handleSave}>
+							Сохранить
+						</Button>
+						<Button
+							variant="subtle"
+							onClick={() => {
+								setIsEditing(false);
+							}}
+						>
+							Отмена
+						</Button>
+					</>
+				) : (
+					<>
+						<Button variant="outline" leftSection={<IconEdit size={16} />} onClick={handleEdit}>
+							Редактировать
+						</Button>
+						<Button
+							variant="outline"
+							color="green"
+							leftSection={<IconCheck size={16} />}
+							onClick={handleConfirm}
+							loading={approveMutation.isPending}
+						>
+							Подтвердить
+						</Button>
+					</>
+				)}
+			</Group>
+
+			{isEditing ? (
+				<Stack gap="md">
+					<Textarea
+						label="Редактирование документации"
+						value={content}
+						onChange={(e) => setContent(e.currentTarget.value)}
+						minRows={10}
+						maxRows={20}
+						autosize
+						styles={{ input: { fontFamily: 'monospace' } }}
+					/>
+					{content && (
+						<Card withBorder>
+							<Text size="sm" fw={500} mb="sm">
+								Предпросмотр:
+							</Text>
+							<MarkdownRenderer content={debouncedContent} />
+						</Card>
+					)}
+				</Stack>
+			) : (
+				<Card withBorder>
+					<MarkdownRenderer content={content} />
+				</Card>
+			)}
+		</Stack>
+	);
+}
+
 export function TeacherSolutionPage({
 	solution,
 	workspaceId,
@@ -429,6 +622,9 @@ export function TeacherSolutionPage({
 				<Tabs.List>
 					<Tabs.Tab value="main">Основное</Tabs.Tab>
 					<Tabs.Tab value="artefacts">Артефакты решения</Tabs.Tab>
+					{solution.status === 'VALIDATION_WAITING' && (
+						<Tabs.Tab value="validation">Валидация ProjectDoc</Tabs.Tab>
+					)}
 					<Tabs.Tab value="criteria">Проверка по критериям</Tabs.Tab>
 					<Tabs.Tab value="final-review">Финальный вердикт</Tabs.Tab>
 				</Tabs.List>
@@ -446,6 +642,15 @@ export function TeacherSolutionPage({
 						<SolutionCriteriaTab solutionId={solution.id} isTeacher={isTeacher} />
 					)}
 				</Tabs.Panel>
+
+				{solution.status === 'VALIDATION_WAITING' && (
+					<Tabs.Panel value="validation" pt="md">
+						<ProjectDocValidationTab
+							solutionId={solution.id}
+							onSuccess={() => setActiveTab('main')}
+						/>
+					</Tabs.Panel>
+				)}
 
 				<Tabs.Panel value="final-review" pt="md">
 					{visitedTabs.has('final-review') && (
@@ -467,6 +672,7 @@ export function SolutionMainTab({
 	const queryClient = useQueryClient();
 	const progress = calculateProgress(solution.status);
 	const canCancel = isTeacher && !['REVIEWED', 'ERROR'].includes(solution.status);
+	const [labelModalOpened, setLabelModalOpened] = useState(false);
 
 	const { data: pipelineInfo, isLoading: isLoadingInfo } = useQuery({
 		queryKey: ['solutionInfo', solution.id],
@@ -488,6 +694,13 @@ export function SolutionMainTab({
 			queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
 			queryClient.invalidateQueries({ queryKey: ['solutionInfo', solution.id] });
 			queryClient.invalidateQueries({ queryKey: ['solutionArtefact', solution.id] });
+		},
+	});
+
+	const updateLabelMutation = useMutation({
+		mutationFn: (label: string) => updateSolutionLabel(solution.id, label),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
 		},
 	});
 
@@ -516,6 +729,14 @@ export function SolutionMainTab({
 								<Text size="sm">{Math.round(progress)}%</Text>
 							</Stack>
 						</Group>
+						{solution.label && (
+							<Group gap="xs">
+								<Text size="xs" c="dimmed">
+									Метка
+								</Text>
+								<Text size="sm">{solution.label}</Text>
+							</Group>
+						)}
 					</Stack>
 				</Card>
 
@@ -555,9 +776,9 @@ export function SolutionMainTab({
 									<Text size="xs" c="dimmed">
 										Ссылка
 									</Text>
-									<Text component="a" href={solution.github_repo_link} target="_blank" size="sm">
+									<Anchor href={solution.github_repo_link} target="_blank" size="sm">
 										Открыть
-									</Text>
+									</Anchor>
 								</Stack>
 							)}
 						</Group>
@@ -614,6 +835,11 @@ export function SolutionMainTab({
 										Отменить
 									</Button>
 								)}
+								{isTeacher && (
+									<Button variant="light" onClick={() => setLabelModalOpened(true)}>
+										Изменить метку
+									</Button>
+								)}
 							</Group>
 						</Stack>
 					</Card>
@@ -632,6 +858,14 @@ export function SolutionMainTab({
 					</Stack>
 				</Card>
 			)}
+
+			<LabelEditModal
+				opened={labelModalOpened}
+				currentLabel={solution.label}
+				onClose={() => setLabelModalOpened(false)}
+				onSubmit={(label) => updateLabelMutation.mutate(label)}
+				isPending={updateLabelMutation.isPending}
+			/>
 		</Stack>
 	);
 }
@@ -765,7 +999,6 @@ export function SolutionFinalReviewTab({
 							onChange={(e) => setHumanFeedback(e.currentTarget.value)}
 							autosize
 							minRows={6}
-							maxRows={12}
 						/>
 						<Group>
 							<Button
@@ -858,6 +1091,7 @@ interface ArtefactCollapseProps {
 }
 
 function ArtefactCollapse({ step, solutionId, isOpen, onToggle }: ArtefactCollapseProps) {
+	const clipboard = useClipboard({ timeout: 2000 });
 	const {
 		data: content,
 		isLoading,
@@ -868,6 +1102,19 @@ function ArtefactCollapse({ step, solutionId, isOpen, onToggle }: ArtefactCollap
 		queryFn: () => getSolutionArtefact(solutionId, step),
 		enabled: isOpen,
 	});
+
+	const handleDownload = () => {
+		if (!content) return;
+		const blob = new Blob([content], { type: 'text/markdown' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${step}.md`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	};
 
 	return (
 		<div style={{ border: '1px solid #eee', borderRadius: 8, overflow: 'hidden' }}>
@@ -886,11 +1133,31 @@ function ArtefactCollapse({ step, solutionId, isOpen, onToggle }: ArtefactCollap
 					{isLoading ? (
 						<Loader size="sm" />
 					) : content ? (
-						step === 'prepare_project_tree' || step === 'prepare_project_content' ? (
-							<Text style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{content}</Text>
-						) : (
-							<MarkdownRenderer content={content} />
-						)
+						<>
+							<Group justify="flex-start" mb="sm">
+								<Button
+									variant="light"
+									size="xs"
+									leftSection={clipboard.copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+									onClick={() => clipboard.copy(content)}
+								>
+									{clipboard.copied ? 'Скопировано' : 'Скопировать'}
+								</Button>
+								<Button
+									variant="light"
+									size="xs"
+									leftSection={<IconDownload size={14} />}
+									onClick={handleDownload}
+								>
+									Скачать
+								</Button>
+							</Group>
+							{step === 'prepare_project_tree' || step === 'prepare_project_content' ? (
+								<Text style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{content}</Text>
+							) : (
+								<MarkdownRenderer content={content} />
+							)}
+						</>
 					) : isError && error ? (
 						<Alert color="red">
 							{(error as { response?: { data?: { message?: string } } })?.response?.data?.message ||

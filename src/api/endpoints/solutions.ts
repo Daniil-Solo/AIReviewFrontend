@@ -142,3 +142,14 @@ export const generateAiFeedback = async (solutionId: number): Promise<string> =>
 	const response = await api.post<string>(`/api/v1/solutions/${solutionId}/ai-feedback`);
 	return response.data;
 };
+
+export const updateSolutionLabel = async (
+	solutionId: number,
+	label: string
+): Promise<SolutionShortResponseDTO> => {
+	const response = await api.patch<SolutionShortResponseDTO>(
+		`/api/v1/solutions/${solutionId}/label`,
+		{ label }
+	);
+	return response.data;
+};
