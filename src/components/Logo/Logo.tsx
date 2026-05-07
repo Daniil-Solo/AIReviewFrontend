@@ -11,7 +11,7 @@ export function Logo() {
 			<ThemeIcon size="lg" variant="gradient" gradient={{ from: 'blue', to: 'cyan', deg: 45 }}>
 				<IconBrain size={18} />
 			</ThemeIcon>
-			<Text className={styles.text}>AI Review</Text>
+			<Text className={styles.text}>AI Grading</Text>
 		</Group>
 	);
 }

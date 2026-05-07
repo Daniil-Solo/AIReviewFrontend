@@ -552,10 +552,6 @@ function CriterionCard({
 								<Menu.Item leftSection={<IconEdit size={14} />} onClick={() => setEditing(true)}>
 									Изменить вес
 								</Menu.Item>
-								<Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
-									Удалить
-								</Menu.Item>
-
 								<Anchor
 									href={
 										tc.criterion.workspace_id !== null
@@ -571,6 +567,9 @@ function CriterionCard({
 										Перейти
 									</Menu.Item>
 								</Anchor>
+								<Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+									Удалить
+								</Menu.Item>
 							</Menu.Dropdown>
 						</Menu>
 					)}

@@ -1,5 +1,5 @@
 import { Title, Text, Button, Group, Container, Box, Stack, ThemeIcon } from '@mantine/core';
-import { IconArrowRight, IconPlayerPlay, IconBrain } from '@tabler/icons-react';
+import { IconArrowRight, IconBook, IconBrain } from '@tabler/icons-react';
 import styles from './Hero.module.css';
 
 export function Hero() {
@@ -34,8 +34,15 @@ export function Hero() {
 							>
 								Начать бесплатно
 							</Button>
-							<Button size="xl" variant="outline" leftSection={<IconPlayerPlay size={20} />}>
-								Смотреть демо
+							<Button
+								size="xl"
+								variant="outline"
+								leftSection={<IconBook size={20} />}
+								component="a"
+								href="https://ai-llm-applications.gitbook.io/ai-grading"
+								target="_blank"
+							>
+								Документация
 							</Button>
 						</Group>
 					</Stack>

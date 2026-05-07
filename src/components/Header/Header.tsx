@@ -17,6 +17,7 @@ import {
 	IconUserPlus,
 	IconLogout,
 	IconHome,
+	IconBook,
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { getUserData, logout as logoutUtil } from '../../lib/jwt';
@@ -56,6 +57,16 @@ export function Header({ opened, onToggle }: HeaderProps) {
 					<ActionIcon variant="default" size="lg" onClick={toggleTheme} aria-label="Toggle theme">
 						{computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
 					</ActionIcon>
+					<ActionIcon
+						variant="default"
+						size="lg"
+						component="a"
+						href="https://ai-llm-applications.gitbook.io/ai-grading"
+						target="_blank"
+					>
+						<IconBook size={18} />
+					</ActionIcon>
+
 					{user ? (
 						<Menu shadow="md" width={200}>
 							<Menu.Target>

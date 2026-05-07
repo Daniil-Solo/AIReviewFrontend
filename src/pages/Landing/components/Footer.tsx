@@ -6,6 +6,7 @@ const navigation = [
 	{ label: 'Как это работает', href: '#how-it-works' },
 	{ label: 'Для кого', href: '#for-whom' },
 	{ label: 'Тарифы', href: '#pricing' },
+	{ label: 'Документация', href: 'https://ai-llm-applications.gitbook.io/ai-grading' },
 ];
 
 const legal = [
@@ -20,7 +21,7 @@ export function Footer() {
 				<SimpleGrid cols={{ base: 1, sm: 4 }} spacing="xl">
 					<Stack gap="xs">
 						<Text fw={700} size="lg">
-							AI Review
+							AI Grading
 						</Text>
 						<Text size="sm" c="dimmed">
 							Автоматическая проверка студенческих проектов с помощью ИИ
@@ -60,7 +61,7 @@ export function Footer() {
 				</SimpleGrid>
 
 				<Text size="xs" c="dimmed" ta="center" mt="xl">
-					© {new Date().getFullYear()} AI Review Platform. Все права защищены.
+					© {new Date().getFullYear()} AI Grading. Все права защищены.
 				</Text>
 			</Container>
 		</Box>

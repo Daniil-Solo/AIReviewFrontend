@@ -1,4 +1,4 @@
-import { Container, Title, Text, Card, Stack, Box, ThemeIcon } from '@mantine/core';
+import { Container, Title, Text, Card, Stack, Box, ThemeIcon, Flex } from '@mantine/core';
 import { IconSchool, IconUser, IconBuilding } from '@tabler/icons-react';
 import styles from './TargetAudience.module.css';
 
@@ -45,11 +45,13 @@ export function TargetAudience() {
 
 				<Box className={styles.cardsGrid}>
 					{cards.map((card, index) => (
-						<Card key={index} className={styles.audienceCard} padding="xl" radius="md">
-							<ThemeIcon size={48} radius="xl" variant="light" color={card.color} mb="md">
-								<card.icon size={24} />
-							</ThemeIcon>
-							<Text fw={700} size="lg" mb="md">
+						<Card key={index} className={styles.audienceCard} radius="md">
+							<Flex align={'center'} justify={'center'}>
+								<ThemeIcon size={48} radius="xl" variant="light" color={card.color} mb="md">
+									<card.icon size={24} />
+								</ThemeIcon>
+							</Flex>
+							<Text fw={700} size="lg" mb="md" ta={'center'} c="dimmed">
 								{card.title}
 							</Text>
 							<Stack gap="sm">

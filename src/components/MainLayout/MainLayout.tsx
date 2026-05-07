@@ -11,6 +11,7 @@ import {
 	IconMoon,
 	IconChecklist,
 	IconWallet,
+	IconBook,
 } from '@tabler/icons-react';
 import { getUserData, logout as logoutUtil } from '../../lib/jwt';
 import styles from './MainLayout.module.css';
@@ -84,6 +85,15 @@ export function MainLayout() {
 					</Stack>
 
 					<Stack gap="xs">
+						<NavLink
+							label={collapsed ? undefined : 'Документация'}
+							leftSection={<IconBook size={20} />}
+							component="a"
+							href="https://ai-llm-applications.gitbook.io/ai-grading"
+							target="_blank"
+							variant="light"
+							className={navLinkClass}
+						/>
 						<NavLink
 							label={collapsed ? undefined : 'Сменить тему'}
 							leftSection={
