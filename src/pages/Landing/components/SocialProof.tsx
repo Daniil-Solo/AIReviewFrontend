@@ -1,12 +1,5 @@
 import { Container, Title, Text, Card, Box, ThemeIcon, SimpleGrid } from '@mantine/core';
-import {
-	IconQuote,
-	IconUsers,
-	IconClock,
-	IconChecklist,
-	IconSchool,
-	IconRobot,
-} from '@tabler/icons-react';
+import { IconQuote, IconUsers, IconClock, IconSchool } from '@tabler/icons-react';
 import styles from './SocialProof.module.css';
 
 export function SocialProof() {

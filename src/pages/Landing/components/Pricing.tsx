@@ -1,15 +1,4 @@
-import {
-	Container,
-	Title,
-	Text,
-	SimpleGrid,
-	Card,
-	Button,
-	Box,
-	List,
-	ThemeIcon,
-	Flex,
-} from '@mantine/core';
+import { Container, Title, Text, Card, Button, Box, List, ThemeIcon, Flex } from '@mantine/core';
 import { IconCheck, IconArrowRight } from '@tabler/icons-react';
 import styles from './Pricing.module.css';
 
