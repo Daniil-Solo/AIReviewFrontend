@@ -52,10 +52,15 @@ export function Footer() {
 
 					<Stack gap="xs" align="flex-start">
 						<Text fw={600} size="sm">
-							Контакты
+							Поддержка
 						</Text>
-						<Anchor href="https://t.me" size="sm" c="dimmed" underline="hover">
-							<Text>Автор в Telegram</Text>
+						<Anchor
+							href="https://telegram.me/daniilsolovjev"
+							size="sm"
+							c="dimmed"
+							underline="hover"
+						>
+							<Text>Telegram</Text>
 						</Anchor>
 					</Stack>
 				</SimpleGrid>

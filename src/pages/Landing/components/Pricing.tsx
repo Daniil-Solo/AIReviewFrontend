@@ -8,6 +8,7 @@ import {
 	Box,
 	List,
 	ThemeIcon,
+	Flex,
 } from '@mantine/core';
 import { IconCheck, IconArrowRight } from '@tabler/icons-react';
 import styles from './Pricing.module.css';
@@ -17,28 +18,9 @@ const plans = [
 		title: 'Бесплатный старт',
 		price: '0 ₽',
 		description: 'Попробуйте платформу бесплатно',
-		features: [
-			'Бесплатно проверка 1 большого или 2 средних проектов',
-			'Все функции доступны',
-			'Базовая аналитика',
-			'Поддержка GitHub',
-		],
+		features: ['Все функции доступны'],
 		cta: 'Начать бесплатно',
 		highlighted: false,
-	},
-	{
-		title: 'Оплата по факту использования',
-		price: 'От 99 ₽',
-		description: 'Платите только за то, что используете',
-		features: [
-			'Прозрачная система формирования баланса',
-			'Все функции доступны',
-			'Расширенная аналитика',
-			'Приоритетная поддержка',
-			'API доступ',
-		],
-		cta: 'Перейти',
-		highlighted: true,
 	},
 ];
 
@@ -53,7 +35,7 @@ export function Pricing() {
 					Выберите подходящий план для ваших задач
 				</Text>
 
-				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" maw={900} mx="auto">
+				<Flex justify={'center'} align={'center'}>
 					{plans.map((plan, index) => (
 						<Card
 							key={index}
@@ -93,6 +75,7 @@ export function Pricing() {
 							</List>
 
 							<Button
+								mt="auto"
 								size="lg"
 								fullWidth
 								variant={plan.highlighted ? 'gradient' : 'outline'}
@@ -105,7 +88,7 @@ export function Pricing() {
 							</Button>
 						</Card>
 					))}
-				</SimpleGrid>
+				</Flex>
 			</Container>
 		</Box>
 	);

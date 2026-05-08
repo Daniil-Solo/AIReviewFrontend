@@ -28,43 +28,13 @@ export function SocialProof() {
 							</ThemeIcon>
 							<Text fz="lg" fw={500} lh={1.6} mb="md">
 								Платформа прошла апробацию в рамках реального учебного процесса. Студенты загружали
-								свои проекты через GitHub, получали детальную обратную связь за считанные минуты, а
-								не дни.
+								свои проекты в виде ссылок на GitHub, валидировали ProjectDoc и получали детальную
+								проверку
 							</Text>
 							<Text fz="lg" fw={500} lh={1.6}>
-								Преподаватели смогли сократить время на проверку работ на 90%, сосредоточившись на
-								творческих аспектах обучения.
+								Преподаватель смог сократить время на проверку работ на 80%, сосредоточившись на
+								оттачивании критериев проверки.
 							</Text>
-						</Box>
-
-						<Box className={styles.featuresList}>
-							<Text fw={700} size="md" mb="md">
-								Что включает проверка:
-							</Text>
-							<Box className={styles.feature}>
-								<ThemeIcon size={24} radius="xl" variant="light" color="teal">
-									<IconChecklist size={14} />
-								</ThemeIcon>
-								<Text size="sm">Автоматическая генерация проектной документации</Text>
-							</Box>
-							<Box className={styles.feature}>
-								<ThemeIcon size={24} radius="xl" variant="light" color="blue">
-									<IconChecklist size={14} />
-								</ThemeIcon>
-								<Text size="sm">Критериальная оценка по настраиваемым параметрам</Text>
-							</Box>
-							<Box className={styles.feature}>
-								<ThemeIcon size={24} radius="xl" variant="light" color="orange">
-									<IconChecklist size={14} />
-								</ThemeIcon>
-								<Text size="sm">Статический анализ кода (Bandit, Pylint)</Text>
-							</Box>
-							<Box className={styles.feature}>
-								<ThemeIcon size={24} radius="xl" variant="light" color="grape">
-									<IconRobot size={14} />
-								</ThemeIcon>
-								<Text size="sm">AI-экзамен по коду и архитектуре проекта</Text>
-							</Box>
 						</Box>
 					</SimpleGrid>
 				</Card>
@@ -86,7 +56,7 @@ export function SocialProof() {
 							<IconClock size={24} />
 						</ThemeIcon>
 						<Text fw={800} fz={40} c="teal.5">
-							90%
+							80%
 						</Text>
 						<Text size="md" c="dimmed">
 							экономия времени преподавателей
@@ -97,7 +67,7 @@ export function SocialProof() {
 							<IconSchool size={24} />
 						</ThemeIcon>
 						<Text fw={800} fz={40} c="grape.5">
-							5-15
+							1-5
 						</Text>
 						<Text size="md" c="dimmed">
 							минут на полный анализ проекта

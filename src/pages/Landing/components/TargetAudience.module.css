@@ -26,9 +26,14 @@
 }
 
 .audienceCard {
+	background: var(--mantine-color-gray-0);
 	transition:
 		transform 0.3s ease,
 		box-shadow 0.3s ease;
+}
+
+[data-mantine-color-scheme='dark'] .audienceCard {
+	background: var(--mantine-color-dark-5);
 }
 
 .audienceCard:hover {
